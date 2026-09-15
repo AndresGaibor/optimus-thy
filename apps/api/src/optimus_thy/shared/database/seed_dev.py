@@ -44,23 +44,28 @@ async def seed_development_data() -> None:
                 {"id": INSTITUTION_ID},
             )
 
+            resolved_role_ids: dict[str, UUID] = {}
             for code, name in (
                 ("medico", "Médico"),
                 ("investigador", "Investigador"),
                 ("administrador", "Administrador"),
             ):
-                await connection.execute(
-                    text(
-                        """
-                        INSERT INTO security.roles (id, code, name, description)
-                        VALUES (:id, :code, :name, 'Rol simulado para desarrollo')
-                        ON CONFLICT (id) DO UPDATE
-                        SET code = EXCLUDED.code, name = EXCLUDED.name,
-                            description = EXCLUDED.description
-                        """
-                    ),
-                    {"id": ROLE_IDS[code], "code": code, "name": name},
-                )
+                role_id = (
+                    await connection.execute(
+                        text(
+                            """
+                            INSERT INTO security.roles (id, code, name, description)
+                            VALUES (:id, :code, :name, 'Rol simulado para desarrollo')
+                            ON CONFLICT (code) DO UPDATE
+                            SET name = EXCLUDED.name,
+                                description = EXCLUDED.description
+                            RETURNING id
+                            """
+                        ),
+                        {"id": ROLE_IDS[code], "code": code, "name": name},
+                    )
+                ).scalar_one()
+                resolved_role_ids[code] = role_id
 
             for code, display_name in (
                 ("medico", "Médico simulado"),
@@ -84,7 +89,7 @@ async def seed_development_data() -> None:
                     {
                         "id": USER_IDS[code],
                         "institution_id": INSTITUTION_ID,
-                        "role_id": ROLE_IDS[code],
+                        "role_id": resolved_role_ids[code],
                         "email": f"{code}@optimus-thy.example.test",
                         "display_name": display_name,
                     },
