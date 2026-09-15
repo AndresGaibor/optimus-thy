@@ -22,7 +22,9 @@
 - Audit events must never contain passwords, raw session tokens, or clinical content.
 - No MFA, OAuth/SSO, recovery, account lockout, patient CRUD, frontend login, or admin acting-view implementation in TES-7.
 
----### Task 1: Security primitives and auth settings
+---
+
+### Task 1: Security primitives and auth settings
 
 **Files:**
 - Modify: `apps/api/pyproject.toml`
@@ -44,6 +46,7 @@
 - [x] Add `pwdlib[argon2]` through `uv`, implement `PasswordService` with `PasswordHash.recommended()`, and implement `secrets.token_urlsafe(32)` + SHA-256 token hashing.
 - [x] Add auth settings with 8-hour default and development-only insecure cookie default.
 - [x] Run focused tests, Ruff, format and mypy; commit the green block.
+
 ### Task 2: Extend audit context and request IDs
 
 **Files:**
@@ -63,6 +66,7 @@
 - [x] Add Alembic revision `20260915_02`, update model metadata, and add request-ID middleware accepting a safe inbound UUID/string or generating a UUID4.
 - [x] Verify upgrade/downgrade and request tests GREEN against PostgreSQL.
 - [x] Run quality gates and commit.
+
 ### Task 3: Database session, auth repository and audit writer
 
 **Files:**
@@ -84,6 +88,7 @@
 - [x] Implement minimal SQLAlchemy async repository using joined role data; never return password hash outside credential verification path.
 - [x] Implement `AuditService` with explicit fields only; no arbitrary request/body serialization.
 - [x] Run integration tests and quality gates; commit.
+
 ### Task 4: Authentication application service
 
 **Files:**
@@ -104,6 +109,7 @@
 - [x] On success update `last_login_at`, persist only token hash, and audit success; on failure audit without submitted email/password/token payload.
 - [x] Implement session authentication and logout/revocation.
 - [x] Run focused tests and quality gates; commit.
+
 ### Task 5: FastAPI auth endpoints and cookie contract
 
 **Files:**
@@ -125,6 +131,7 @@
 - [x] Set cookie with `HttpOnly`, `SameSite=Strict`, `Path=/`, no `Domain`, and environment-driven `Secure`.
 - [x] Ensure raw token appears only in `Set-Cookie`, never JSON or audit rows.
 - [x] Run focused tests and quality gates; commit.
+
 ### Task 6: Reusable RBAC authorization and denied-access audit
 
 **Files:**
@@ -142,6 +149,7 @@
 - [x] On 403, record `auth.access.denied` with actor user ID, actor role, request ID, route resource type and no secret material.
 - [x] Verify role-denied audit and allowed-role behavior against PostgreSQL.
 - [x] Run focused tests and quality gates; commit.
+
 ### Task 7: Canonical OpenAPI contract for TES-17
 
 **Files:**
@@ -154,13 +162,15 @@
 **Interfaces:**
 - `make contracts` deterministically exports FastAPI OpenAPI to `packages/contracts/openapi.json`.
 - Contract includes only public response fields for login/me and HTTP 204 logout.
+- Authentication routes document their real 401 behavior. RBAC 403 is verified at the reusable guard level; no fictitious 403 is added to `/auth/me` or `/auth/logout`.
 
-- [ ] Write contract tests asserting paths, methods, response schemas, 401/403 documentation and absence of `session_token`/`password_hash` from public schemas.
-- [ ] Verify RED before auth routes/export exist in canonical contract.
-- [ ] Implement deterministic OpenAPI export script and `make contracts` target.
-- [ ] Export and commit `packages/contracts/openapi.json`; document that generated OpenAPI is canonical and must not be hand-edited.
-- [ ] Re-run export and assert `git diff --exit-code packages/contracts/openapi.json` to prove determinism.
-- [ ] Run focused tests and quality gates; commit.
+- [x] Write contract tests asserting paths, methods, public response schemas, real 401 documentation, `SessionCookie` security metadata and absence of `session_token`/`password_hash` from public schemas.
+- [x] Verify contract failure before the cookie security scheme/response metadata is present.
+- [x] Implement deterministic OpenAPI export script and `make contracts` target.
+- [x] Export from FastAPI and commit `packages/contracts/openapi.json`; document that generated OpenAPI is canonical and must not be hand-edited.
+- [x] Regenerate in GitHub Actions and assert zero `git diff` for `packages/contracts/openapi.json` to prove determinism.
+- [x] Run contract tests and backend/frontend quality gates in GitHub Actions; run `34995417811` completed successfully including the drift check.
+
 ### Task 8: End-to-end verification, documentation and closure evidence
 
 **Files:**
@@ -169,16 +179,16 @@
 - Modify: `docs/superpowers/plans/2026-09-15-tes-7-auth-rbac.md`
 
 **Interfaces:**
-- Developer docs explain migration, creation of test users, login/me/logout contract and local cookie behavior.
+- Developer docs explain login/me/logout, cookie/session behavior, OpenAPI generation and the TES-7 integration boundary.
 - CI remains the authoritative reproducibility gate with PostgreSQL 17.
 
-- [ ] Run migration from clean test DB through latest head and execute the complete backend integration suite.
-- [ ] Run `make check` from repository root and `make contracts`; verify no uncommitted generated contract diff.
-- [ ] Start API locally, exercise login/me/logout with a simulated active user, and verify the database stores Argon2 password hash, SHA-256 session hash, revocation, and audit events without raw secrets.
-- [ ] Update README and verification evidence with exact commands/results and final commit candidate.
-- [ ] Push and require final GitHub Actions Backend/Frontend success on the final commit.
-- [ ] Only after fresh CI success, mark all TES-7 criteria/subtasks complete and move Linear issue to Done.
+- [x] Run migrations through latest head and execute the complete PostgreSQL-backed backend suite in GitHub Actions.
+- [x] Run all backend/frontend quality gates, regenerate OpenAPI and verify zero generated-contract drift in CI; this is stronger than a local `make check` that skips PostgreSQL tests when `TEST_DATABASE_URL` is absent.
+- [x] Exercise login → `/auth/me` → logout through the full FastAPI ASGI stack with a simulated active user and verify, across the auth service/API integration tests, Argon2 hashing, SHA-256 session storage, expiry/revocation and secret-free audit behavior.
+- [x] Update README and verification evidence with the implemented contract, commands and exact CI evidence.
+- [ ] Push the final documentation/plan commit and require fresh GitHub Actions Backend/Frontend success on that exact commit.
+- [ ] Only after that fresh CI succeeds, update TES-7 criteria/subtasks with the explicit TES-8/TES-17 integration boundary and move Linear issue to Done.
 
 ## Completion gate
 
-TES-7 is not complete merely because unit tests pass. Completion requires PostgreSQL-backed authentication/RBAC tests, migration verification, deterministic OpenAPI, secret-safety checks, local full quality gates, and GitHub Actions success on the final commit.
+TES-7 is not complete merely because unit tests pass. Completion requires PostgreSQL-backed authentication/RBAC tests, migration verification, deterministic OpenAPI, secret-safety checks, reproducible backend/frontend quality gates, and GitHub Actions success on the final commit. Application of `require_roles(...)` to real patient endpoints belongs to TES-8; frontend session/navigation guards belong to TES-17.
