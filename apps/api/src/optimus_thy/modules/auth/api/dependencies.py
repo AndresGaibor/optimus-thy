@@ -1,8 +1,8 @@
 from collections.abc import Awaitable, Callable
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, Request, Security, status
 from fastapi.security import APIKeyCookie
+from fastapi import Depends, HTTPException, Request, Security, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from optimus_thy.config.settings import get_settings
