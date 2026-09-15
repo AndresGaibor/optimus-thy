@@ -98,12 +98,12 @@
 - `AuthService.authenticate_session(raw_token: str) -> AuthUser | None`.
 - `AuthService.logout(raw_token: str, request_id: str | None) -> None`.
 
-- [ ] Write tests for valid login, wrong password, unknown email, inactive user, hash upgrade, session creation and audit events.
-- [ ] Verify RED before service exists.
-- [ ] Implement generic invalid-credentials error so unknown email, bad password and inactive user are externally indistinguishable.
-- [ ] On success update `last_login_at`, persist only token hash, and audit success; on failure audit without submitted email/password/token payload.
-- [ ] Implement session authentication and logout/revocation.
-- [ ] Run focused tests and quality gates; commit.
+- [x] Write tests for valid login, wrong password, unknown email, inactive user, hash upgrade, session creation and audit events.
+- [x] Verify RED before service exists.
+- [x] Implement generic invalid-credentials error so unknown email, bad password and inactive user are externally indistinguishable.
+- [x] On success update `last_login_at`, persist only token hash, and audit success; on failure audit without submitted email/password/token payload.
+- [x] Implement session authentication and logout/revocation.
+- [x] Run focused tests and quality gates; commit.
 ### Task 5: FastAPI auth endpoints and cookie contract
 
 **Files:**

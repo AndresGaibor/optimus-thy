@@ -59,6 +59,16 @@ class AuthRepository:
             active=row.active,
         )
 
+    async def update_password_hash(self, user_id: UUID, password_hash: str) -> None:
+        await self._session.execute(
+            update(UserModel).where(UserModel.id == user_id).values(password_hash=password_hash)
+        )
+
+    async def update_last_login(self, user_id: UUID, last_login_at: datetime) -> None:
+        await self._session.execute(
+            update(UserModel).where(UserModel.id == user_id).values(last_login_at=last_login_at)
+        )
+
     async def create_session(
         self,
         user_id: UUID,
