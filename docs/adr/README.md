@@ -89,3 +89,17 @@ Estado de estas decisiones: **aceptadas durante TES-4 (15/09/2026)**. Las decisi
 **Alternativa:** stack completo de métricas/tracing desde el inicio.
 
 **Motivo:** mantener evidencia y diagnósticos suficientes sin sobrecargar la primera ola.
+
+
+## Cómo registrar nuevas decisiones
+
+1. Crear un archivo desde `docs/adr/TEMPLATE.md` cuando una decisión sea arquitectónica, de seguridad, persistencia, integración, privacidad o tenga consecuencias difíciles de revertir.
+2. Nombrar el archivo `ADR-NNN-titulo-corto.md` y conservar numeración secuencial.
+3. Enlazar siempre el issue `TES-XX` que originó la decisión.
+4. Registrar el mismo evento en la pestaña **Decisiones** del Sheet Tesis cuando tenga utilidad académica.
+5. Si la decisión produce evidencia verificable, registrarla también en **Evidencias**.
+6. Una ADR aceptada no se reescribe para ocultar el historial: si cambia la decisión, crear otra ADR y marcar la anterior como reemplazada.
+
+## Criterio para crear ADR
+
+No crear ADR para decisiones triviales o fácilmente reversibles. Sí crearla cuando existan alternativas razonables y la elección afecte arquitectura, datos, seguridad, IA/OCR, despliegue, pruebas o privacidad.
