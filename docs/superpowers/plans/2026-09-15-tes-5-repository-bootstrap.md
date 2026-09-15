@@ -2,11 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Leave `AndresGaibor/optimus-thy` ready for incremental development with reproducible backend/frontend setup, local PostgreSQL/MinIO, quality gates, CI, and clone-clean documentation.
+**Goal:** Leave `AndresGaibor/optimus-thy` ready for incremental development with reproducible backend/frontend setup, local PostgreSQL/RustFS, quality gates, CI, and clone-clean documentation.
 
 **Architecture:** Implement the modular monorepo approved in TES-4 without building thesis features early. `apps/api` is a FastAPI package managed by uv; `apps/web` is React/TypeScript with Vite managed by Bun; local infrastructure lives under `infra/docker`; root commands orchestrate the same checks used by CI.
 
-**Tech Stack:** Python 3.12, uv, FastAPI, Pydantic Settings, SQLAlchemy, Alembic, Ruff, mypy, pytest, React 19, TypeScript, Vite 8, Bun, Biome, Vitest, PostgreSQL 17, MinIO community container `RELEASE.2025-09-07T16-13-09Z`, GitHub Actions.
+**Tech Stack:** Python 3.12, uv, FastAPI, Pydantic Settings, SQLAlchemy, Alembic, Ruff, mypy, pytest, React 19, TypeScript, Vite 8, Bun, Biome, Vitest, PostgreSQL 17, RustFS `1.0.0-rc.6`, GitHub Actions.
 
 **Spec:** `docs/superpowers/specs/2026-09-15-optimus-thy-architecture-design.md`
 
@@ -15,7 +15,7 @@
 - Work directly on `main` because Andrés explicitly approved direct work on his Mac.
 - Do not copy implementation code from `optimus-thy-referencia`.
 - Keep Redis/RQ out of this task; asynchronous execution is not implemented in TES-5.
-- PostgreSQL is durable state; MinIO is local S3-compatible object storage.
+- PostgreSQL is durable state; RustFS is the local S3-compatible object store, while application configuration remains vendor-neutral through `S3_*`.
 - No real credentials, clinical data, model weights, datasets, or binary artifacts in Git.
 - OpenAPI from FastAPI is the future canonical HTTP contract; TES-5 only establishes the base app and health endpoint.
 - Use TDD for production behavior. Pure configuration/scaffolding may be created directly, then verified by commands.
@@ -40,8 +40,8 @@
 
 - [ ] Create repository directories matching TES-4 without placeholder application code.
 - [ ] Add `.gitignore` for Python, Bun/Node, env files, IDE/system files, coverage, build output, model/data artifacts.
-- [ ] Add `.env.example` with development-only placeholders for PostgreSQL, MinIO, API, and Vite URL.
-- [ ] Add Compose with PostgreSQL 17 and pinned MinIO local service, health checks, named volumes, and no application containers yet.
+- [ ] Add `.env.example` with development-only placeholders for PostgreSQL, RustFS/S3, API, and Vite URL.
+- [ ] Add Compose with PostgreSQL 17 and pinned RustFS local service, health checks, named volumes, and no application containers yet.
 - [ ] Add root Makefile commands that delegate to uv/Bun and Compose.
 - [ ] Run `docker compose --env-file .env -f infra/docker/compose.yaml config` after creating local `.env`; expect valid config.
 - [ ] Commit root/infrastructure scaffold.
@@ -117,7 +117,7 @@
 - [ ] Add GitHub Actions jobs for backend and frontend quality checks with dependency caching/lockfiles.
 - [ ] Document prerequisites: Git, Docker, uv, Bun; note Python 3.12 is managed by uv and system Python is irrelevant.
 - [ ] Document `.env.example -> .env`, `make infra-up`, backend/frontend dev commands, `make check`, and shutdown.
-- [ ] Document MinIO community upstream archival and that the pinned release is for local development only; deployment storage must be revalidated.
+- [ ] Document RustFS pinned release and vendor-neutral `S3_*` application configuration; deployment storage must still be revalidated.
 - [ ] Add troubleshooting for occupied ports, Docker not running, missing Bun/uv, and stale dependencies.
 - [ ] Run YAML/basic syntax checks available locally and `git diff --check`.
 - [ ] Commit CI/documentation.
@@ -134,7 +134,7 @@
 - [ ] Push `main` and clone repository into a fresh temporary directory outside the project.
 - [ ] Copy `.env.example` to `.env` and replace placeholders with local development-only values.
 - [ ] Run `uv sync --project apps/api --all-groups` and `bun install --cwd apps/web --frozen-lockfile` (or exact equivalent supported by installed Bun).
-- [ ] Start PostgreSQL and MinIO from the clone and verify health.
+- [ ] Start PostgreSQL and RustFS from the clone and verify health.
 - [ ] Run backend lint/format/typecheck/tests and frontend lint/format/typecheck/tests/build from the clone.
 - [ ] Start API and web long enough to confirm `/health` and the web root respond, then stop them.
 - [ ] Run `git status --short` in both canonical checkout and verification clone; ensure no generated files that should be tracked are missing and no secrets are tracked.

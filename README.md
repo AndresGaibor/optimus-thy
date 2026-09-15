@@ -73,10 +73,10 @@ Vite sirve por defecto en `http://localhost:5173`.
 ## Infraestructura local
 
 - PostgreSQL: `localhost:55432`.
-- MinIO API: `http://localhost:9000`.
-- MinIO Console: `http://localhost:9001`.
+- RustFS S3 API: `http://localhost:9000`.
+- RustFS Console: `http://localhost:9001`.
 
-MinIO utiliza `quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z`. El repositorio comunitario de MinIO fue archivado en 2026; este pin se mantiene únicamente como dependencia reproducible de **desarrollo local**. La solución de almacenamiento para un despliegue final debe revalidarse antes de producción.
+RustFS utiliza la imagen fijada `rustfs/rustfs:1.0.0-rc.6`. La aplicación usa variables genéricas `S3_*`, por lo que el almacenamiento puede cambiarse por otra implementación S3-compatible sin acoplar el dominio al proveedor. RustFS se usa como infraestructura local; el despliegue final seguirá sujeto a validación operativa.
 
 Para detener servicios:
 
@@ -112,7 +112,8 @@ La CI de GitHub ejecuta los mismos comandos sobre cada push a `main` y cada pull
 | --- | --- |
 | `DATABASE_URL` | conexión SQLAlchemy/Alembic a PostgreSQL |
 | `POSTGRES_*` | inicialización del PostgreSQL local |
-| `MINIO_*` | almacenamiento S3-compatible local |
+| `RUSTFS_*` | proceso RustFS local (credenciales/puertos) |
+| `S3_*` | configuración de almacenamiento S3-compatible consumida por la aplicación |
 | `API_HOST`, `API_PORT` | servidor FastAPI local |
 | `VITE_API_URL` | URL de la API consumida por la web |
 

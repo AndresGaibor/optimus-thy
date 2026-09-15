@@ -2,7 +2,7 @@
 
 **Fecha:** 2026-09-15  
 **Tarea:** TES-4 — Definir arquitectura objetivo y decisiones técnicas base  
-**Estado:** diseño aprobado por Andrés durante revisión seccional; pendiente revisión final del documento.  
+**Estado:** aprobado por Andrés el 15/09/2026; actualizado en TES-5 para usar RustFS como adaptador local S3-compatible.
 **Repositorio:** `AndresGaibor/optimus-thy`
 
 ## 1. Propósito
@@ -36,7 +36,7 @@ Aprobadas durante TES-3/TES-4:
 - OpenAPI de FastAPI como contrato HTTP canónico;
 - PostgreSQL como fuente durable de verdad;
 - UUID para entidades principales;
-- MinIO local detrás de una abstracción S3-compatible;
+- RustFS local detrás de una abstracción S3-compatible;
 - ejecución asíncrona inicial simple, co-localizada y en memoria, fuera del request HTTP;
 - sin Redis/RQ en la primera versión;
 - sesiones opacas persistidas en PostgreSQL y cookie HttpOnly;
@@ -53,7 +53,7 @@ Aprobadas durante TES-3/TES-4:
 ## 3. Principios arquitectónicos
 
 1. **Trazabilidad antes que reutilización:** cada componente debe existir por un requisito aprobado o decisión explícita.
-2. **Dominio independiente:** dominio y casos de uso no dependen de FastAPI, SQLAlchemy, MinIO, PaddleOCR, PyTorch ni del modelo demo.
+2. **Dominio independiente:** dominio y casos de uso no dependen de FastAPI, SQLAlchemy, RustFS, PaddleOCR, PyTorch ni del modelo demo.
 3. **Infraestructura reemplazable:** almacenamiento, OCR, ejecución de trabajos y modelo IA se consumen mediante puertos.
 4. **Persistencia durable en PostgreSQL:** la memoria puede coordinar ejecución, pero nunca será la única fuente del estado clínico ni del estado de trabajos.
 5. **Privacidad por diseño:** PII separada de información clínica operacional; investigadores consumen proyecciones desidentificadas.
@@ -73,7 +73,7 @@ flowchart LR
         API["apps/api\nFastAPI + casos de uso"]
         EXEC["Ejecutor de trabajos\ncola en memoria\nlímite lógico de worker"]
         DB[("PostgreSQL\nestado durable + auditoría")]
-        OBJ[("MinIO local\nS3-compatible")]
+        OBJ[("RustFS local\nS3-compatible")]
         OCR["Adaptador OCR local\nOCRRunner"]
         MODEL["Adaptador modelo tiroideo\nModelRunner"]
     end
@@ -109,7 +109,7 @@ optimus-thy/
 ├── infra/
 │   ├── docker/
 │   ├── postgres/
-│   └── minio/
+│   └── rustfs/
 ├── docs/
 │   ├── architecture/
 │   ├── adr/
@@ -152,7 +152,7 @@ apps/api/src/optimus_thy/
 
 - `domain`: entidades, value objects, reglas e interfaces estrictamente de dominio; sin dependencias de frameworks.
 - `application`: casos de uso, DTO internos y puertos requeridos por los casos de uso.
-- `infrastructure`: SQLAlchemy, PostgreSQL, MinIO, OCR, modelo IA, hashing, sesiones y ejecutores.
+- `infrastructure`: SQLAlchemy, PostgreSQL, RustFS, OCR, modelo IA, hashing, sesiones y ejecutores.
 - `api`: rutas FastAPI, validación HTTP, dependencias de autenticación y traducción HTTP↔casos de uso.
 
 Los módulos se comunican mediante casos de uso/puertos explícitos; no se permite importar directamente tablas SQLAlchemy de otro módulo como atajo de negocio.
@@ -270,7 +270,7 @@ El investigador no consume `patient_identity` directamente. El mecanismo exacto 
 
 ### Adaptador inicial
 
-MinIO local usando API S3-compatible.
+RustFS local usando API S3-compatible.
 
 ### PostgreSQL guarda
 
@@ -285,7 +285,7 @@ MinIO local usando API S3-compatible.
 
 Blobs pesados de imágenes ecográficas o documentos clínicos.
 
-La elección de MinIO es una decisión del proyecto compatible con el anteproyecto, que permite un repositorio local o una alternativa S3-compatible.
+La elección de RustFS es una decisión del proyecto compatible con el anteproyecto, que permite un repositorio local o una alternativa S3-compatible. La aplicación consume configuración `S3_*` y no depende de APIs propietarias de RustFS.
 
 ## 12. Trabajos asíncronos
 
@@ -422,7 +422,7 @@ Prometheus/Grafana no son requisito de la primera ola.
 ### Pirámide
 
 1. Unitarias de dominio y casos de uso.
-2. Integración para PostgreSQL, MinIO y adaptadores.
+2. Integración para PostgreSQL, RustFS/S3 y adaptadores.
 3. Tests de API FastAPI.
 4. Tests de componentes/flows críticos del frontend.
 5. Pocos E2E de flujos esenciales.
@@ -444,8 +444,8 @@ Pesos grandes, benchmarks de IA/OCR y pruebas costosas no corren obligatoriament
 
 | Módulo aprobado | Componentes arquitectónicos |
 |---|---|
-| Gestión Clínica y Documental | `patients`, `documents`, `imaging`, PostgreSQL, MinIO, `OCRRunner` |
-| Inferencia y Resultados IA | `inference`, `ModelRunner`, ejecutor de trabajos, PostgreSQL, MinIO |
+| Gestión Clínica y Documental | `patients`, `documents`, `imaging`, PostgreSQL, RustFS, `OCRRunner` |
+| Inferencia y Resultados IA | `inference`, `ModelRunner`, ejecutor de trabajos, PostgreSQL, RustFS |
 | Investigación y Evaluación | `research`, proyecciones desidentificadas, registro de versiones/resultados/auditoría |
 | Administración y Seguridad | `auth`, `audit`, sesiones, RBAC, separación PII, auditoría transversal |
 
@@ -457,7 +457,7 @@ Pesos grandes, benchmarks de IA/OCR y pruebas costosas no corren obligatoriament
 | ADR-002 | Clean Architecture modular por capacidad | capas globales únicas | evita acoplamiento y permite entender/probar módulos aisladamente |
 | ADR-003 | OpenAPI como contrato canónico | DTO manual duplicado | evita inconsistencias Python/TS encontradas en TES-3 |
 | ADR-004 | PostgreSQL + UUID | mezcla int/UUID | contrato consistente y durable |
-| ADR-005 | MinIO local vía puerto S3 | blobs en DB; path local acoplado | alineación con anteproyecto y reemplazabilidad |
+| ADR-005 | RustFS local vía puerto S3 | MinIO; blobs en DB; path local acoplado | mantenimiento activo, alineación con anteproyecto y reemplazabilidad |
 | ADR-006 | Cola en memoria + estado durable en PostgreSQL | Redis/RQ inmediato | menor complejidad sin perder trazabilidad durable |
 | ADR-007 | Sesión opaca en PostgreSQL | JWT en localStorage | revocación simple y menor exposición del token en navegador |
 | ADR-008 | PII separada | identidad inline con ficha clínica | privacidad y desidentificación para investigación |
@@ -510,4 +510,4 @@ Manual técnico / tesis
 - Distingue aplicación, infraestructura e IA: **sí**.
 - Decisiones tienen justificación técnica: **sí**.
 - Supuestos/pendientes están marcados: **sí**.
-- Puede utilizarse para inicializar el repositorio real y alimentar documentación de tesis: **sí, pendiente revisión final de Andrés/Daniel**.
+- Puede utilizarse para inicializar el repositorio real y alimentar documentación de tesis: **sí; aprobado por Andrés**.

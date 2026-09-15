@@ -34,13 +34,13 @@ Estado de estas decisiones: **aceptadas durante TES-4 (15/09/2026)**. Las decisi
 
 **Motivo:** consistencia transversal y recuperación confiable de datos y trabajos.
 
-## ADR-005 — MinIO local mediante interfaz S3-compatible
+## ADR-005 — RustFS local mediante interfaz S3-compatible
 
-**Decisión:** documentos e imágenes se almacenan inicialmente en MinIO local detrás de `ObjectStorage`.
+**Decisión:** documentos e imágenes se almacenan inicialmente en RustFS local detrás de `ObjectStorage`.
 
-**Alternativas:** blobs pesados en PostgreSQL; rutas de filesystem acopladas al dominio.
+**Alternativas:** MinIO; blobs pesados en PostgreSQL; rutas de filesystem acopladas al dominio.
 
-**Motivo:** coincide con el anteproyecto (almacenamiento local/S3-compatible) y permite sustituir la implementación.
+**Motivo:** coincide con el anteproyecto (almacenamiento local/S3-compatible), RustFS mantiene desarrollo activo y una API S3 estándar, y el puerto permite sustituir la implementación.
 
 ## ADR-006 — Ejecutor de trabajos simple, sin Redis inicialmente
 

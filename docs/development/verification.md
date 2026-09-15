@@ -40,7 +40,7 @@ make infra-up
 Validaciones esperadas:
 
 ```bash
-curl -fsS http://localhost:9000/minio/health/live
+curl -fsS http://localhost:9000/health/ready
 cd apps/api && uv run alembic current
 ```
 
@@ -53,7 +53,7 @@ cd apps/api && uv run alembic current
 - backend: instalación congelada, lint, formato, typecheck y tests;
 - frontend: instalación congelada, lint, formato, typecheck, tests y build.
 
-La CI no requiere datos clínicos, modelos de IA, MinIO ni PostgreSQL porque los tests base de TES-5 no dependen de infraestructura externa.
+La CI no requiere datos clínicos, modelos de IA, RustFS ni PostgreSQL porque los tests base de TES-5 no dependen de infraestructura externa.
 
 ## Evidencia de clon limpio
 

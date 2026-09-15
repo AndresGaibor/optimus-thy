@@ -24,7 +24,7 @@ Representar la arquitectura inicial aprobada para el sistema web de gestión de 
 - **API (`apps/api`)**: FastAPI, casos de uso, autenticación/autorización y contrato OpenAPI.
 - **Ejecutor de trabajos**: límite lógico para OCR e inferencia. En la primera versión usa cola en memoria dentro del runtime Python, fuera del request HTTP.
 - **PostgreSQL**: fuente durable de verdad para datos estructurados, sesiones, estado de trabajos, resultados y auditoría.
-- **MinIO local**: almacenamiento S3-compatible de documentos e imágenes. PostgreSQL conserva metadatos y `object_key`.
+- **RustFS local**: almacenamiento S3-compatible de documentos e imágenes. PostgreSQL conserva metadatos y `object_key`.
 - **OCRRunner**: puerto para OCR local, independiente del motor elegido.
 - **ModelRunner**: puerto para modelo tiroideo demo/oficial, independiente de framework o pesos.
 
@@ -41,7 +41,7 @@ flowchart LR
       API["FastAPI\napps/api"]
       EXEC["JobExecutor\ncola en memoria"]
       DB[("PostgreSQL")]
-      OBJ[("MinIO local\nS3-compatible")]
+      OBJ[("RustFS local\nS3-compatible")]
       OCR["OCRRunner\nadaptador OCR local"]
       MODEL["ModelRunner\nmodelo tiroideo"]
     end
@@ -62,7 +62,7 @@ flowchart LR
 1. Los usuarios interactúan únicamente con la aplicación web.
 2. La web consume la API bajo un contrato generado desde OpenAPI.
 3. La API valida sesión, rol y permisos antes de ejecutar casos de uso.
-4. Los archivos pesados se almacenan en MinIO; la base de datos conserva metadatos y referencias.
+4. Los archivos pesados se almacenan en RustFS; la base de datos conserva metadatos y referencias.
 5. OCR e inferencia no se ejecutan dentro del request HTTP; se registran como trabajos durables en PostgreSQL y se procesan por el ejecutor.
 6. El motor OCR y el modelo tiroideo se conectan mediante puertos reemplazables.
 7. Las acciones relevantes generan evidencia de auditoría.

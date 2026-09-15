@@ -17,10 +17,10 @@ class Settings(BaseSettings):
     app_name: str = "OPTIMUS-THY API"
     environment: str = "development"
     database_url: str | None = None
-    minio_endpoint: str | None = None
-    minio_bucket: str | None = None
-    minio_access_key: str | None = None
-    minio_secret_key: SecretStr | None = None
+    s3_endpoint: str | None = None
+    s3_bucket: str | None = None
+    s3_access_key: str | None = None
+    s3_secret_key: SecretStr | None = None
 
 
 @lru_cache
