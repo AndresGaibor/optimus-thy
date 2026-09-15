@@ -44,7 +44,7 @@ curl -fsS http://localhost:9000/health/ready
 cd apps/api && uv run alembic current
 ```
 
-`alembic current` debe conectar con PostgreSQL aunque todavía no exista una primera migración de dominio; esa migración pertenece a TES-6.
+`alembic current` debe conectar con PostgreSQL y reflejar la revisión aplicada. Desde TES-6, la revisión inicial es `20260915_01`.
 
 ## CI
 
@@ -53,7 +53,7 @@ cd apps/api && uv run alembic current
 - backend: instalación congelada, lint, formato, typecheck y tests;
 - frontend: instalación congelada, lint, formato, typecheck, tests y build.
 
-La CI no requiere datos clínicos, modelos de IA, RustFS ni PostgreSQL porque los tests base de TES-5 no dependen de infraestructura externa.
+La CI no requiere datos clínicos, modelos de IA ni RustFS. Desde TES-6, el job backend levanta PostgreSQL 17 efímero para validar migraciones, restricciones, cifrado y seed.
 
 ## Evidencia de clon limpio — 15/09/2026
 
@@ -71,3 +71,22 @@ La CI no requiere datos clínicos, modelos de IA, RustFS ni PostgreSQL porque lo
 - GitHub Actions run `34963269656`: `Backend quality` y `Frontend quality` finalizaron en `success`.
 
 La verificación se ejecutó sin versionar `.env`, credenciales locales, artefactos de build ni dependencias instaladas.
+
+## Evidencia TES-6 — modelo de datos y migraciones — 15/09/2026
+
+**Commit funcional verificado:** `52a043481d503f98ca8b6399984d4bfd7b026e38`.
+**Revisión Alembic:** `20260915_01`.
+
+- Modelo materializado: 3 esquemas (`security`, `clinical`, `audit`) y exactamente 7 tablas de Ola 1.
+- PII: `first_names` y `last_names` persisten como `BYTEA` cifrado mediante AES-256-GCM; la clave se entrega por `PII_ENCRYPTION_KEY_B64`.
+- Base local dedicada `optimus_thy_tes6_test`: `pytest -m integration` finalizó con **2 passed**.
+- Ciclo verificado: base vacía → `upgrade head` → restricciones/PII → `downgrade base` → `upgrade head`.
+- Restricciones verificadas: unicidad de rol y FK de institución de paciente rechazan datos inválidos.
+- Seed de desarrollo ejecutado dos veces: resultado estable **3 roles : 3 usuarios : 1 paciente** (`3:3:1`).
+- Los usuarios del seed son simulados, inactivos y usan direcciones reservadas `.example.test`; no existe contraseña utilizable.
+- `make check` local: Ruff, formato, mypy, frontend typecheck/lint, 8 tests backend no-integración, 1 test frontend y build Vite correctos.
+- GitHub Actions run `34967909019`: `Backend quality` y `Frontend quality` = `success`.
+- Backend CI con PostgreSQL 17 ejecutó **10 tests y 10 passed**, incluyendo migración y seed.
+- Ninguna clave PII real, `.env`, dato clínico real o dato de paciente real fue versionado.
+
+La migración implementa solo autenticación/RBAC base, sesiones, paciente operacional, identidad separada y auditoría mínima. Consentimientos, casos clínicos, documentos/OCR, imágenes, IA e investigación continúan diferidos hasta que un flujo/requisito posterior justifique sus tablas.
