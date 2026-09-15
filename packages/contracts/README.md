@@ -1,5 +1,13 @@
 # API contracts
 
-FastAPI/OpenAPI is the canonical HTTP contract.
+FastAPI/OpenAPI is the canonical HTTP contract for OPTIMUS-THY.
 
-Generated OpenAPI artifacts and generated client metadata may live here later. Do not maintain a second hand-written copy of backend DTOs in this package.
+`openapi.json` is generated from the running FastAPI application with:
+
+```bash
+make contracts
+```
+
+Do not edit `openapi.json` by hand. Change FastAPI routes/schemas/security metadata first, regenerate the contract, and commit the generated diff.
+
+Frontend TypeScript clients/types may be generated from this artifact later. Do not maintain a second hand-written copy of backend DTOs in this package.
