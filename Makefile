@@ -1,4 +1,11 @@
 ENV_FILE ?= .env
+
+-include $(ENV_FILE)
+export POSTGRES_DB POSTGRES_USER POSTGRES_PASSWORD POSTGRES_PORT DATABASE_URL
+export MINIO_ROOT_USER MINIO_ROOT_PASSWORD MINIO_API_PORT MINIO_CONSOLE_PORT
+export MINIO_ENDPOINT MINIO_BUCKET MINIO_ACCESS_KEY MINIO_SECRET_KEY
+export API_HOST API_PORT VITE_API_URL
+
 COMPOSE = docker compose --env-file $(ENV_FILE) -f infra/docker/compose.yaml
 
 .PHONY: setup infra-up infra-down infra-logs api-dev web-dev lint format-check typecheck test build check
