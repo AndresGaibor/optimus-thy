@@ -15,6 +15,8 @@ class AuditEventModel(Base):
     actor_user_id: Mapped[UUID | None] = mapped_column(
         Uuid, ForeignKey("security.users.id", ondelete="SET NULL"), index=True
     )
+    actor_role: Mapped[str | None] = mapped_column(Text)
+    active_view: Mapped[str | None] = mapped_column(Text)
     action: Mapped[str] = mapped_column(Text, nullable=False)
     resource_type: Mapped[str] = mapped_column(Text, nullable=False)
     resource_id: Mapped[str | None] = mapped_column(Text)

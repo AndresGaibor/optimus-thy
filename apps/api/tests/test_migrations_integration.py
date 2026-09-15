@@ -171,3 +171,31 @@ def test_initial_migration_cycle_constraints_and_pii() -> None:
 
     _alembic("upgrade", "head")
     assert _run(_table_names()) == expected_tables
+
+
+async def _column_names(schema: str, table: str) -> set[str]:
+    assert TEST_DATABASE_URL is not None
+    engine = create_async_engine(TEST_DATABASE_URL)
+    try:
+        async with engine.connect() as connection:
+            rows = await connection.execute(
+                text(
+                    """
+                    SELECT column_name
+                    FROM information_schema.columns
+                    WHERE table_schema = :schema AND table_name = :table
+                    """
+                ),
+                {"schema": schema, "table": table},
+            )
+            return set(rows.scalars())
+    finally:
+        await engine.dispose()
+
+
+def test_auth_audit_context_columns_exist_at_head() -> None:
+    _alembic("upgrade", "head")
+
+    columns = _run(_column_names("audit", "events"))
+
+    assert {"actor_role", "active_view"} <= columns

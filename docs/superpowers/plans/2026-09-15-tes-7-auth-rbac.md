@@ -58,11 +58,11 @@
 - Audit columns: `actor_role: str | None`, `active_view: str | None`.
 - Request state/header: `request.state.request_id` and response `X-Request-ID`.
 
-- [ ] Write failing tests for request-ID generation/echo and migration presence of `actor_role`/`active_view`.
-- [ ] Verify RED before middleware/migration exists.
-- [ ] Add Alembic revision `20260915_02`, update model metadata, and add request-ID middleware accepting a safe inbound UUID/string or generating a UUID4.
-- [ ] Verify upgrade/downgrade and request tests GREEN against PostgreSQL.
-- [ ] Run quality gates and commit.
+- [x] Write failing tests for request-ID generation/echo and migration presence of `actor_role`/`active_view`.
+- [x] Verify RED before middleware/migration exists.
+- [x] Add Alembic revision `20260915_02`, update model metadata, and add request-ID middleware accepting a safe inbound UUID/string or generating a UUID4.
+- [x] Verify upgrade/downgrade and request tests GREEN against PostgreSQL.
+- [x] Run quality gates and commit.
 ### Task 3: Database session, auth repository and audit writer
 
 **Files:**
