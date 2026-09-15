@@ -1,0 +1,36 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# JavaScript / Bun
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+
+# IDE / OS
+.DS_Store
+.idea/
+.vscode/
+
+# Local runtime data
+.local/
+.tmp/
+models/
+datasets/
+data/
+*.pt
+*.pth
+*.onnx
+*.ckpt

@@ -6,7 +6,7 @@
 
 **Architecture:** Implement the modular monorepo approved in TES-4 without building thesis features early. `apps/api` is a FastAPI package managed by uv; `apps/web` is React/TypeScript with Vite managed by Bun; local infrastructure lives under `infra/docker`; root commands orchestrate the same checks used by CI.
 
-**Tech Stack:** Python 3.12, uv, FastAPI, Pydantic Settings, SQLAlchemy, Alembic, Ruff, mypy, pytest, React 19, TypeScript, Vite 8, Bun, Biome, Vitest, PostgreSQL 17, MinIO community release `RELEASE.2025-10-15T17-29-55Z`, GitHub Actions.
+**Tech Stack:** Python 3.12, uv, FastAPI, Pydantic Settings, SQLAlchemy, Alembic, Ruff, mypy, pytest, React 19, TypeScript, Vite 8, Bun, Biome, Vitest, PostgreSQL 17, MinIO community container `RELEASE.2025-09-07T16-13-09Z`, GitHub Actions.
 
 **Spec:** `docs/superpowers/specs/2026-09-15-optimus-thy-architecture-design.md`
 
