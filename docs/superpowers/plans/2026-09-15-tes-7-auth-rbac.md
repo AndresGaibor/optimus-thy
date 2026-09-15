@@ -79,11 +79,11 @@
 - `AuthRepository.revoke_session(token_hash: str, revoked_at: datetime) -> bool`.
 - `AuditService.record(...) -> None` writes `audit.events` without secrets.
 
-- [ ] Write PostgreSQL integration tests for user lookup, active session resolution, expiry/revocation rejection, session revocation, and audit persistence.
-- [ ] Verify RED because repository/service do not exist.
-- [ ] Implement minimal SQLAlchemy async repository using joined role data; never return password hash outside credential verification path.
-- [ ] Implement `AuditService` with explicit fields only; no arbitrary request/body serialization.
-- [ ] Run integration tests and quality gates; commit.
+- [x] Write PostgreSQL integration tests for user lookup, active session resolution, expiry/revocation rejection, session revocation, and audit persistence.
+- [x] Verify RED because repository/service do not exist.
+- [x] Implement minimal SQLAlchemy async repository using joined role data; never return password hash outside credential verification path.
+- [x] Implement `AuditService` with explicit fields only; no arbitrary request/body serialization.
+- [x] Run integration tests and quality gates; commit.
 ### Task 4: Authentication application service
 
 **Files:**
