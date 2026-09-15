@@ -39,11 +39,11 @@
 - Produces: `hash_session_token(token: str) -> str`
 - Settings: `auth_cookie_name`, `auth_session_ttl_seconds`, `auth_cookie_secure`
 
-- [ ] Write tests that enforce 15-character hashing minimum, successful Argon2 round-trip, wrong-password rejection, 256-bit token entropy, deterministic SHA-256 hashing, and absence of the raw token from its hash.
-- [ ] Run focused tests and verify RED because the helpers/settings do not exist.
-- [ ] Add `pwdlib[argon2]` through `uv`, implement `PasswordService` with `PasswordHash.recommended()`, and implement `secrets.token_urlsafe(32)` + SHA-256 token hashing.
-- [ ] Add auth settings with 8-hour default and development-only insecure cookie default.
-- [ ] Run focused tests, Ruff, format and mypy; commit the green block.
+- [x] Write tests that enforce 15-character hashing minimum, successful Argon2 round-trip, wrong-password rejection, 256-bit token entropy, deterministic SHA-256 hashing, and absence of the raw token from its hash.
+- [x] Run focused tests and verify RED because the helpers/settings do not exist.
+- [x] Add `pwdlib[argon2]` through `uv`, implement `PasswordService` with `PasswordHash.recommended()`, and implement `secrets.token_urlsafe(32)` + SHA-256 token hashing.
+- [x] Add auth settings with 8-hour default and development-only insecure cookie default.
+- [x] Run focused tests, Ruff, format and mypy; commit the green block.
 ### Task 2: Extend audit context and request IDs
 
 **Files:**

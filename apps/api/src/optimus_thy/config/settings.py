@@ -22,6 +22,12 @@ class Settings(BaseSettings):
     s3_bucket: str | None = None
     s3_access_key: str | None = None
     s3_secret_key: SecretStr | None = None
+    auth_cookie_name: str = "optimus_thy_session"
+    auth_session_ttl_seconds: int = 8 * 60 * 60
+
+    @property
+    def auth_cookie_secure(self) -> bool:
+        return self.environment != "development"
 
 
 @lru_cache
