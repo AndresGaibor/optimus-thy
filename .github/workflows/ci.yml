@@ -62,6 +62,9 @@ jobs:
       - name: Export OpenAPI contract
         run: uv run python scripts/export_openapi.py
 
+      - name: Check OpenAPI contract drift
+        run: git -C ../.. diff --exit-code -- packages/contracts/openapi.json
+
       - name: Upload OpenAPI contract
         uses: actions/upload-artifact@v4
         with:
