@@ -10,7 +10,7 @@ export API_HOST API_PORT VITE_API_URL
 
 COMPOSE = docker compose --env-file $(ENV_FILE) -f infra/docker/compose.yaml
 
-.PHONY: setup infra-up infra-down infra-logs db-upgrade db-downgrade seed-dev test-integration api-dev web-dev lint format-check typecheck test build check
+.PHONY: setup infra-up infra-down infra-logs db-upgrade db-downgrade seed-dev test-integration contracts api-dev web-dev lint format-check typecheck test build check
 
 setup:
 	@test -f .env || cp .env.example .env
@@ -37,6 +37,9 @@ seed-dev:
 
 test-integration:
 	cd apps/api && uv run pytest -q -W error -m integration
+
+contracts:
+	cd apps/api && uv run python scripts/export_openapi.py
 
 api-dev:
 	cd apps/api && uv run uvicorn optimus_thy.main:app --reload --host $${API_HOST:-127.0.0.1} --port $${API_PORT:-8000}
