@@ -59,6 +59,16 @@ jobs:
       - name: Test
         run: uv run pytest -q -W error
 
+      - name: Export OpenAPI contract
+        run: uv run python scripts/export_openapi.py
+
+      - name: Upload OpenAPI contract
+        uses: actions/upload-artifact@v4
+        with:
+          name: openapi-contract
+          path: packages/contracts/openapi.json
+          if-no-files-found: error
+
   frontend:
     name: Frontend quality
     runs-on: ubuntu-latest
