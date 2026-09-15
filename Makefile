@@ -5,7 +5,7 @@ COMPOSE = docker compose --env-file $(ENV_FILE) -f infra/docker/compose.yaml
 
 setup:
 	@test -f .env || cp .env.example .env
-	cd apps/api && uv sync --all-groups
+	cd apps/api && uv sync --all-groups --frozen
 	cd apps/web && bun install --frozen-lockfile
 
 infra-up:
@@ -36,7 +36,7 @@ typecheck:
 	cd apps/web && bun run typecheck
 
 test:
-	cd apps/api && uv run pytest -q
+	cd apps/api && uv run pytest -q -W error
 	cd apps/web && bun run test
 
 build:

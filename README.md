@@ -1,1 +1,135 @@
-# optimus-thy
+# OPTIMUS-THY
+
+Sistema web de trabajo de titulación para la gestión de datos clínicos e integración de un modelo de inteligencia artificial existente del proyecto OPTIMUS-THY.
+
+El repositorio se desarrolla a partir del anteproyecto aprobado y de la arquitectura definida en TES-4. El repositorio de referencia no es una fuente autoritativa de requisitos ni de implementación.
+
+## Arquitectura base
+
+```text
+apps/web       React + TypeScript + Vite
+apps/api       FastAPI + Clean Architecture modular
+services       límite futuro para workers separados
+packages       contratos y artefactos compartidos
+infra          infraestructura de desarrollo local
+docs           arquitectura, ADRs, planes y evidencias
+```
+
+Documentación relacionada:
+
+- [Arquitectura objetivo](docs/superpowers/specs/2026-09-15-optimus-thy-architecture-design.md)
+- [Diagrama y límites](docs/architecture/README.md)
+- [Registro de ADRs](docs/adr/README.md)
+
+## Requisitos de desarrollo
+
+- Git.
+- Docker compatible con `docker compose` (OrbStack, Docker Desktop u otro runtime).
+- [uv](https://docs.astral.sh/uv/) 0.11.x o compatible.
+- Bun 1.4.2.
+
+No hace falta modificar el Python del sistema: `uv` instala y usa Python 3.12 para `apps/api`.
+
+## Arranque desde un clon limpio
+
+```bash
+git clone https://github.com/AndresGaibor/optimus-thy.git
+cd optimus-thy
+cp .env.example .env
+```
+
+Edita `.env` y reemplaza todos los valores `<set-local-...>` por credenciales **solo de desarrollo**. `.env` está ignorado por Git.
+
+Después instala dependencias y levanta infraestructura:
+
+```bash
+make setup
+make infra-up
+```
+
+El PostgreSQL de desarrollo usa por defecto el puerto host `55432` para evitar conflictos frecuentes con instalaciones locales en `5432`. Dentro del contenedor sigue usando `5432`.
+
+## Ejecutar la API
+
+```bash
+make api-dev
+```
+
+Endpoints iniciales:
+
+- salud: `http://127.0.0.1:8000/health`
+- OpenAPI/Swagger: `http://127.0.0.1:8000/docs`
+
+## Ejecutar el frontend
+
+En otra terminal:
+
+```bash
+make web-dev
+```
+
+Vite sirve por defecto en `http://localhost:5173`.
+
+## Infraestructura local
+
+- PostgreSQL: `localhost:55432`.
+- MinIO API: `http://localhost:9000`.
+- MinIO Console: `http://localhost:9001`.
+
+MinIO utiliza `quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z`. El repositorio comunitario de MinIO fue archivado en 2026; este pin se mantiene únicamente como dependencia reproducible de **desarrollo local**. La solución de almacenamiento para un despliegue final debe revalidarse antes de producción.
+
+Para detener servicios:
+
+```bash
+make infra-down
+```
+
+## Calidad
+
+Ejecuta todos los gates locales con:
+
+```bash
+make check
+```
+
+Ese comando verifica:
+
+- Ruff lint y formato del backend.
+- mypy estricto.
+- pytest.
+- Biome lint y formato del frontend.
+- TypeScript.
+- Vitest.
+- build de Vite.
+
+La CI de GitHub ejecuta los mismos comandos sobre cada push a `main` y cada pull request.
+
+## Variables de entorno
+
+`.env.example` documenta las variables disponibles. Las principales son:
+
+| Variable | Uso |
+| --- | --- |
+| `DATABASE_URL` | conexión SQLAlchemy/Alembic a PostgreSQL |
+| `POSTGRES_*` | inicialización del PostgreSQL local |
+| `MINIO_*` | almacenamiento S3-compatible local |
+| `API_HOST`, `API_PORT` | servidor FastAPI local |
+| `VITE_API_URL` | URL de la API consumida por la web |
+
+Nunca se deben versionar credenciales reales, datos clínicos, datasets, pesos de modelos ni certificados.
+
+## Solución de problemas
+
+**Docker no responde:** inicia OrbStack/Docker Desktop y confirma `docker info`.
+
+**Puerto ocupado:** revisa `55432`, `9000`, `9001`, `8000` o `5173` con `lsof -nP -iTCP:<puerto> -sTCP:LISTEN`. Los puertos de infraestructura pueden cambiarse en `.env`.
+
+**`uv` no existe:** instala uv y vuelve a ejecutar `make setup`; Python 3.12 será gestionado por uv.
+
+**`bun` no existe:** instala Bun y confirma `bun --version` antes de `make setup`.
+
+**Dependencias desalineadas:** usa `cd apps/api && uv sync --all-groups --frozen` y `cd apps/web && bun install --frozen-lockfile`.
+
+## Estado del proyecto
+
+TES-5 establece únicamente el baseline técnico y de calidad. El modelo de datos clínico pertenece a TES-6 y autenticación/RBAC a TES-7; no se adelantan esas funcionalidades en este scaffold.
