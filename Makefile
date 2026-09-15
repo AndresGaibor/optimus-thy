@@ -5,11 +5,12 @@ BUN ?= $(shell command -v bun 2>/dev/null || printf "%s" "$(HOME)/.bun/bin/bun")
 export POSTGRES_DB POSTGRES_USER POSTGRES_PASSWORD POSTGRES_PORT DATABASE_URL
 export RUSTFS_ACCESS_KEY RUSTFS_SECRET_KEY RUSTFS_API_PORT RUSTFS_CONSOLE_PORT
 export S3_ENDPOINT S3_BUCKET S3_ACCESS_KEY S3_SECRET_KEY
+export PII_ENCRYPTION_KEY_B64
 export API_HOST API_PORT VITE_API_URL
 
 COMPOSE = docker compose --env-file $(ENV_FILE) -f infra/docker/compose.yaml
 
-.PHONY: setup infra-up infra-down infra-logs api-dev web-dev lint format-check typecheck test build check
+.PHONY: setup infra-up infra-down infra-logs db-upgrade db-downgrade seed-dev test-integration api-dev web-dev lint format-check typecheck test build check
 
 setup:
 	@test -f .env || cp .env.example .env
@@ -24,6 +25,18 @@ infra-down:
 
 infra-logs:
 	$(COMPOSE) logs -f
+
+db-upgrade:
+	cd apps/api && uv run alembic upgrade head
+
+db-downgrade:
+	cd apps/api && uv run alembic downgrade -1
+
+seed-dev:
+	cd apps/api && uv run python -m optimus_thy.shared.database.seed_dev
+
+test-integration:
+	cd apps/api && uv run pytest -q -W error -m integration
 
 api-dev:
 	cd apps/api && uv run uvicorn optimus_thy.main:app --reload --host $${API_HOST:-127.0.0.1} --port $${API_PORT:-8000}

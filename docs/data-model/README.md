@@ -111,11 +111,11 @@ Primera migración: solo nombres y apellidos se materializan como PII porque son
 
 ## Seed de desarrollo
 
-El seed usará datos totalmente simulados:
+El seed usa datos totalmente simulados:
 
 - una institución de desarrollo asociada a OPTIMUS-THY/ESPOCH;
 - tres roles (`administrador`, `medico`, `investigador`);
-- usuarios simulados con dominios `.invalid`, deshabilitados hasta TES-7;
+- usuarios simulados con dominio reservado `.example.test`, deshabilitados hasta TES-7;
 - un paciente simulado con PII cifrada.
 
 Los UUID serán determinísticos para que el seed sea idempotente. No se incluirán contraseñas utilizables ni datos reales.
@@ -136,3 +136,12 @@ Los UUID serán determinísticos para que el seed sea idempotente. No se incluir
 ## Tablas explícitamente diferidas
 
 No se crean todavía: consentimientos, casos clínicos, encuentros, perfil tiroideo, diagnósticos, archivos/documentos, trabajos OCR, campos OCR, estudios/series/instancias de imagen, modelos/versiones IA, trabajos/resultados de inferencia, datasets/métricas/investigación ni tablas CMS. Cada una requiere un flujo o requisito posterior que justifique su migración.
+
+
+## Migración y verificación implementadas
+
+- Revisión inicial Alembic: `20260915_01`.
+- Migración: `apps/api/alembic/versions/20260915_01_initial_ola1.py`.
+- Seed: `python -m optimus_thy.shared.database.seed_dev` / `make seed-dev`.
+- Pruebas PostgreSQL: ciclo `upgrade -> downgrade -> upgrade`, tablas esperadas, restricciones únicas/FK, PII cifrada y seed idempotente.
+- CI backend levanta PostgreSQL 17 y ejecuta estas pruebas con una base efímera.

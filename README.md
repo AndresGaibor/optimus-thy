@@ -38,7 +38,7 @@ cd optimus-thy
 cp .env.example .env
 ```
 
-Edita `.env` y reemplaza todos los valores `<set-local-...>` por credenciales **solo de desarrollo**. `.env` está ignorado por Git.
+Edita `.env` y reemplaza todos los valores `<set-local-...>` por credenciales **solo de desarrollo**. `.env` está ignorado por Git. Para `PII_ENCRYPTION_KEY_B64`, genera 32 bytes aleatorios y codifícalos en Base64; nunca reutilices una clave publicada o de CI.
 
 Después instala dependencias y levanta infraestructura:
 
@@ -48,6 +48,19 @@ make infra-up
 ```
 
 El PostgreSQL de desarrollo usa por defecto el puerto host `55432` para evitar conflictos frecuentes con instalaciones locales en `5432`. Dentro del contenedor sigue usando `5432`.
+
+## Migraciones y datos simulados
+
+Aplica la migración actual y, si necesitas datos de demostración, ejecuta el seed reproducible:
+
+```bash
+make db-upgrade
+make seed-dev
+```
+
+`make db-downgrade` revierte una revisión. El seed crea únicamente datos simulados e inactivos y cifra la identidad del paciente con `PII_ENCRYPTION_KEY_B64`.
+
+Los tests de integración de migraciones realizan `upgrade`/`downgrade`; deben apuntar a una base **dedicada de pruebas** mediante `TEST_DATABASE_URL`, nunca a una base con datos que deban conservarse.
 
 ## Ejecutar la API
 
@@ -114,6 +127,7 @@ La CI de GitHub ejecuta los mismos comandos sobre cada push a `main` y cada pull
 | `POSTGRES_*` | inicialización del PostgreSQL local |
 | `RUSTFS_*` | proceso RustFS local (credenciales/puertos) |
 | `S3_*` | configuración de almacenamiento S3-compatible consumida por la aplicación |
+| `PII_ENCRYPTION_KEY_B64` | clave AES-256-GCM local para cifrar PII; nunca se versiona |
 | `API_HOST`, `API_PORT` | servidor FastAPI local |
 | `VITE_API_URL` | URL de la API consumida por la web |
 
@@ -133,4 +147,4 @@ Nunca se deben versionar credenciales reales, datos clínicos, datasets, pesos d
 
 ## Estado del proyecto
 
-TES-5 establece únicamente el baseline técnico y de calidad. El modelo de datos clínico pertenece a TES-6 y autenticación/RBAC a TES-7; no se adelantan esas funcionalidades en este scaffold.
+TES-5 dejó establecido el baseline técnico y de calidad. TES-6 materializa el modelo mínimo de Ola 1, la primera migración y el cifrado de PII; autenticación/RBAC funcional continúa en TES-7.
