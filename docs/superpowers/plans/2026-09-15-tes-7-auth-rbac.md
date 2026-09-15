@@ -119,12 +119,12 @@
 - `POST /auth/logout` returns HTTP 204 and expires the cookie.
 - Missing/invalid/expired/revoked session => generic 401.
 
-- [ ] Write PostgreSQL-backed API tests for valid/invalid/inactive login, `/auth/me`, expired/revoked cookie and logout.
-- [ ] Verify RED because routes do not exist.
-- [ ] Implement Pydantic schemas, dependency wiring and router using the application service.
-- [ ] Set cookie with `HttpOnly`, `SameSite=Strict`, `Path=/`, no `Domain`, and environment-driven `Secure`.
-- [ ] Ensure raw token appears only in `Set-Cookie`, never JSON or audit rows.
-- [ ] Run focused tests and quality gates; commit.
+- [x] Write PostgreSQL-backed API tests for valid/invalid/inactive login, `/auth/me`, expired/revoked cookie and logout.
+- [x] Verify RED because routes do not exist.
+- [x] Implement Pydantic schemas, dependency wiring and router using the application service.
+- [x] Set cookie with `HttpOnly`, `SameSite=Strict`, `Path=/`, no `Domain`, and environment-driven `Secure`.
+- [x] Ensure raw token appears only in `Set-Cookie`, never JSON or audit rows.
+- [x] Run focused tests and quality gates; commit.
 ### Task 6: Reusable RBAC authorization and denied-access audit
 
 **Files:**
