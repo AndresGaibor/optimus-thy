@@ -6,7 +6,7 @@ from optimus_thy.modules.auth.api.dependencies import (
     CurrentUserDependency,
     SessionDependency,
 )
-from optimus_thy.modules.auth.api.schemas import AuthUserResponse, LoginRequest
+from optimus_thy.modules.auth.api.schemas import AuthUserResponse, ErrorResponse, LoginRequest
 from optimus_thy.modules.auth.application.models import AuthUser
 from optimus_thy.modules.auth.application.service import InvalidCredentialsError
 
@@ -22,7 +22,11 @@ def _public_user(user: AuthUser) -> AuthUserResponse:
     )
 
 
-@router.post("/login", response_model=AuthUserResponse)
+@router.post(
+    "/login",
+    response_model=AuthUserResponse,
+    responses={401: {"model": ErrorResponse, "description": "Invalid credentials"}},
+)
 async def login(
     payload: LoginRequest,
     request: Request,
@@ -55,12 +59,20 @@ async def login(
     return _public_user(result.user)
 
 
-@router.get("/me", response_model=AuthUserResponse)
+@router.get(
+    "/me",
+    response_model=AuthUserResponse,
+    responses={401: {"model": ErrorResponse, "description": "Not authenticated"}},
+)
 async def me(user: CurrentUserDependency) -> AuthUserResponse:
     return _public_user(user)
 
 
-@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
+@router.post(
+    "/logout",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses={401: {"model": ErrorResponse, "description": "Not authenticated"}},
+)
 async def logout(
     request: Request,
     response: Response,
