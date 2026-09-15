@@ -12,6 +12,23 @@ jobs:
   backend:
     name: Backend quality
     runs-on: ubuntu-latest
+    env:
+      TEST_DATABASE_URL: postgresql+asyncpg://optimus:optimus_test_password@localhost:5432/optimus_thy_test
+      PII_ENCRYPTION_KEY_B64: MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: optimus_thy_test
+          POSTGRES_USER: optimus
+          POSTGRES_PASSWORD: optimus_test_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U optimus -d optimus_thy_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     defaults:
       run:
         working-directory: apps/api
