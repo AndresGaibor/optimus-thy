@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     app_name: str = "OPTIMUS-THY API"
     environment: str = "development"
     database_url: str | None = None
+    pii_encryption_key_b64: SecretStr | None = None
     s3_endpoint: str | None = None
     s3_bucket: str | None = None
     s3_access_key: str | None = None
