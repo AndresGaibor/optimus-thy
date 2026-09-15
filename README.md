@@ -73,6 +73,37 @@ Endpoints iniciales:
 - salud: `http://127.0.0.1:8000/health`
 - OpenAPI/Swagger: `http://127.0.0.1:8000/docs`
 
+### Autenticación y sesiones
+
+TES-7 implementa autenticación real basada en sesión opaca server-side:
+
+- `POST /auth/login` — recibe `email` y `password`, devuelve únicamente el usuario público y establece la cookie de sesión;
+- `GET /auth/me` — resuelve la sesión actual;
+- `POST /auth/logout` — revoca la sesión y elimina la cookie.
+
+La contraseña se verifica con Argon2id. El token de sesión se genera aleatoriamente y **no se almacena en claro**: PostgreSQL conserva únicamente su SHA-256. La cookie es `HttpOnly`, `SameSite=Strict`, `Path=/`, sin `Domain`; `Secure` se activa fuera del desarrollo HTTP local.
+
+El backend diferencia:
+
+- `401 Unauthorized`: no existe una sesión válida o las credenciales son inválidas;
+- `403 Forbidden`: existe una sesión válida, pero el rol real no autoriza la acción.
+
+`require_roles(...)` usa exclusivamente el rol recuperado desde la sesión del servidor. Headers, body o query parameters enviados por el cliente no conceden permisos.
+
+Los roles base de Ola 1 son `medico`, `investigador` y `administrador`, con un único rol real por usuario. El modo de vista operativa del administrador se mantiene diferido.
+
+### Contrato OpenAPI canónico
+
+FastAPI es la fuente de verdad del contrato HTTP. Para regenerar el artefacto versionado:
+
+```bash
+make contracts
+```
+
+El resultado es `packages/contracts/openapi.json`. No debe editarse a mano. GitHub Actions regenera el archivo y falla si existe drift entre FastAPI y el contrato comprometido.
+
+TES-8 aplicará el RBAC a endpoints reales de pacientes; TES-17 consumirá el contrato de autenticación para sesión, navegación y guards del frontend.
+
 ## Ejecutar el frontend
 
 En otra terminal:
@@ -115,7 +146,13 @@ Ese comando verifica:
 - Vitest.
 - build de Vite.
 
-La CI de GitHub ejecuta los mismos comandos sobre cada push a `main` y cada pull request.
+Regenera además el contrato cuando cambie la API:
+
+```bash
+make contracts
+```
+
+La CI de GitHub ejecuta los gates sobre cada push a `main` y cada pull request. El job backend usa PostgreSQL 17 efímero, ejecuta la suite de seguridad y valida que `packages/contracts/openapi.json` no tenga drift.
 
 ## Variables de entorno
 
@@ -147,4 +184,4 @@ Nunca se deben versionar credenciales reales, datos clínicos, datasets, pesos d
 
 ## Estado del proyecto
 
-TES-5 dejó establecido el baseline técnico y de calidad. TES-6 materializa el modelo mínimo de Ola 1, la primera migración y el cifrado de PII; autenticación/RBAC funcional continúa en TES-7.
+TES-5 estableció el baseline técnico y de calidad. TES-6 materializó el modelo mínimo de Ola 1, la primera migración y el cifrado de PII. TES-7 implementa la fundación real de autenticación, sesiones, auditoría de acceso y RBAC que consumen los siguientes flujos verticales.
