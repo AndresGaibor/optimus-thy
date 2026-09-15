@@ -4,7 +4,7 @@ import subprocess
 import sys
 from collections.abc import Coroutine
 from pathlib import Path
-from typing import Any, TypeVar
+from typing import Any
 from uuid import uuid4
 
 import pytest
@@ -16,7 +16,6 @@ from optimus_thy.shared.security.pii_cipher import PiiCipher
 
 API_ROOT = Path(__file__).resolve().parents[1]
 TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL")
-T = TypeVar("T")
 
 pytestmark = pytest.mark.integration
 
@@ -34,7 +33,7 @@ def _alembic(*args: str) -> None:
     )
 
 
-def _run(coro: Coroutine[Any, Any, T]) -> T:
+def _run[T](coro: Coroutine[Any, Any, T]) -> T:
     return asyncio.run(coro)
 
 

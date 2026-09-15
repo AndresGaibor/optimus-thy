@@ -71,7 +71,8 @@ async def seed_development_data() -> None:
                     text(
                         """
                         INSERT INTO security.users
-                            (id, institution_id, role_id, email, password_hash, display_name, active)
+                            (id, institution_id, role_id, email, password_hash,
+                             display_name, active)
                         VALUES
                             (:id, :institution_id, :role_id, :email,
                              'seed-disabled-no-login', :display_name, false)

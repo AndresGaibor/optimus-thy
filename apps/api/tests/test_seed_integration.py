@@ -5,7 +5,7 @@ import subprocess
 import sys
 from collections.abc import Coroutine
 from pathlib import Path
-from typing import Any, TypeVar
+from typing import Any
 
 import pytest
 from sqlalchemy import text
@@ -17,12 +17,11 @@ API_ROOT = Path(__file__).resolve().parents[1]
 TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL")
 TEST_KEY = b"1" * 32
 TEST_KEY_B64 = base64.urlsafe_b64encode(TEST_KEY).decode()
-T = TypeVar("T")
 
 pytestmark = pytest.mark.integration
 
 
-def _run(coro: Coroutine[Any, Any, T]) -> T:
+def _run[T](coro: Coroutine[Any, Any, T]) -> T:
     return asyncio.run(coro)
 
 
@@ -43,10 +42,16 @@ async def _assert_seeded_data() -> None:
     try:
         async with engine.connect() as connection:
             roles = await connection.scalar(
-                text("SELECT count(*) FROM security.roles WHERE code IN ('medico','investigador','administrador')")
+                text(
+                    "SELECT count(*) FROM security.roles "
+                    "WHERE code IN ('medico', 'investigador', 'administrador')"
+                )
             )
             users = await connection.scalar(
-                text("SELECT count(*) FROM security.users WHERE email LIKE '%@optimus-thy.example.test'")
+                text(
+                    "SELECT count(*) FROM security.users "
+                    "WHERE email LIKE '%@optimus-thy.example.test'"
+                )
             )
             patients = await connection.scalar(
                 text("SELECT count(*) FROM clinical.patients WHERE public_code = 'DEMO-0001'")
