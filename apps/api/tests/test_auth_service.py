@@ -166,13 +166,22 @@ async def _exercise_invalid_login_cases() -> None:
                 with pytest.raises(InvalidCredentialsError, match="Invalid credentials"):
                     await service.login(email, password, "failed-login-request")
 
-            sessions = list((await session.execute(select(SessionModel))).scalars())
+            sessions = list(
+                (
+                    await session.execute(
+                        select(SessionModel).where(
+                            SessionModel.user_id.in_([active_user.id, inactive_user.id])
+                        )
+                    )
+                ).scalars()
+            )
             assert sessions == []
             failed_actions = list(
                 (
                     await session.execute(
                         select(AuditEventModel.action).where(
-                            AuditEventModel.action == "auth.login.failed"
+                            AuditEventModel.action == "auth.login.failed",
+                            AuditEventModel.request_id == "failed-login-request",
                         )
                     )
                 ).scalars()
