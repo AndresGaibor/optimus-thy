@@ -5,10 +5,10 @@ from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
+import optimus_thy.shared.database.models  # noqa: F401
 from alembic import context
 from optimus_thy.config.settings import get_settings
 from optimus_thy.shared.database.base import Base
-import optimus_thy.shared.database.models  # noqa: F401
 
 config = context.config
 
