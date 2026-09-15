@@ -1,0 +1,28 @@
+from functools import lru_cache
+from pathlib import Path
+
+from pydantic import SecretStr
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+REPOSITORY_ROOT = Path(__file__).resolve().parents[5]
+
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=REPOSITORY_ROOT / ".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
+    app_name: str = "OPTIMUS-THY API"
+    environment: str = "development"
+    database_url: str | None = None
+    minio_endpoint: str | None = None
+    minio_bucket: str | None = None
+    minio_access_key: str | None = None
+    minio_secret_key: SecretStr | None = None
+
+
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()
