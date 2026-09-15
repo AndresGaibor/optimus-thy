@@ -55,8 +55,19 @@ cd apps/api && uv run alembic current
 
 La CI no requiere datos clínicos, modelos de IA, RustFS ni PostgreSQL porque los tests base de TES-5 no dependen de infraestructura externa.
 
-## Evidencia de clon limpio
+## Evidencia de clon limpio — 15/09/2026
 
-**Estado:** pendiente hasta ejecutar Task 5 de TES-5.
+**Commit verificado:** `933b9b4ac7e0d6ede2d23639f202eb33e7c2e25b`.
 
-No debe marcarse esta sección como aprobada hasta verificar instalación, infraestructura, gates, API y web desde un checkout temporal recién clonado.
+- Clon temporal nuevo desde GitHub: correcto.
+- `make setup`: correcto con Python 3.12.13 administrado por uv y Bun 1.4.2 desde lockfiles.
+- `make check`: correcto; Ruff, formato, mypy, TypeScript, Biome, pytest (2 tests), Vitest (1 test) y build Vite pasaron.
+- `git status --short` después de instalación/build: limpio.
+- PostgreSQL 17 y RustFS `1.0.0-rc.6`: `healthy` en Compose con puertos aislados para la prueba.
+- `uv run alembic current`: conexión PostgreSQL correcta sin migraciones de dominio adelantadas.
+- API S3 de RustFS: round-trip real crear bucket → subir → leer → borrar objeto, correcto mediante cliente AWS compatible.
+- `make api-dev`: `/health` respondió `200` con `{"status":"ok"}` y OpenAPI fue accesible.
+- `make web-dev`: `http://localhost:5173` respondió `200` con el shell OPTIMUS-THY.
+- GitHub Actions run `34963269656`: `Backend quality` y `Frontend quality` finalizaron en `success`.
+
+La verificación se ejecutó sin versionar `.env`, credenciales locales, artefactos de build ni dependencias instaladas.
