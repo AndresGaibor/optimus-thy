@@ -13,3 +13,7 @@ class AuthUserResponse(BaseModel):
     email: str
     display_name: str
     role: str
+
+
+class ErrorResponse(BaseModel):
+    detail: str
