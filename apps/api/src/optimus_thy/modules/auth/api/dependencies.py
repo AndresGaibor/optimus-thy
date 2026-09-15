@@ -1,7 +1,8 @@
 from collections.abc import Awaitable, Callable
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, Request, status
+from fastapi import Depends, HTTPException, Request, Security, status
+from fastapi.security import APIKeyCookie
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from optimus_thy.config.settings import get_settings
@@ -11,6 +12,14 @@ from optimus_thy.modules.auth.application.service import AuthService
 from optimus_thy.modules.auth.infrastructure.persistence.repository import AuthRepository
 from optimus_thy.shared.database.session import get_async_session
 from optimus_thy.shared.security.passwords import PasswordService
+
+
+_SESSION_COOKIE_SCHEME = APIKeyCookie(
+    name=get_settings().auth_cookie_name,
+    scheme_name="SessionCookie",
+    description="Opaque server-side session cookie.",
+    auto_error=False,
+)
 
 
 async def get_auth_service(
@@ -28,13 +37,13 @@ async def get_auth_service(
 
 AuthServiceDependency = Annotated[AuthService, Depends(get_auth_service)]
 SessionDependency = Annotated[AsyncSession, Depends(get_async_session)]
+SessionTokenDependency = Annotated[str | None, Security(_SESSION_COOKIE_SCHEME)]
 
 
 async def get_current_user(
-    request: Request,
     service: AuthServiceDependency,
+    token: SessionTokenDependency,
 ) -> AuthUser:
-    token = request.cookies.get(get_settings().auth_cookie_name)
     if token is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
