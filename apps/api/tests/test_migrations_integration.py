@@ -70,7 +70,10 @@ async def _exercise_constraints_and_pii() -> None:
     try:
         async with engine.begin() as connection:
             await connection.execute(
-                text("INSERT INTO security.roles (id, code, name) VALUES (:id, 'medico', 'Médico')"),
+                text(
+                    "INSERT INTO security.roles (id, code, name) "
+                    "VALUES (:id, 'constraint_test_role', 'Rol de prueba')"
+                ),
                 {"id": role_id},
             )
             await connection.execute(
@@ -83,7 +86,8 @@ async def _exercise_constraints_and_pii() -> None:
                     INSERT INTO security.users
                         (id, institution_id, role_id, email, password_hash, display_name)
                     VALUES
-                        (:id, :institution_id, :role_id, 'medico@example.test', 'hash', 'Médico Test')
+                        (:id, :institution_id, :role_id,
+                         'constraint-test@example.test', 'hash', 'Usuario Test')
                     """
                 ),
                 {"id": user_id, "institution_id": institution_id, "role_id": role_id},
@@ -91,7 +95,7 @@ async def _exercise_constraints_and_pii() -> None:
             await connection.execute(
                 text(
                     "INSERT INTO clinical.patients (id, institution_id, public_code) "
-                    "VALUES (:id, :institution_id, 'PAC-0001')"
+                    "VALUES (:id, :institution_id, 'PAC-CONSTRAINT-0001')"
                 ),
                 {"id": patient_id, "institution_id": institution_id},
             )
@@ -129,7 +133,10 @@ async def _exercise_constraints_and_pii() -> None:
         with pytest.raises(IntegrityError):
             async with engine.begin() as connection:
                 await connection.execute(
-                    text("INSERT INTO security.roles (id, code, name) VALUES (:id, 'medico', 'Duplicado')"),
+                    text(
+                        "INSERT INTO security.roles (id, code, name) "
+                        "VALUES (:id, 'constraint_test_role', 'Duplicado')"
+                    ),
                     {"id": uuid4()},
                 )
 
