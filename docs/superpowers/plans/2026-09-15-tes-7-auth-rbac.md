@@ -187,7 +187,7 @@
 - [x] Exercise login → `/auth/me` → logout through the full FastAPI ASGI stack with a simulated active user and verify, across the auth service/API integration tests, Argon2 hashing, SHA-256 session storage, expiry/revocation and secret-free audit behavior.
 - [x] Update README and verification evidence with the implemented contract, commands and exact CI evidence.
 - [x] Push the final documentation/plan commit and require fresh GitHub Actions Backend/Frontend success on that exact commit (run `34995755116`, commit `2952453`: Backend/Frontend `success`).
-- [ ] Only after that fresh CI succeeds, update TES-7 criteria/subtasks with the explicit TES-8/TES-17 integration boundary and move Linear issue to Done.
+- [x] After fresh CI succeeded, update TES-7 criteria/subtasks with the explicit TES-8/TES-17 integration boundary and move Linear issue to Done (completed 15/09/2026).
 
 ## Completion gate
 
