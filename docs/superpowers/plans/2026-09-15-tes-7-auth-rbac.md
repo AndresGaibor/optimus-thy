@@ -186,7 +186,7 @@
 - [x] Run all backend/frontend quality gates, regenerate OpenAPI and verify zero generated-contract drift in CI; this is stronger than a local `make check` that skips PostgreSQL tests when `TEST_DATABASE_URL` is absent.
 - [x] Exercise login → `/auth/me` → logout through the full FastAPI ASGI stack with a simulated active user and verify, across the auth service/API integration tests, Argon2 hashing, SHA-256 session storage, expiry/revocation and secret-free audit behavior.
 - [x] Update README and verification evidence with the implemented contract, commands and exact CI evidence.
-- [ ] Push the final documentation/plan commit and require fresh GitHub Actions Backend/Frontend success on that exact commit.
+- [x] Push the final documentation/plan commit and require fresh GitHub Actions Backend/Frontend success on that exact commit (run `34995755116`, commit `2952453`: Backend/Frontend `success`).
 - [ ] Only after that fresh CI succeeds, update TES-7 criteria/subtasks with the explicit TES-8/TES-17 integration boundary and move Linear issue to Done.
 
 ## Completion gate
