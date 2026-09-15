@@ -1,8 +1,8 @@
 from collections.abc import Awaitable, Callable
 from typing import Annotated
 
-from fastapi.security import APIKeyCookie
 from fastapi import Depends, HTTPException, Request, Security, status
+from fastapi.security import APIKeyCookie
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from optimus_thy.config.settings import get_settings
@@ -12,7 +12,6 @@ from optimus_thy.modules.auth.application.service import AuthService
 from optimus_thy.modules.auth.infrastructure.persistence.repository import AuthRepository
 from optimus_thy.shared.database.session import get_async_session
 from optimus_thy.shared.security.passwords import PasswordService
-
 
 _SESSION_COOKIE_SCHEME = APIKeyCookie(
     name=get_settings().auth_cookie_name,
