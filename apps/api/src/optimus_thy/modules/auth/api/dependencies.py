@@ -1,3 +1,4 @@
+from collections.abc import Awaitable, Callable
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, Request, status
@@ -49,3 +50,40 @@ async def get_current_user(
 
 
 CurrentUserDependency = Annotated[AuthUser, Depends(get_current_user)]
+
+
+_ALLOWED_ROLES = frozenset({"medico", "investigador", "administrador"})
+
+
+def require_roles(*allowed_roles: str) -> Callable[..., Awaitable[AuthUser]]:
+    if not allowed_roles:
+        raise ValueError("at least one allowed role is required")
+    unknown_roles = set(allowed_roles) - _ALLOWED_ROLES
+    if unknown_roles:
+        raise ValueError(f"unknown roles: {sorted(unknown_roles)}")
+
+    async def role_dependency(
+        request: Request,
+        user: CurrentUserDependency,
+        session: SessionDependency,
+    ) -> AuthUser:
+        if user.role in allowed_roles:
+            return user
+
+        audit = AuditService(session)
+        await audit.record(
+            action="auth.access.denied",
+            resource_type="route",
+            actor_user_id=user.id,
+            actor_role=user.role,
+            resource_id=request.url.path,
+            allowed=False,
+            request_id=getattr(request.state, "request_id", None),
+        )
+        await session.commit()
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden",
+        )
+
+    return role_dependency

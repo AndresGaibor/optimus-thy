@@ -136,12 +136,12 @@
 - `require_roles(*allowed_roles: str)` returns a FastAPI dependency callable.
 - Allowed roles for Ola 1 are exactly `medico`, `investigador`, `administrador`.
 
-- [ ] Build a test-only FastAPI route protected by `require_roles("administrador")` and write tests for unauthenticated 401, administrator success, and authenticated doctor/researcher 403.
-- [ ] Verify RED before RBAC factory exists.
-- [ ] Implement `require_roles` using the real role from the authenticated session; never trust role headers/body/query parameters.
-- [ ] On 403, record `auth.access.denied` with actor user ID, actor role, request ID, route resource type and no secret material.
-- [ ] Verify role-denied audit and allowed-role behavior against PostgreSQL.
-- [ ] Run focused tests and quality gates; commit.
+- [x] Build a test-only FastAPI route protected by `require_roles("administrador")` and write tests for unauthenticated 401, administrator success, and authenticated doctor/researcher 403.
+- [x] Verify RED before RBAC factory exists.
+- [x] Implement `require_roles` using the real role from the authenticated session; never trust role headers/body/query parameters.
+- [x] On 403, record `auth.access.denied` with actor user ID, actor role, request ID, route resource type and no secret material.
+- [x] Verify role-denied audit and allowed-role behavior against PostgreSQL.
+- [x] Run focused tests and quality gates; commit.
 ### Task 7: Canonical OpenAPI contract for TES-17
 
 **Files:**
