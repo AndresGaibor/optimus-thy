@@ -186,6 +186,7 @@ PY
     log "release $sha desplegado correctamente"
     ;;
   rollback)
+    lock_deploy; load_env; confirm
     rollback_target="${ROLLBACK_TARGET:-}"
     if [[ -z "$rollback_target" && "$REF_GIVEN" == true ]]; then rollback_target="$REF"; fi
     rollback_release "$rollback_target"
