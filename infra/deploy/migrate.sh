@@ -3,6 +3,7 @@ set -Eeuo pipefail
 
 migration_output() {
   local mode="$1"; shift
+  verify_environment
   COMPOSE_PROJECT_DIR="$RELEASE_DIR" compose run --rm --no-deps backend alembic "$mode" "$@"
 }
 
@@ -18,6 +19,7 @@ migration_revision() {
 
 migrate_release() {
   local heads before after history
+  verify_environment
   heads="$(migration_revision heads)"
   [[ -n "$heads" && "$(printf '%s\n' "$heads" | wc -l)" -eq 1 ]] || die "la imagen debe declarar exactamente un head Alembic"
   before="$(migration_revision current)"

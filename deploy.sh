@@ -38,7 +38,9 @@ confirm() {
 
 run_backup() {
   local output line db='' files='' sums=''
-  output="$(RAIZ="$APP_DIR" COMPOSE_PROJECT_NAME="$COMPOSE_PROJECT_NAME" "$APP_DIR/infra/scripts/respaldo.sh")" || die "falló el respaldo"
+  verify_environment
+  [[ -n "$COMPOSE_PROJECT_NAME" ]] || die "COMPOSE_PROJECT_NAME vacío: no se puede ejecutar respaldo"
+  output="$(RAIZ="$APP_DIR" COMPOSE_PROJECT_NAME="$COMPOSE_PROJECT_NAME" "$APP_DIR/infra/scripts/respaldo.sh")" || die "falló el respaldo para project=$COMPOSE_PROJECT_NAME"
   while IFS= read -r line; do
     case "$line" in
       BACKUP_DB=*) db="${line#BACKUP_DB=}" ;;
@@ -58,6 +60,7 @@ PY
 
 stack_has_postgres() {
   local rows
+  verify_environment
   rows="$(compose ps -a --format json)"
   python3 - "$rows" <<'PY'
 import json, sys
@@ -71,24 +74,35 @@ PY
 }
 
 show_status() {
-  if [[ ! -f "$DEPLOYMENTS_DIR/current.json" ]]; then
-    log "no hay un release desplegado (current.json no existe)"
-    return 0
+  local current_file="$DEPLOYMENTS_DIR/current.json" release='' deployed_at='' previous='' last_backup='' health_ok=false
+  if ! load_env 2>/dev/null; then
+    log "entorno: no verificado (falta/corrupto $ENV_FILE o variables de identidad requeridas)"
+  else
+    log "entorno: ${DEPLOY_ENV} project=${COMPOSE_PROJECT_NAME} prefix=${IMAGE_PREFIX} network=${COMPOSE_NETWORK}"
   fi
-  load_env
-  local release images rev last_backup
-  release="$(json_get "$DEPLOYMENTS_DIR/current.json" release)"
-  images="$(json_get "$DEPLOYMENTS_DIR/current.json" images)"
-  last_backup="$(json_get "$DEPLOYMENTS_DIR/current.json" backup 2>/dev/null || true)"
-  log "release: $release"
-  log "imágenes: $images"
-  RELEASE="$release"
-  RELEASE_DIR="$RELEASES_DIR/$release"
-  rev="$(migration_revision current)"
-  log "revisión DB: ${rev:-desconocida}"
+  if [[ -f "$current_file" ]]; then
+    release="$(json_get "$current_file" release 2>/dev/null || true)"
+    deployed_at="$(json_get "$current_file" deployed_at 2>/dev/null || true)"
+    previous="$(json_get "$current_file" previous 2>/dev/null || true)"
+    last_backup="$(json_get "$current_file" backup.db 2>/dev/null || true)"
+  fi
+  log "release actual: ${release:-ninguno}"
+  log "fecha despliegue: ${deployed_at:-desconocida}"
+  log "release anterior: ${previous:-ninguno}"
   log "último backup: ${last_backup:-ninguno registrado}"
-  if check_health "$release" >/dev/null; then log "salud: OK"; else warn "salud: fallo en una o más comprobaciones"; fi
-  COMPOSE_PROJECT_DIR="$RELEASE_DIR" compose ps
+  if [[ -n "$release" && -n "${COMPOSE_PROJECT_NAME:-}" && -n "${DEPLOY_ENV:-}" ]]; then
+    export RELEASE="$release" RELEASE_DIR="$RELEASES_DIR/$release"
+    if check_health "$release" >/dev/null 2>&1; then
+      log "salud: OK"
+      health_ok=true
+    else
+      warn "salud: fallo en una o más comprobaciones"
+    fi
+    COMPOSE_PROJECT_DIR="$RELEASE_DIR" compose ps || warn "no se pudo consultar docker compose ps"
+  else
+    log "salud: no comprobada (sin release actual y/o entorno no verificado)"
+  fi
+  [[ "$health_ok" == true || -z "$release" ]] || true
 }
 
 SCRIPT_DIR="$ROOT/infra/deploy"
@@ -108,25 +122,29 @@ done
 
 case "$command_name" in
   check)
+    load_env
+    verify_environment
     resolved="$(preflight "$REF")"
-    log "prerequisitos válidos; commit: $resolved"
+    log "prerequisitos válidos; commit: $resolved (env=$DEPLOY_ENV project=$COMPOSE_PROJECT_NAME)"
     ;;
   status)
     show_status
     ;;
   backup)
-    lock_deploy; load_env; confirm
+    lock_deploy; load_env; verify_environment; confirm
     backup_json="$(run_backup)"
     log "backup y checksums verificados: $backup_json"
     ;;
   deploy)
-    lock_deploy; confirm
+    lock_deploy
     load_env
+    verify_environment
+    confirm
     declare -g MIGRATION_STARTED=false
     recovery_notice() {
       local status=$?
       if (( status != 0 )) && [[ "$MIGRATION_STARTED" == true ]]; then
-        printf '[deploy] ERROR: migración iniciada; no se hizo downgrade ni restore automático.\n' >&2
+        printf '[deploy] ERROR: migración iniciada; no se hizo downgrade ni restore automático (env=%s project=%s).\n' "${DEPLOY_ENV:-}" "${COMPOSE_PROJECT_NAME:-}" >&2
         printf '[deploy] Comprueba: ./deploy.sh status\n' >&2
         printf '[deploy] Recuperación manual: restaurar el backup registrado o desplegar un release compatible con la revisión DB actual.\n' >&2
       fi
@@ -146,16 +164,16 @@ value = json.loads(sys.argv[1]); value[sys.argv[2]] = sys.argv[3]; print(json.du
 PY
 )"
     done <<<"$build_output"
-    images="$(python3 - "$sha" <<'PY'
+    images="$(python3 - "$IMAGE_PREFIX" "$sha" <<'PY'
 import json, sys
-sha = sys.argv[1]
-print(json.dumps({name: f'optimus-thy-{name}:{sha}' for name in ('backend', 'frontend', 'ocr', 'ia')}, separators=(',', ':')))
+prefix, sha = sys.argv[1:]
+print(json.dumps({name: f'{prefix}-{name}:{sha}' for name in ('backend', 'frontend', 'ocr', 'ia')}, separators=(',', ':')))
 PY
 )"
     [[ "$(python3 -c 'import json,sys; print(len(json.load(sys.stdin)))' <<<"$images")" -eq 4 ]] || die "no se registraron todas las etiquetas de imagen"
     [[ "$(python3 -c 'import json,sys; print(len(json.load(sys.stdin)))' <<<"$image_ids")" -eq 4 ]] || die "no se registraron todos los IDs de imagen"
     previous=''
-    [[ -f "$DEPLOYMENTS_DIR/current.json" ]] && previous="$(json_get "$DEPLOYMENTS_DIR/current.json" release)"
+    [[ -f "$DEPLOYMENTS_DIR/current.json" ]] && previous="$(json_get "$DEPLOYMENTS_DIR/current.json" release 2>/dev/null || true)"
     if stack_has_postgres; then
       running_services="$(compose ps --status running --services)" || die "no se pudo consultar el estado del stack"
       grep -Fxq postgres <<<"$running_services" || die "Postgres existe pero no está corriendo; no se migrará una base detenida"
@@ -170,23 +188,24 @@ PY
     mapfile -t revisions <<<"$revision_output"
     (( ${#revisions[@]} == 2 )) || die "no se pudieron registrar revisiones Alembic"
     db_before="${revisions[0]}"; db_after="${revisions[1]}"
+    verify_compose_target
     compose up -d --no-build --wait --wait-timeout 180 backend frontend ocr ia edge
     check_health "$sha" >/dev/null
     deployed_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
     result='success'
-    metadata="$(python3 - "$sha" "$previous" "$deployed_at" "$images" "$image_ids" "$db_before" "$db_after" "${backup_json:-null}" "$result" <<'PY'
+    metadata="$(python3 - "$sha" "$previous" "$deployed_at" "$images" "$image_ids" "$db_before" "$db_after" "${backup_json:-null}" "$result" "$DEPLOY_ENV" "$COMPOSE_PROJECT_NAME" "$IMAGE_PREFIX" "$COMPOSE_NETWORK" <<'PY'
 import json, sys
-release, previous, deployed_at, images, image_ids, before, after, backup, result = sys.argv[1:]
-print(json.dumps({'release': release, 'previous': previous or None, 'deployed_at': deployed_at, 'images': json.loads(images), 'image_ids': json.loads(image_ids), 'db_revision_before': before or None, 'db_revision_after': after, 'backup': json.loads(backup) if backup != 'null' else None, 'result': result}))
+release, previous, deployed_at, images, image_ids, before, after, backup, result, env, project, prefix, network = sys.argv[1:]
+print(json.dumps({'release': release, 'previous': previous or None, 'deployed_at': deployed_at, 'environment': env, 'project': project, 'image_prefix': prefix, 'network': network, 'images': json.loads(images), 'image_ids': json.loads(image_ids), 'db_revision_before': before or None, 'db_revision_after': after, 'backup': json.loads(backup) if backup != 'null' else None, 'result': result}))
 PY
 )"
     json_write "$DEPLOYMENTS_DIR/current.json" "$metadata"
     cp "$DEPLOYMENTS_DIR/current.json" "$DEPLOYMENTS_DIR/$sha.json"
     cp "$DEPLOYMENTS_DIR/current.json" "$DEPLOYMENTS_DIR/deploy-$deployed_at-$sha.json"
-    log "release $sha desplegado correctamente"
+    log "release $sha desplegado correctamente (env=$DEPLOY_ENV project=$COMPOSE_PROJECT_NAME)"
     ;;
   rollback)
-    lock_deploy; load_env; confirm
+    lock_deploy; load_env; verify_environment; confirm
     rollback_target="${ROLLBACK_TARGET:-}"
     if [[ -z "$rollback_target" && "$REF_GIVEN" == true ]]; then rollback_target="$REF"; fi
     rollback_release "$rollback_target"

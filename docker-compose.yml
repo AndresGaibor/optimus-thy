@@ -3,7 +3,7 @@ name: optimus-thy
 # Red interna por defecto. Sin red externa.
 networks:
   default:
-    name: optimus-thy-net
+    name: ${COMPOSE_NETWORK:?COMPOSE_NETWORK requerido}
     driver: bridge
 
 volumes:

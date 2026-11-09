@@ -19,7 +19,7 @@ set -euo pipefail
 
 RAIZ="${RAIZ:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROYECTO="${COMPOSE_PROJECT_NAME:-optimus-thy}"
+PROYECTO="${COMPOSE_PROJECT_NAME:?define COMPOSE_PROJECT_NAME}"
 PG_CONTAINER="${PG_CONTAINER:-${PROYECTO}-postgres-1}"
 VOLUMEN_ARCHIVOS="${VOLUMEN_ARCHIVOS:-${PROYECTO}_miniodata}"
 DESTINO="${BACKUP_DIR:-$HOME/backups/optimus}"

@@ -1,5 +1,9 @@
 # Overlay de producción. La instalación lo copia como compose.server.yaml.
 # RELEASE, TAILSCALE_IP, APP_DIR y RELEASE_DIR son requeridos.
+networks:
+  default:
+    name: ${COMPOSE_NETWORK:?COMPOSE_NETWORK requerido}
+
 services:
   postgres:
     deploy:
@@ -16,7 +20,7 @@ services:
           memory: 512m
 
   backend:
-    image: optimus-thy-backend:${RELEASE:?RELEASE requerido}
+    image: ${IMAGE_PREFIX:?IMAGE_PREFIX requerido}-backend:${RELEASE:?RELEASE requerido}
     ports: !override []
     deploy:
       resources:
@@ -25,7 +29,7 @@ services:
           memory: 2g
 
   frontend:
-    image: optimus-thy-frontend:${RELEASE:?RELEASE requerido}
+    image: ${IMAGE_PREFIX:?IMAGE_PREFIX requerido}-frontend:${RELEASE:?RELEASE requerido}
     deploy:
       resources:
         limits:
@@ -33,7 +37,7 @@ services:
           memory: 256m
 
   ocr:
-    image: optimus-thy-ocr:${RELEASE:?RELEASE requerido}
+    image: ${IMAGE_PREFIX:?IMAGE_PREFIX requerido}-ocr:${RELEASE:?RELEASE requerido}
     deploy:
       resources:
         limits:
@@ -41,7 +45,7 @@ services:
           memory: 1g
 
   ia:
-    image: optimus-thy-ia:${RELEASE:?RELEASE requerido}
+    image: ${IMAGE_PREFIX:?IMAGE_PREFIX requerido}-ia:${RELEASE:?RELEASE requerido}
     deploy:
       resources:
         limits:
