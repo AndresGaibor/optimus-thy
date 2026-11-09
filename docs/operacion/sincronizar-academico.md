@@ -11,6 +11,13 @@ Este documento define cómo verificar y mover cambios entre `optimus-thy-academi
 - **Ninguna copia operativo → académico** sin autorización explícita y revisión humana.
 - Toda sincronización debe dejar evidencia verificable (commit/tree hash, diff, PR o ADR).
 
+
+## Main protegida y rama dev
+
+- `main` exige PR, check `CI OK`, rama al día y no permite force push ni borrado; la protección incluye a administradores.
+- El trabajo diario se hace en `dev`; los cambios llegan a `main` por PR desde `dev` o desde una rama de historia.
+- Un snapshot raíz (historia no relacionada) no puede entrar por un PR normal: requiere autorización explícita y un ajuste temporal de la protección. No es un force push rutinario.
+
 ## Verificación rápida
 
 Desde el repo de producción:
@@ -60,14 +67,9 @@ test "$(git -C "$CLON" rev-parse HEAD^{tree})" = "$ACADEMICO_TREE"
 cp -n .env "$TMP/.env.backup" 2>/dev/null || true
 
 # 5) Sustituir la rama con autorización explícita (no ejecutar sin aprobación)
-# Secuencia validada (usa el clon temporal como fuente local):
-# git fetch "$CLON" snapshot:snapshot
-# git read-tree --reset -u snapshot
-# git branch -M main
-# Nota: `git switch --discard-changes` puede estar bloqueado por la política local;
-# `git read-tree --reset -u` materializa el árbol sin ese comando.
-# Restaurar .env local si existía; nunca commitear secretos.
-# Actualizar docs/operacion/academico-snapshot.json y commitear el lock.
+# main está protegida: NO hacer push directo ni force push.
+# Un snapshot raíz requiere autorización y ajuste temporal de la protección;
+# los cambios normales se preparan en dev y entran por PR con CI OK.
 ```
 
 ## Procedimiento backport (solo con autorización)
@@ -113,6 +115,8 @@ Reglas:
 - No uses force push ni merge automático.
 - El snapshot académico se toma con git archive de un commit/ref, nunca del working tree sucio.
 - Ninguna copia operativo → académico se hace sin autorización explícita.
+- `main` solo recibe PR con `CI OK`; trabajar en `dev`.
+- No force push ni borrado de `main`.
 
 Tareas:
 1. Ejecuta `make comparar-academico` en el repo de producción.
