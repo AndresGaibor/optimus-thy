@@ -1,4 +1,7 @@
-.PHONY: up down check certificado-dev db-test
+.PHONY: up down check certificado-dev db-test respaldo-prueba comparar-academico
+
+ACADEMICO_DIR ?= /home/ubuntu/code/optimus-thy-academico
+ACADEMICO_REF ?= HEAD
 
 up:
 	docker compose up -d --build --wait
@@ -27,3 +30,6 @@ db-test:
 # Prueba de punta a punta del respaldo cifrado y su restauración en un Postgres limpio (HT-013).
 respaldo-prueba:
 	BACKUP_KEY_FILE=$${BACKUP_KEY_FILE:-$$HOME/.optimus-respaldo.key} infra/scripts/probar-respaldo.sh
+
+comparar-academico:
+	bash scripts/comparar-academico.sh "$(ACADEMICO_DIR)" "$(ACADEMICO_REF)"

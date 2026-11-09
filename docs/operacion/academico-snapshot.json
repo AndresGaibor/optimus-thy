@@ -1,0 +1,8 @@
+{
+  "repositorio_academico": "https://github.com/AndresGaibor/optimus",
+  "commit_academico": "66e5b8d6a334e079147b95b23ae1dc9006377804",
+  "tree_academico": "8f49be48ec65ae9617eef9f9ad78a0e2443b0084",
+  "commit_snapshot_produccion": "a8ac2ad0ff16eeee01dd5c349128d0e8dc95b122",
+  "fecha_snapshot": "2026-11-09",
+  "nota": "El snapshot es idéntico al commit académico; HEAD de producción incluye endurecimiento y documentación posteriores."
+}
