@@ -24,3 +24,8 @@ regexTarget = "line"
 regexes = ['''TAILSCALE_IP=100\.107\.225\.79''']
 paths = ['''docs/operacion/despliegue-produccion\.md''']
 condition = "AND"
+
+[allowlist]
+description = "IP privada Tailscale en runbook, no credencial"
+regexTarget = "line"
+regexes = ['''TAILSCALE_IP=100\.107\.225\.79''']
