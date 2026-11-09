@@ -1,0 +1,21 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Sistema de diseño/Fundamentos/Bordes y radios" tags={['ai-generated']} />
+
+# Bordes y radios
+
+Los radios distinguen controles, tarjetas y paneles sin introducir geometrías específicas por pantalla. Los bordes, campos y anillos de foco usan tokens semánticos que responden al tema.
+
+| Variable CSS       | Claro                       | Oscuro                      |
+| ------------------ | --------------------------- | --------------------------- |
+| `--control-radius` | `0.5rem`                    | `0.5rem`                    |
+| `--card-radius`    | `0.5rem`                    | `0.5rem`                    |
+| `--panel-radius`   | `0.75rem`                   | `0.75rem`                   |
+| `--border`         | `var(--primitive-gray-200)` | `var(--primitive-gray-700)` |
+| `--border-subtle`  | `var(--primitive-gray-100)` | `var(--primitive-gray-800)` |
+| `--input`          | `var(--primitive-gray-200)` | `var(--primitive-gray-700)` |
+| `--ring`           | `var(--brand)`              | `var(--brand)` (heredado)   |
+
+## Cuándo usarlo / Reglas
+
+Utiliza las clases `rounded-control`, `rounded-card` y `rounded-panel`, y los bordes semánticos de componentes. Los controles enfocables deben conservar el anillo visible mediante `--ring`; no reemplaces el indicador de foco por una decoración sin equivalente accesible. Evita valores de radio y color de borde literales.

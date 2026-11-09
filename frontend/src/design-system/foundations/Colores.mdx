@@ -1,0 +1,96 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Sistema de diseño/Fundamentos/Colores" tags={['ai-generated']} />
+
+# Colores
+
+El sistema separa las primitivas cromáticas de los tokens semánticos que describen su función. Los valores primitivos son comunes a ambos temas; los tokens semánticos cambian entre claro y oscuro para conservar contraste y significado.
+
+## Primitivas
+
+| Variable CSS              | Claro                        | Oscuro                       |
+| ------------------------- | ---------------------------- | ---------------------------- |
+| `--primitive-white`       | `oklch(1 0 0)`               | `oklch(1 0 0)`               |
+| `--primitive-gray-50`     | `oklch(0.984 0.003 247.858)` | `oklch(0.984 0.003 247.858)` |
+| `--primitive-gray-100`    | `oklch(0.968 0.007 247.896)` | `oklch(0.968 0.007 247.896)` |
+| `--primitive-gray-200`    | `oklch(0.929 0.013 255.508)` | `oklch(0.929 0.013 255.508)` |
+| `--primitive-gray-300`    | `oklch(0.869 0.022 252.894)` | `oklch(0.869 0.022 252.894)` |
+| `--primitive-gray-400`    | `oklch(0.704 0.04 256.788)`  | `oklch(0.704 0.04 256.788)`  |
+| `--primitive-gray-500`    | `oklch(0.554 0.046 257.417)` | `oklch(0.554 0.046 257.417)` |
+| `--primitive-gray-600`    | `oklch(0.446 0.043 257.281)` | `oklch(0.446 0.043 257.281)` |
+| `--primitive-gray-700`    | `oklch(0.372 0.044 257.287)` | `oklch(0.372 0.044 257.287)` |
+| `--primitive-gray-800`    | `oklch(0.279 0.041 260.031)` | `oklch(0.279 0.041 260.031)` |
+| `--primitive-gray-900`    | `oklch(0.208 0.042 265.755)` | `oklch(0.208 0.042 265.755)` |
+| `--primitive-gray-950`    | `oklch(0.129 0.042 264.695)` | `oklch(0.129 0.042 264.695)` |
+| `--primitive-blue-300`    | `oklch(0.809 0.105 251.813)` | `oklch(0.809 0.105 251.813)` |
+| `--primitive-blue-400`    | `oklch(0.707 0.165 254.624)` | `oklch(0.707 0.165 254.624)` |
+| `--primitive-blue-600`    | `oklch(0.546 0.245 262.881)` | `oklch(0.546 0.245 262.881)` |
+| `--primitive-blue-700`    | `oklch(0.488 0.243 264.376)` | `oklch(0.488 0.243 264.376)` |
+| `--primitive-indigo-300`  | `oklch(0.785 0.115 274.713)` | `oklch(0.785 0.115 274.713)` |
+| `--primitive-indigo-400`  | `oklch(0.673 0.182 276.935)` | `oklch(0.673 0.182 276.935)` |
+| `--primitive-indigo-600`  | `oklch(0.511 0.262 276.966)` | `oklch(0.511 0.262 276.966)` |
+| `--primitive-indigo-700`  | `oklch(0.457 0.24 277.023)`  | `oklch(0.457 0.24 277.023)`  |
+| `--primitive-purple-300`  | `oklch(0.827 0.119 306.383)` | `oklch(0.827 0.119 306.383)` |
+| `--primitive-purple-400`  | `oklch(0.714 0.203 305.504)` | `oklch(0.714 0.203 305.504)` |
+| `--primitive-purple-600`  | `oklch(0.558 0.288 302.321)` | `oklch(0.558 0.288 302.321)` |
+| `--primitive-purple-700`  | `oklch(0.496 0.265 301.924)` | `oklch(0.496 0.265 301.924)` |
+| `--primitive-emerald-300` | `oklch(0.845 0.143 164.978)` | `oklch(0.845 0.143 164.978)` |
+| `--primitive-emerald-700` | `oklch(0.508 0.118 165.612)` | `oklch(0.508 0.118 165.612)` |
+| `--primitive-amber-300`   | `oklch(0.879 0.169 91.605)`  | `oklch(0.879 0.169 91.605)`  |
+| `--primitive-amber-800`   | `oklch(0.473 0.137 46.201)`  | `oklch(0.473 0.137 46.201)`  |
+| `--primitive-orange-300`  | `oklch(0.837 0.128 66.29)`   | `oklch(0.837 0.128 66.29)`   |
+| `--primitive-orange-400`  | `oklch(0.75 0.183 55.934)`   | `oklch(0.75 0.183 55.934)`   |
+| `--primitive-orange-700`  | `oklch(0.54 0.195 38.402)`   | `oklch(0.54 0.195 38.402)`   |
+| `--primitive-red-300`     | `oklch(0.808 0.114 19.571)`  | `oklch(0.808 0.114 19.571)`  |
+| `--primitive-red-700`     | `oklch(0.505 0.213 27.518)`  | `oklch(0.505 0.213 27.518)`  |
+
+## Tokens semánticos
+
+Las columnas muestran la referencia definida por el tema, no un color calculado. `--scrim` no cambia con el tema.
+
+| Variable CSS                   | Claro                          | Oscuro                         |
+| ------------------------------ | ------------------------------ | ------------------------------ |
+| `--background`                 | `var(--primitive-white)`       | `var(--primitive-gray-950)`    |
+| `--foreground`                 | `var(--primitive-gray-900)`    | `var(--primitive-gray-50)`     |
+| `--surface`                    | `var(--primitive-white)`       | `var(--primitive-gray-900)`    |
+| `--surface-subtle`             | `var(--primitive-gray-50)`     | `var(--primitive-gray-800)`    |
+| `--muted-foreground`           | `var(--primitive-gray-600)`    | `var(--primitive-gray-400)`    |
+| `--border`                     | `var(--primitive-gray-200)`    | `var(--primitive-gray-700)`    |
+| `--border-subtle`              | `var(--primitive-gray-100)`    | `var(--primitive-gray-800)`    |
+| `--input`                      | `var(--primitive-gray-200)`    | `var(--primitive-gray-700)`    |
+| `--ring`                       | `var(--brand)`                 | `var(--brand)` (heredado)      |
+| `--primary`                    | `var(--primitive-gray-900)`    | `var(--primitive-gray-50)`     |
+| `--primary-foreground`         | `var(--primitive-white)`       | `var(--primitive-gray-900)`    |
+| `--brand`                      | `var(--primitive-indigo-600)`  | `var(--primitive-indigo-300)`  |
+| `--brand-foreground`           | `var(--primitive-white)`       | `var(--primitive-gray-950)`    |
+| `--scrim`                      | `rgb(0 0 0 / 0.64)`            | `rgb(0 0 0 / 0.64)`            |
+| `--info`                       | `var(--primitive-blue-700)`    | `var(--primitive-blue-300)`    |
+| `--info-foreground`            | `var(--primitive-white)`       | `var(--primitive-gray-950)`    |
+| `--success`                    | `var(--primitive-emerald-700)` | `var(--primitive-emerald-300)` |
+| `--success-foreground`         | `var(--primitive-white)`       | `var(--primitive-gray-950)`    |
+| `--warning`                    | `var(--primitive-amber-800)`   | `var(--primitive-amber-300)`   |
+| `--warning-foreground`         | `var(--primitive-white)`       | `var(--primitive-gray-950)`    |
+| `--attention`                  | `var(--primitive-orange-700)`  | `var(--primitive-orange-300)`  |
+| `--attention-foreground`       | `var(--primitive-white)`       | `var(--primitive-gray-950)`    |
+| `--danger`                     | `var(--primitive-red-700)`     | `var(--primitive-red-300)`     |
+| `--danger-foreground`          | `var(--primitive-white)`       | `var(--primitive-gray-950)`    |
+| `--ai`                         | `var(--primitive-purple-700)`  | `var(--primitive-purple-300)`  |
+| `--ai-foreground`              | `var(--primitive-white)`       | `var(--primitive-gray-950)`    |
+| `--role-doctor`                | `var(--primitive-blue-600)`    | `var(--primitive-blue-300)`    |
+| `--role-doctor-foreground`     | `var(--primitive-white)`       | `var(--primitive-gray-950)`    |
+| `--role-researcher`            | `var(--primitive-purple-600)`  | `var(--primitive-purple-300)`  |
+| `--role-researcher-foreground` | `var(--primitive-white)`       | `var(--primitive-gray-950)`    |
+| `--role-admin`                 | `var(--primitive-orange-700)`  | `var(--primitive-orange-300)`  |
+| `--role-admin-foreground`      | `var(--primitive-white)`       | `var(--primitive-gray-950)`    |
+| `--class-normal`               | `var(--primitive-blue-700)`    | `var(--primitive-blue-300)`    |
+| `--class-normal-foreground`    | `var(--primitive-white)`       | `var(--primitive-gray-950)`    |
+| `--class-benigno`              | `var(--primitive-orange-700)`  | `var(--primitive-orange-300)`  |
+| `--class-benigno-foreground`   | `var(--primitive-white)`       | `var(--primitive-gray-950)`    |
+| `--class-maligno`              | `var(--primitive-purple-700)`  | `var(--primitive-purple-300)`  |
+| `--class-maligno-foreground`   | `var(--primitive-white)`       | `var(--primitive-gray-950)`    |
+
+**Normal**, **benigno** y **maligno** se distinguen también con icono y texto, no solo por color.
+
+## Cuándo usarlo / Reglas
+
+Usa tokens semánticos para la interfaz; nunca introduzcas colores literales. En Tailwind utiliza, por ejemplo, `bg-brand` o `text-foreground`, y en CSS la variable semántica correspondiente. No uses el color como único medio para comunicar un estado clínico.

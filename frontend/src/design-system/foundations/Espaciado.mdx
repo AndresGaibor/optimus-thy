@@ -1,0 +1,19 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Sistema de diseño/Fundamentos/Espaciado" tags={['ai-generated']} />
+
+# Espaciado
+
+El espaciado mantiene un ritmo consistente entre controles, tarjetas, secciones y márgenes de contenido. La escala se basa en una unidad de cuarto de rem y sus derivados se expresan como múltiplos de esa unidad.
+
+| Variable CSS      | Claro                         | Oscuro                        | Equivalencia           |
+| ----------------- | ----------------------------- | ----------------------------- | ---------------------- |
+| `--space-unit`    | `0.25rem`                     | `0.25rem`                     | Unidad base            |
+| `--space-field`   | `calc(var(--space-unit) * 3)` | `calc(var(--space-unit) * 3)` | `3 × unidad = 0.75rem` |
+| `--space-card`    | `calc(var(--space-unit) * 6)` | `calc(var(--space-unit) * 6)` | `6 × unidad = 1.5rem`  |
+| `--space-section` | `calc(var(--space-unit) * 8)` | `calc(var(--space-unit) * 8)` | `8 × unidad = 2rem`    |
+| `--space-gutter`  | `calc(var(--space-unit) * 6)` | `calc(var(--space-unit) * 6)` | `6 × unidad = 1.5rem`  |
+
+## Cuándo usarlo / Reglas
+
+Usa el ritmo de Tailwind y los alias de espaciado definidos; no añadas valores literales de espacio a CSS o JSX. `--space-field` es la separación compacta entre controles, `--space-card` separa contenido de tarjetas y `--space-section` da aire entre bloques mayores. El gutter acompaña los márgenes y separaciones de la composición.

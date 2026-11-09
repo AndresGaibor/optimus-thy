@@ -1,0 +1,470 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-27T14:46:33.892Z",
+  "title": "Design System: OPTIMUS-THY",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "neutral",
+        "displayName": "Neutro de acción primaria",
+        "canonical": "var(--primary)",
+        "tonalRamp": [
+          "color-mix(in oklch, black 85%, var(--primary) 15%)",
+          "color-mix(in oklch, black 75%, var(--primary) 25%)",
+          "color-mix(in oklch, black 65%, var(--primary) 35%)",
+          "color-mix(in oklch, black 55%, var(--primary) 45%)",
+          "color-mix(in oklch, var(--primary) 55%, white 45%)",
+          "color-mix(in oklch, var(--primary) 65%, white 35%)",
+          "color-mix(in oklch, var(--primary) 75%, white 25%)",
+          "color-mix(in oklch, var(--primary) 85%, white 15%)"
+        ]
+      },
+      "brand": {
+        "role": "primary",
+        "displayName": "Índigo de marca",
+        "canonical": "var(--brand)",
+        "tonalRamp": [
+          "color-mix(in oklch, black 85%, var(--brand) 15%)",
+          "color-mix(in oklch, black 75%, var(--brand) 25%)",
+          "color-mix(in oklch, black 65%, var(--brand) 35%)",
+          "color-mix(in oklch, black 55%, var(--brand) 45%)",
+          "color-mix(in oklch, var(--brand) 55%, white 45%)",
+          "color-mix(in oklch, var(--brand) 65%, white 35%)",
+          "color-mix(in oklch, var(--brand) 75%, white 25%)",
+          "color-mix(in oklch, var(--brand) 85%, white 15%)"
+        ]
+      },
+      "background": {
+        "role": "neutral",
+        "displayName": "Lienzo",
+        "canonical": "var(--background)",
+        "tonalRamp": [
+          "color-mix(in oklch, black 85%, var(--background) 15%)",
+          "color-mix(in oklch, black 75%, var(--background) 25%)",
+          "color-mix(in oklch, black 65%, var(--background) 35%)",
+          "color-mix(in oklch, black 55%, var(--background) 45%)",
+          "color-mix(in oklch, var(--background) 55%, white 45%)",
+          "color-mix(in oklch, var(--background) 65%, white 35%)",
+          "color-mix(in oklch, var(--background) 75%, white 25%)",
+          "color-mix(in oklch, var(--background) 85%, white 15%)"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Superficie",
+        "canonical": "var(--surface)",
+        "tonalRamp": [
+          "color-mix(in oklch, black 85%, var(--surface) 15%)",
+          "color-mix(in oklch, black 75%, var(--surface) 25%)",
+          "color-mix(in oklch, black 65%, var(--surface) 35%)",
+          "color-mix(in oklch, black 55%, var(--surface) 45%)",
+          "color-mix(in oklch, var(--surface) 55%, white 45%)",
+          "color-mix(in oklch, var(--surface) 65%, white 35%)",
+          "color-mix(in oklch, var(--surface) 75%, white 25%)",
+          "color-mix(in oklch, var(--surface) 85%, white 15%)"
+        ]
+      },
+      "surface-subtle": {
+        "role": "neutral",
+        "displayName": "Superficie sutil",
+        "canonical": "var(--surface-subtle)",
+        "tonalRamp": [
+          "color-mix(in oklch, black 85%, var(--surface-subtle) 15%)",
+          "color-mix(in oklch, black 75%, var(--surface-subtle) 25%)",
+          "color-mix(in oklch, black 65%, var(--surface-subtle) 35%)",
+          "color-mix(in oklch, black 55%, var(--surface-subtle) 45%)",
+          "color-mix(in oklch, var(--surface-subtle) 55%, white 45%)",
+          "color-mix(in oklch, var(--surface-subtle) 65%, white 35%)",
+          "color-mix(in oklch, var(--surface-subtle) 75%, white 25%)",
+          "color-mix(in oklch, var(--surface-subtle) 85%, white 15%)"
+        ]
+      },
+      "foreground": {
+        "role": "neutral",
+        "displayName": "Texto principal",
+        "canonical": "var(--foreground)",
+        "tonalRamp": [
+          "color-mix(in oklch, black 85%, var(--foreground) 15%)",
+          "color-mix(in oklch, black 75%, var(--foreground) 25%)",
+          "color-mix(in oklch, black 65%, var(--foreground) 35%)",
+          "color-mix(in oklch, black 55%, var(--foreground) 45%)",
+          "color-mix(in oklch, var(--foreground) 55%, white 45%)",
+          "color-mix(in oklch, var(--foreground) 65%, white 35%)",
+          "color-mix(in oklch, var(--foreground) 75%, white 25%)",
+          "color-mix(in oklch, var(--foreground) 85%, white 15%)"
+        ]
+      },
+      "muted-foreground": {
+        "role": "neutral",
+        "displayName": "Texto secundario",
+        "canonical": "var(--muted-foreground)",
+        "tonalRamp": [
+          "color-mix(in oklch, black 85%, var(--muted-foreground) 15%)",
+          "color-mix(in oklch, black 75%, var(--muted-foreground) 25%)",
+          "color-mix(in oklch, black 65%, var(--muted-foreground) 35%)",
+          "color-mix(in oklch, black 55%, var(--muted-foreground) 45%)",
+          "color-mix(in oklch, var(--muted-foreground) 55%, white 45%)",
+          "color-mix(in oklch, var(--muted-foreground) 65%, white 35%)",
+          "color-mix(in oklch, var(--muted-foreground) 75%, white 25%)",
+          "color-mix(in oklch, var(--muted-foreground) 85%, white 15%)"
+        ]
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Borde",
+        "canonical": "var(--border)",
+        "tonalRamp": [
+          "color-mix(in oklch, black 85%, var(--border) 15%)",
+          "color-mix(in oklch, black 75%, var(--border) 25%)",
+          "color-mix(in oklch, black 65%, var(--border) 35%)",
+          "color-mix(in oklch, black 55%, var(--border) 45%)",
+          "color-mix(in oklch, var(--border) 55%, white 45%)",
+          "color-mix(in oklch, var(--border) 65%, white 35%)",
+          "color-mix(in oklch, var(--border) 75%, white 25%)",
+          "color-mix(in oklch, var(--border) 85%, white 15%)"
+        ]
+      },
+      "input": {
+        "role": "neutral",
+        "displayName": "Borde de control",
+        "canonical": "var(--input)",
+        "tonalRamp": [
+          "color-mix(in oklch, black 85%, var(--input) 15%)",
+          "color-mix(in oklch, black 75%, var(--input) 25%)",
+          "color-mix(in oklch, black 65%, var(--input) 35%)",
+          "color-mix(in oklch, black 55%, var(--input) 45%)",
+          "color-mix(in oklch, var(--input) 55%, white 45%)",
+          "color-mix(in oklch, var(--input) 65%, white 35%)",
+          "color-mix(in oklch, var(--input) 75%, white 25%)",
+          "color-mix(in oklch, var(--input) 85%, white 15%)"
+        ]
+      },
+      "ring": {
+        "role": "primary",
+        "displayName": "Anillo de foco",
+        "canonical": "var(--ring)",
+        "tonalRamp": [
+          "color-mix(in oklch, black 85%, var(--ring) 15%)",
+          "color-mix(in oklch, black 75%, var(--ring) 25%)",
+          "color-mix(in oklch, black 65%, var(--ring) 35%)",
+          "color-mix(in oklch, black 55%, var(--ring) 45%)",
+          "color-mix(in oklch, var(--ring) 55%, white 45%)",
+          "color-mix(in oklch, var(--ring) 65%, white 35%)",
+          "color-mix(in oklch, var(--ring) 75%, white 25%)",
+          "color-mix(in oklch, var(--ring) 85%, white 15%)"
+        ]
+      },
+      "info": {
+        "role": "secondary",
+        "displayName": "Azul informativo",
+        "canonical": "var(--info)",
+        "tonalRamp": [
+          "color-mix(in oklch, black 85%, var(--info) 15%)",
+          "color-mix(in oklch, black 75%, var(--info) 25%)",
+          "color-mix(in oklch, black 65%, var(--info) 35%)",
+          "color-mix(in oklch, black 55%, var(--info) 45%)",
+          "color-mix(in oklch, var(--info) 55%, white 45%)",
+          "color-mix(in oklch, var(--info) 65%, white 35%)",
+          "color-mix(in oklch, var(--info) 75%, white 25%)",
+          "color-mix(in oklch, var(--info) 85%, white 15%)"
+        ]
+      },
+      "success": {
+        "role": "secondary",
+        "displayName": "Verde de éxito",
+        "canonical": "var(--success)",
+        "tonalRamp": [
+          "color-mix(in oklch, black 85%, var(--success) 15%)",
+          "color-mix(in oklch, black 75%, var(--success) 25%)",
+          "color-mix(in oklch, black 65%, var(--success) 35%)",
+          "color-mix(in oklch, black 55%, var(--success) 45%)",
+          "color-mix(in oklch, var(--success) 55%, white 45%)",
+          "color-mix(in oklch, var(--success) 65%, white 35%)",
+          "color-mix(in oklch, var(--success) 75%, white 25%)",
+          "color-mix(in oklch, var(--success) 85%, white 15%)"
+        ]
+      },
+      "warning": {
+        "role": "secondary",
+        "displayName": "Ámbar de espera",
+        "canonical": "var(--warning)",
+        "tonalRamp": [
+          "color-mix(in oklch, black 85%, var(--warning) 15%)",
+          "color-mix(in oklch, black 75%, var(--warning) 25%)",
+          "color-mix(in oklch, black 65%, var(--warning) 35%)",
+          "color-mix(in oklch, black 55%, var(--warning) 45%)",
+          "color-mix(in oklch, var(--warning) 55%, white 45%)",
+          "color-mix(in oklch, var(--warning) 65%, white 35%)",
+          "color-mix(in oklch, var(--warning) 75%, white 25%)",
+          "color-mix(in oklch, var(--warning) 85%, white 15%)"
+        ]
+      },
+      "attention": {
+        "role": "tertiary",
+        "displayName": "Naranja de atención",
+        "canonical": "var(--attention)",
+        "tonalRamp": [
+          "color-mix(in oklch, black 85%, var(--attention) 15%)",
+          "color-mix(in oklch, black 75%, var(--attention) 25%)",
+          "color-mix(in oklch, black 65%, var(--attention) 35%)",
+          "color-mix(in oklch, black 55%, var(--attention) 45%)",
+          "color-mix(in oklch, var(--attention) 55%, white 45%)",
+          "color-mix(in oklch, var(--attention) 65%, white 35%)",
+          "color-mix(in oklch, var(--attention) 75%, white 25%)",
+          "color-mix(in oklch, var(--attention) 85%, white 15%)"
+        ]
+      },
+      "danger": {
+        "role": "secondary",
+        "displayName": "Rojo de riesgo",
+        "canonical": "var(--danger)",
+        "tonalRamp": [
+          "color-mix(in oklch, black 85%, var(--danger) 15%)",
+          "color-mix(in oklch, black 75%, var(--danger) 25%)",
+          "color-mix(in oklch, black 65%, var(--danger) 35%)",
+          "color-mix(in oklch, black 55%, var(--danger) 45%)",
+          "color-mix(in oklch, var(--danger) 55%, white 45%)",
+          "color-mix(in oklch, var(--danger) 65%, white 35%)",
+          "color-mix(in oklch, var(--danger) 75%, white 25%)",
+          "color-mix(in oklch, var(--danger) 85%, white 15%)"
+        ]
+      },
+      "ai": {
+        "role": "tertiary",
+        "displayName": "Morado de IA",
+        "canonical": "var(--ai)",
+        "tonalRamp": [
+          "color-mix(in oklch, black 85%, var(--ai) 15%)",
+          "color-mix(in oklch, black 75%, var(--ai) 25%)",
+          "color-mix(in oklch, black 65%, var(--ai) 35%)",
+          "color-mix(in oklch, black 55%, var(--ai) 45%)",
+          "color-mix(in oklch, var(--ai) 55%, white 45%)",
+          "color-mix(in oklch, var(--ai) 65%, white 35%)",
+          "color-mix(in oklch, var(--ai) 75%, white 25%)",
+          "color-mix(in oklch, var(--ai) 85%, white 15%)"
+        ]
+      },
+      "role-doctor": {
+        "role": "secondary",
+        "displayName": "Azul médico",
+        "canonical": "var(--role-doctor)",
+        "tonalRamp": [
+          "color-mix(in oklch, black 85%, var(--role-doctor) 15%)",
+          "color-mix(in oklch, black 75%, var(--role-doctor) 25%)",
+          "color-mix(in oklch, black 65%, var(--role-doctor) 35%)",
+          "color-mix(in oklch, black 55%, var(--role-doctor) 45%)",
+          "color-mix(in oklch, var(--role-doctor) 55%, white 45%)",
+          "color-mix(in oklch, var(--role-doctor) 65%, white 35%)",
+          "color-mix(in oklch, var(--role-doctor) 75%, white 25%)",
+          "color-mix(in oklch, var(--role-doctor) 85%, white 15%)"
+        ]
+      },
+      "role-researcher": {
+        "role": "tertiary",
+        "displayName": "Morado investigador",
+        "canonical": "var(--role-researcher)",
+        "tonalRamp": [
+          "color-mix(in oklch, black 85%, var(--role-researcher) 15%)",
+          "color-mix(in oklch, black 75%, var(--role-researcher) 25%)",
+          "color-mix(in oklch, black 65%, var(--role-researcher) 35%)",
+          "color-mix(in oklch, black 55%, var(--role-researcher) 45%)",
+          "color-mix(in oklch, var(--role-researcher) 55%, white 45%)",
+          "color-mix(in oklch, var(--role-researcher) 65%, white 35%)",
+          "color-mix(in oklch, var(--role-researcher) 75%, white 25%)",
+          "color-mix(in oklch, var(--role-researcher) 85%, white 15%)"
+        ]
+      },
+      "role-admin": {
+        "role": "secondary",
+        "displayName": "Naranja administrador",
+        "canonical": "var(--role-admin)",
+        "tonalRamp": [
+          "color-mix(in oklch, black 85%, var(--role-admin) 15%)",
+          "color-mix(in oklch, black 75%, var(--role-admin) 25%)",
+          "color-mix(in oklch, black 65%, var(--role-admin) 35%)",
+          "color-mix(in oklch, black 55%, var(--role-admin) 45%)",
+          "color-mix(in oklch, var(--role-admin) 55%, white 45%)",
+          "color-mix(in oklch, var(--role-admin) 65%, white 35%)",
+          "color-mix(in oklch, var(--role-admin) 75%, white 25%)",
+          "color-mix(in oklch, var(--role-admin) 85%, white 15%)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Titulares principales de portada."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Títulos de pantalla."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Encabezados de tarjetas y secciones."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Lectura principal y explicaciones."
+      },
+      "control": {
+        "displayName": "Control",
+        "purpose": "Botones y navegación."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Insignias y metadatos breves."
+      }
+    },
+    "shadows": [
+      {
+        "name": "card-low",
+        "value": "0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)",
+        "purpose": "Separación tenue de tarjetas sobre el lienzo."
+      },
+      {
+        "name": "overlay",
+        "value": "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)",
+        "purpose": "Elevar diálogos y navegación modal."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      },
+      {
+        "name": "xl",
+        "value": "1280px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Botón primario",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Acción principal de alto contraste.",
+      "html": "<button class=\"ds-button-primary\" type=\"button\">Continuar</button>",
+      "css": ".ds-button-primary{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;height:2.5rem;padding:.5rem 1rem;border:0;border-radius:var(--control-radius);background:var(--primary);color:var(--primary-foreground);font:500 .875rem/1.25rem system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;transition:color 150ms,background-color 150ms}.ds-button-primary:hover{background:color-mix(in oklab,var(--primary) 90%,transparent)}.ds-button-primary:focus-visible{outline:2px solid var(--ring);outline-offset:2px}"
+    },
+    {
+      "name": "Botón outline",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Acción secundaria con borde visible.",
+      "html": "<button class=\"ds-button-outline\" type=\"button\">Cancelar</button>",
+      "css": ".ds-button-outline{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;height:2.5rem;padding:.5rem 1rem;border:1px solid var(--input);border-radius:var(--control-radius);background:var(--background);color:var(--foreground);font:500 .875rem/1.25rem system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;transition:color 150ms,background-color 150ms}.ds-button-outline:hover{background:var(--border-subtle)}.ds-button-outline:focus-visible{outline:2px solid var(--ring);outline-offset:2px}"
+    },
+    {
+      "name": "Campo de texto",
+      "kind": "input",
+      "refersTo": "field",
+      "description": "Campo con borde, tamaño y foco coherentes.",
+      "html": "<input class=\"ds-input\" type=\"text\" aria-label=\"Buscar\" placeholder=\"Buscar\">",
+      "css": ".ds-input{width:100%;height:2.5rem;padding:.5rem .75rem;border:1px solid var(--input);border-radius:var(--control-radius);background:var(--background);color:var(--foreground);font:400 .875rem/1.25rem system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif}.ds-input::placeholder{color:var(--muted-foreground)}.ds-input:focus-visible{outline:2px solid var(--ring);outline-offset:2px}.ds-input[aria-invalid=true]{border-color:var(--danger)}"
+    },
+    {
+      "name": "Tarjeta",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Contenedor principal de superficie con borde y elevación tenue.",
+      "html": "<article class=\"ds-card\"><h2 class=\"ds-card__title\">Actividad reciente</h2><p>Resumen de demostración</p></article>",
+      "css": ".ds-card{padding:1.5rem;border:1px solid var(--border);border-radius:var(--card-radius);background:var(--surface);color:var(--foreground);box-shadow:0 1px 3px 0 rgb(0 0 0 / .1),0 1px 2px -1px rgb(0 0 0 / .1)}.ds-card__title{margin:0 0 .75rem;font:600 1.125rem/1.25 system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;letter-spacing:-.025em}"
+    },
+    {
+      "name": "Insignia de estado",
+      "kind": "chip",
+      "refersTo": "status-chip",
+      "description": "Estado semántico con texto y tono redundante.",
+      "html": "<span class=\"ds-status-chip\">Completado</span>",
+      "css": ".ds-status-chip{display:inline-flex;align-items:center;gap:.25rem;padding:.125rem .625rem;border:1px solid color-mix(in oklab,var(--success) 30%,transparent);border-radius:9999px;background:color-mix(in oklab,var(--success) 10%,transparent);color:var(--success);font:600 .75rem/1rem system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif}"
+    },
+    {
+      "name": "Insignia de rol",
+      "kind": "chip",
+      "refersTo": "role-badge",
+      "description": "Identidad de rol con icono decorativo y nombre legible.",
+      "html": "<span class=\"ds-role-badge\"><svg viewBox=\"0 0 16 16\" aria-hidden=\"true\"><circle cx=\"8\" cy=\"5\" r=\"3\"></circle><path d=\"M2.5 14c.4-2.8 2.4-4.2 5.5-4.2s5.1 1.4 5.5 4.2\"></path></svg>Médico</span>",
+      "css": ".ds-role-badge{display:inline-flex;align-items:center;gap:.375rem;padding:.125rem .625rem;border:1px solid color-mix(in oklab,var(--role-doctor) 30%,transparent);border-radius:9999px;background:color-mix(in oklab,var(--role-doctor) 10%,transparent);color:var(--role-doctor);font:600 .75rem/1rem system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif}.ds-role-badge svg{width:.75rem;height:.75rem;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}"
+    },
+    {
+      "name": "Navegación activa",
+      "kind": "nav",
+      "refersTo": "navigation-active",
+      "description": "Elemento activo de navegación con fondo de marca tenue.",
+      "html": "<a class=\"ds-nav-active\" href=\"#inicio\"><svg viewBox=\"0 0 16 16\" aria-hidden=\"true\"><path d=\"m2 7 6-5 6 5v7H9v-4H7v4H2z\"></path></svg>Inicio</a>",
+      "css": ".ds-nav-active{display:flex;align-items:center;gap:.75rem;padding:.5rem .75rem;border-radius:var(--control-radius);background:color-mix(in oklab,var(--brand) 10%,transparent);color:var(--brand);font:500 .875rem/1.25rem system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;text-decoration:none}.ds-nav-active svg{width:1rem;height:1rem;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}.ds-nav-active:focus-visible{outline:2px solid var(--ring);outline-offset:2px}"
+    },
+    {
+      "name": "Aviso de demostración sintética",
+      "kind": "custom",
+      "refersTo": "synthetic-notice",
+      "description": "Aviso visible que identifica fixtures y límites de IA.",
+      "html": "<div class=\"ds-notice\" role=\"note\"><svg viewBox=\"0 0 20 20\" aria-hidden=\"true\"><circle cx=\"10\" cy=\"10\" r=\"8\"></circle><path d=\"M10 9v5m0-8h.01\"></path></svg><div><strong>Demostración sintética</strong><p>Las cifras son ilustrativas; la IA no establece diagnósticos.</p></div></div>",
+      "css": ".ds-notice{display:flex;align-items:flex-start;gap:.75rem;padding:1rem;border:1px solid color-mix(in oklab,var(--info) 30%,transparent);border-radius:var(--card-radius);background:color-mix(in oklab,var(--info) 10%,transparent);color:var(--foreground);font:400 .875rem/1.25rem system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif}.ds-notice svg{width:1.25rem;height:1.25rem;flex:none;margin-top:.125rem;fill:none;stroke:var(--info);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.ds-notice strong{display:block;font-weight:600}.ds-notice p{margin:.25rem 0 0;color:var(--foreground)}"
+    },
+    {
+      "name": "Diálogo",
+      "kind": "custom",
+      "refersTo": "dialog",
+      "description": "Capa de decisión centrada con scrim y elevación profunda.",
+      "html": "<div class=\"ds-dialog-backdrop\"><section class=\"ds-dialog\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"ds-dialog-title\"><header class=\"ds-dialog__header\"><h2 id=\"ds-dialog-title\">Revisión profesional</h2><button type=\"button\" aria-label=\"Cerrar\">×</button></header><p>La IA apoya la lectura; la interpretación corresponde al profesional.</p></section></div>",
+      "css": ".ds-dialog-backdrop{position:fixed;inset:0;display:grid;place-items:center;padding:1rem;background:var(--scrim)}.ds-dialog{width:min(32rem,100%);padding:1.5rem;border:1px solid var(--border);border-radius:var(--panel-radius);background:var(--surface);color:var(--foreground);box-shadow:0 20px 25px -5px rgb(0 0 0 / .1),0 8px 10px -6px rgb(0 0 0 / .1);font:400 1rem/1.5 system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif}.ds-dialog__header{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;padding-bottom:1rem;border-bottom:1px solid var(--border)}.ds-dialog__header h2{margin:0;font:600 1.125rem/1.25 system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif}.ds-dialog__header button{width:2rem;height:2rem;border:0;border-radius:var(--control-radius);background:transparent;color:var(--muted-foreground)}.ds-dialog__header button:focus-visible{outline:2px solid var(--ring);outline-offset:2px}.ds-dialog>p{margin:1rem 0 0;color:var(--muted-foreground)}"
+    }
+  ],
+  "narrative": {
+    "northStar": "No se documenta una metáfora con nombre en el registro disponible; la referencia solicitada y el sistema visible son la autoridad visual.",
+    "overview": "La solicitud fija una URL de referencia como horizonte; no consta una aprobación explícita de una metáfora, un mood o una identidad estética más específica. Esta guía registra decisiones observables en la implementación: tipografía de sistema, superficies neutras, índigo de marca, acentos semánticos por rol y estado, y temas claro/oscuro.\n\nOPTIMUS-THY organiza información clínica para revisión profesional. Las pantallas completas de los roles viven en Storybook y usan datos sintéticos; el aviso visible aclara que las cifras no representan rendimiento real y que la IA no establece diagnósticos.",
+    "keyCharacteristics": [
+      "Tokens semánticos claro/oscuro; los componentes consumen variables, no valores de paleta aislados.",
+      "Jerarquía de lectura con fondo neutro, texto de alto contraste y acento de marca índigo.",
+      "Médico, investigador y administrador conservan igual peso; cada rol mantiene un tono propio además de su etiqueta textual.",
+      "Los estados, métricas y resultados de demostración se explican con texto; el color nunca es el único canal.",
+      "Navegación lateral en escritorio y menú modal en móvil."
+    ],
+    "rules": [
+      {
+        "name": "The Semantic Token Rule",
+        "body": "Usa el nombre semántico; no sustituyas un token de marca por uno de estado ni escribas un color literal en un componente.",
+        "section": "colors"
+      },
+      {
+        "name": "The Text-Is-State Rule",
+        "body": "Cada estado y rol conserva una etiqueta textual legible; no comuniques clasificación únicamente con color.",
+        "section": "colors"
+      },
+      {
+        "name": "The Hierarchy Rule",
+        "body": "Mantén el orden semántico de los encabezados; el tamaño visual no sustituye la estructura H1/H2/H3.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat-By-Default Rule",
+        "body": "Reserva la elevación profunda para diálogos y navegación modal; las superficies de contenido permanecen planas o con sombra tenue.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do**: usa variables semánticas de `tokens.css` para superficies, texto, foco, roles y estados.",
+      "**Do**: conserva etiquetas textuales para roles, estados y clasificaciones; evita que el color sea el único indicador.",
+      "**Do**: identifica todas las pantallas y métricas de demostración como sintéticas y mantiene el aviso visible.",
+      "**Do**: conserva el mismo peso visual para médico, investigador y administrador.",
+      "**Do**: valida la jerarquía de encabezados y el menú modal en teclado y pantalla estrecha."
+    ],
+    "donts": [
+      "**Don't**: no presentes métricas sintéticas como rendimiento real ni imágenes vectoriales como estudios clínicos.",
+      "**Don't**: no sugieras que la IA diagnostica o reemplaza la decisión profesional.",
+      "**Don't**: no incluyas datos personales o clínicos reales.",
+      "**Don't**: no añadas pantallas, enlaces, permisos, tarjetas, datos o acciones relacionadas con proyectos."
+    ]
+  }
+}

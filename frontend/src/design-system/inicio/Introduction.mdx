@@ -1,0 +1,25 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Inicio/Introducción" />
+
+# OPTIMUS-THY · sistema de interfaz
+
+La biblioteca define los controles y patrones visuales compartidos por OPTIMUS-THY. Los componentes exponen una API tipada, estados accesibles y tonos semánticos. Las pantallas de Aplicación usan la API simulada mediante MSW; no son maquetas.
+
+## Alcance del producto
+
+OPTIMUS-THY apoya la gestión de datos relacionados con cáncer de tiroides. El sistema contempla por igual los roles clínico, investigador y administrador. La inteligencia artificial apoya la revisión clínica; no diagnostica ni sustituye el criterio profesional.
+
+La ruta `/` está gestionada por `RootRedirect`: sin sesión redirige a `/login` y con sesión a `/{rolActivo}`. El flujo de acceso lleva al inicio del rol activo.
+
+## Datos de demostración
+
+Todo dato de personas, historias, mediciones, actividad, solicitudes y modelos en Storybook es sintético. No contiene pacientes reales, datos identificables, imágenes médicas reales, pesos de modelos ni resultados de rendimiento reales. Las métricas y resultados ilustran la presentación y no prueban desempeño clínico.
+
+El estado **Normal** significa **sin nódulo detectado**. En resultados de IA se comunica como observación de apoyo que requiere revisión médica, no como diagnóstico.
+
+## Temas y accesibilidad
+
+El selector de temas de Storybook alterna entre claro y oscuro mediante la clase `dark`. Las stories con navegación se envuelven en un `MemoryRouter`. Los componentes interactivos deben conservar nombre accesible, foco visible, operación por teclado y respeto por movimiento reducido.
+
+El addon de accesibilidad de Storybook está habilitado para revisar cada story. Cada componente y pantalla debe contar con al menos una story autodocumentada; los estados relevantes —vacío, error, cargando, foco y diálogos— también deben mostrarse.

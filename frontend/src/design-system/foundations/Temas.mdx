@@ -1,0 +1,19 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Sistema de diseño/Fundamentos/Temas" tags={['ai-generated']} />
+
+# Temas
+
+La interfaz ofrece temas claro y oscuro. El tema oscuro redefine tokens semánticos bajo la clase `.dark`, y las historias del catálogo pueden alternarlos con el selector de la barra de herramientas.
+
+## Selector y tokens
+
+El decorador global `withThemeByClassName` aplica las clases `claro` y `oscuro` según el global `theme`; en oscuro se añade la clase `.dark` al documento. La hoja de estilos declara `@custom-variant dark`, de modo que las utilidades dark de Tailwind responden a esa clase. Los valores semánticos de cada tema están descritos en [Colores](?path=/docs/sistema-de-diseño-fundamentos-colores--docs).
+
+## Movimiento reducido
+
+La hoja respeta `prefers-reduced-motion: reduce`: reduce las duraciones a `0.01ms`, usa curvas `linear`, y limita animaciones y transiciones. Storybook expone además el global `motion` para probar movimiento normal y reducido en las historias que lo implementan.
+
+## Cuándo usarlo / Reglas
+
+Usa tokens semánticos para que los componentes funcionen con ambos temas; no introduzcas valores de color literales. El sistema NO ofrece controles de densidad, idioma ni alto contraste: no presentes esos ajustes como capacidades disponibles. Comprueba que foco, estados y contenido sigan legibles en claro y oscuro.

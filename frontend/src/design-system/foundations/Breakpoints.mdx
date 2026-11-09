@@ -1,0 +1,33 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Sistema de diseño/Fundamentos/Grid y breakpoints" tags={['ai-generated']} />
+
+# Grid y breakpoints
+
+La composición se adapta con los breakpoints estándar de Tailwind CSS 4 y limita la lectura con el ancho máximo de contenido. Los presets de Storybook permiten revisar las mismas historias en tamaños de móvil, tableta y escritorio.
+
+## Breakpoints
+
+| Prefijo               | Ancho mínimo |
+| --------------------- | ------------ |
+| `sm`                  | `40rem`      |
+| `md`                  | `48rem`      |
+| `lg`                  | `64rem`      |
+| `xl`                  | `80rem`      |
+| `2xl`                 | `96rem`      |
+| `--content-max-width` | `88rem`      |
+
+## Viewports del catálogo
+
+| Clave              | Nombre del preset | Dimensiones |
+| ------------------ | ----------------- | ----------- |
+| `movil`            | Móvil             | `360×800`   |
+| `tablet`           | Tablet            | `768×1024`  |
+| `escritorio`       | Escritorio        | `1366×768`  |
+| `escritorioAmplio` | Escritorio amplio | `1440×900`  |
+
+Un patrón de rejilla real de las historias es `grid gap-3 sm:grid-cols-2 lg:grid-cols-3`: una columna en tamaños menores, dos desde `sm` y tres desde `lg`.
+
+## Cuándo usarlo / Reglas
+
+Usa el flujo flexible y los prefijos responsive de Tailwind; no fijes anchos de viewport para los componentes. Revisa el comportamiento en los presets del catálogo y conserva `--content-max-width` como límite de lectura. Evita que textos, tablas o controles desborden en móvil.

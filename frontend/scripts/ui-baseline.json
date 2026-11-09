@@ -1,0 +1,17 @@
+{
+  "src/pages/admin/UsuariosPage.tsx": {
+    "valor-arbitrario": 2
+  },
+  "src/screens/doctor/AIInferenceScreen.tsx": {
+    "valor-arbitrario": 1
+  },
+  "src/screens/doctor/ImagesGallery.tsx": {
+    "valor-arbitrario": 2
+  },
+  "src/screens/doctor/PatientDetailScreen.tsx": {
+    "valor-arbitrario": 1
+  },
+  "src/screens/public/HomeScreen.tsx": {
+    "valor-arbitrario": 1
+  }
+}

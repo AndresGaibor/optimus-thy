@@ -1,0 +1,20 @@
+# Configuración de gitleaks: reglas por defecto más una lista de permitidos mínima.
+[extend]
+useDefault = true
+
+# Contraseñas sintéticas de los tests de HU-010 y HU-011 (mínimo de 12 caracteres exigido
+# por el servidor). No son credenciales reales; se permiten por valor exacto
+# para que un secreto real en esos mismos archivos siga detectándose.
+[[allowlists]]
+description = "Contraseñas de prueba sintéticas"
+regexTarget = "match"
+regexes = [
+  '''pass1234567890''',
+  '''temporal12345''',
+]
+paths = [
+  '''backend/tests/test_usuarios\.py''',
+  '''backend/tests/test_roles\.py''',
+  '''backend/tests/test_sesiones_seguridad\.py''',
+]
+condition = "AND"

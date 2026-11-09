@@ -1,0 +1,7 @@
+node_modules
+dist
+storybook-static
+catalogo-static
+coverage
+.env
+.env.local

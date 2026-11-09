@@ -1,0 +1,33 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Inicio/Cómo contribuir" tags={['ai-generated']} />
+
+# Cómo contribuir
+
+Flujo de trabajo para cambios en el monorepo y en el catálogo de interfaz.
+
+## Flujo de trabajo
+
+1. **Rama**: trabaja en una rama con identificador de historia, por ejemplo `ht-001-estructura` o `hu-xxx`.
+2. **Commit**: usa mensajes con el formato `tipo(HT-001): resumen`, donde el tipo describe el cambio y el identificador enlaza la historia o tarea.
+3. **Pull request**: abre **un PR por historia**. El PR debe citar el requisito y la historia que atiende.
+4. **CI**: el PR solo puede integrarse con CI en verde.
+5. **Integración**: `main` recibe cambios únicamente mediante PR.
+6. **Kanban**: el estado del trabajo sigue el flujo Pendiente → En proceso → Revisión → Finalizado.
+
+## Cómo añadir un componente
+
+Para incorporar un componente al sistema de diseño:
+
+1. **Átomo o nivel adecuado**: crea el componente en la capa correspondiente (`atoms`, `molecules`, etc.) dentro de `frontend/src/design-system/`.
+2. **Barril**: exporta el componente desde el archivo de barril (`index.ts`) de su carpeta para mantener importaciones consistentes.
+3. **Historia**: añade una historia en Storybook con ejemplos representativos, estados relevantes y, cuando aplique, acciones `play`.
+4. **Prueba**: cubre el comportamiento esperado con Vitest.
+5. **Token**: si el componente necesita una decisión visual nueva (color, espaciado, radio, sombra u otro valor reutilizable), define el **token** en `frontend/src/styles/tokens.css` antes de usarlo en el componente.
+
+## Antes de abrir el PR
+
+- Verifica que los gates locales relevantes pasen (`bun run ui:check`, `bun run tamanos`, pruebas y comprobaciones aplicables).
+- Confirma que los ejemplos usan datos sintéticos y textos en español.
+- Revisa accesibilidad básica: nombre accesible, foco visible, teclado y movimiento reducido.
+- Asegúrate de que el cambio no exponga secretos, datos personales ni detalles internos en mensajes al cliente.

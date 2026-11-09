@@ -1,0 +1,19 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Inicio/Changelog" tags={['ai-generated']} />
+
+# Changelog
+
+Registro de cambios relevantes del catálogo y sus herramientas de verificación.
+
+| Fecha | Cambio | Detalle |
+| 2026-11-09 | Recuperar contraseña | Se sumó la historia HU-111 y la pantalla presentacional `PasswordRecoveryPage` con seis estados (solicitud, enviada, error, enlace caducado, contraseña nueva, completada); todavía sin lógica ni endpoints. |
+| 2026-11-08 | Gates de composición y tamaño | Se incorporaron `ui:check` (controles crudos, colores literales, valores arbitrarios y estilos inline) y `tamanos` (límites 220 UI / 150 hooks / 300 resto y fixtures) con baseline ratchet, encadenados en `make check` y CI. |
+| 2026-11-08 | Cierre de Storybook | Se completaron Fundamentos, siete patrones y casos límite; fichas de componente con cinco secciones JSDoc; MSW con 10 escenarios; viewports; revisión con `ai-generated`; regresión visual local y guardias de tokens y documentación. |
+| 2026-11-08 | `Checkbox` | Se añadió el componente `Checkbox` al sistema de diseño con su API tipada y cobertura en el catálogo. |
+| 2026-11-08 | Captura Playwright | Se habilitó `bun run capturar` para generar capturas reproducibles de historias del catálogo con Playwright. |
+| 2026-11-08 | MSW en Storybook | Se integró MSW en Storybook para simular respuestas y estados de red con datos sintéticos en escenarios presentacionales. |
+| 2026-11-08 | Conmutador de shell | La barra de herramientas del catálogo incorporó el control **Shell** (sin/con sidebar; por defecto sin) para revisar historias en distintos contextos de disposición. |
+| 2026-11-08 | Guías de calidad | Se añadieron guías y evidencias bajo la raíz de calidad (adaptabilidad, rendimiento, accesibilidad, movimiento, gates y evidencias) como destino del catálogo. |
+| 2026-11-08 | UnUQ | Se incorporó UnUQ como apoyo de consulta/verificación dentro del flujo del proyecto. |
+| 2026-11-08 | MCP y autodocs | Se habilitó la consulta del catálogo mediante MCP/autodocs, incluyendo `bun run consulta list` / `show --id` y la cita reproducible con `iframe.html?id=<storyId>&viewMode=story`. |

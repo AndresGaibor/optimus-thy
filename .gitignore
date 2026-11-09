@@ -1,0 +1,51 @@
+# Secretos y entorno
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# Node
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+
+# Pesos de modelos y datos pesados
+*.keras
+*.h5
+*.pt
+*.pth
+*.onnx
+*.ckpt
+
+# Editor y sistema
+.DS_Store
+.idea/
+.vscode/
+*.log
+
+# Certificados de desarrollo (autofirmados, no se commitean)
+infra/nginx/certs/
+
+# Caché local de wrangler/cloudflared
+.cloudflare/
+# Índice de código y artefactos de pruebas
+.codegraph/
+playwright-report/
+test-results/
+**/__screenshots__/
+
+# Herramientas y artefactos locales (no forman parte del producto)
+.agents/
+.wrangler/
+mcp.json
+frontend/.vitest-attachments/
+frontend/local:/

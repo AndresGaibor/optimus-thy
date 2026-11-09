@@ -1,0 +1,101 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Inicio/Instalación y configuración" tags={['ai-generated']} />
+
+# Instalación y configuración
+
+Pasos para preparar el entorno local y verificar el proyecto.
+
+## Requisitos
+
+- **bun 1.4+** para el frontend y las herramientas del catálogo.
+- **Docker** (opcional) para levantar la pila completa con `make up`.
+- Dependencias del backend según su entorno Python cuando se trabaje fuera de contenedores.
+
+## Puesta en marcha
+
+### Frontend
+
+```bash
+cd frontend
+bun install
+bun run dev
+```
+
+`bun run dev` inicia el servidor de desarrollo del frontend.
+
+### Pila completa
+
+Desde la raíz del monorepo:
+
+```bash
+make up    # levanta los servicios
+make down  # detiene los servicios
+```
+
+### Variables de entorno
+
+Copia el archivo de ejemplo correspondiente y ajusta los valores locales:
+
+```bash
+cp .env.example .env
+```
+
+Revisa `.env.example` en la raíz (y los ejemplos de cada servicio, si aplica) antes de ejecutar servicios que dependan de configuración externa.
+
+### Tipos desde el contrato
+
+Cuando cambie el contrato OpenAPI, regenera los tipos del cliente:
+
+```bash
+cd frontend
+bun run gen:api
+```
+
+Esto actualiza `frontend/src/api/schema.d.ts` a partir de `contracts/openapi.json`.
+
+## Comandos de verificación
+
+Orden sugerido para comprobar cambios en el frontend:
+
+```bash
+cd frontend
+bun run lint
+bun run format:check
+bun run typecheck
+bun run ui:check
+bun run tamanos
+bun run test
+bun run build
+```
+
+Verificación integral desde la raíz:
+
+```bash
+make check
+```
+
+Verificación del backend (desde `backend/`):
+
+```bash
+ruff format --check .
+ruff check .
+mypy app
+pytest
+```
+
+## Referencia de comandos
+
+| Ámbito      | Comando                               | Propósito                                     |
+| ----------- | ------------------------------------- | --------------------------------------------- |
+| Raíz        | `make up` / `make down`               | Levantar o detener la pila                    |
+| Raíz        | `make check`                          | Ejecutar la verificación encadenada           |
+| `frontend/` | `bun run dev`                         | Servidor de desarrollo                        |
+| `frontend/` | `bun run build`                       | Compilación de producción                     |
+| `frontend/` | `bun run test`                        | Pruebas con Vitest                            |
+| `frontend/` | `bun run ui:check`                    | Gate de composición de UI                     |
+| `frontend/` | `bun run tamanos`                     | Gate de tamaño por archivo (baseline ratchet) |
+| `frontend/` | `bun run catalogo` / `catalogo:build` | Catálogo en desarrollo o compilado            |
+| `frontend/` | `bun run capturar`                    | Capturas Playwright del catálogo              |
+| `frontend/` | `bun run consulta list\|show --id`    | Consulta de APIs/historias del catálogo       |
+| `frontend/` | `bun run gen:api`                     | Generar tipos desde OpenAPI                   |

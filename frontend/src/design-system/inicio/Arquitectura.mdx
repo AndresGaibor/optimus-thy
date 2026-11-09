@@ -1,0 +1,52 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Inicio/Arquitectura" tags={['ai-generated']} />
+
+# Arquitectura
+
+Visión general de las capas del monorepo, el flujo de datos y las fuentes de verdad del proyecto.
+
+## Capas del monorepo
+
+| Directorio   | Rol                                                 | Tecnologías principales                                                                       |
+| ------------ | --------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `frontend/`  | Interfaz web y catálogo de componentes              | React 18.3, TypeScript 5.7, Vite 6, Tailwind 4, bun 1.4, Storybook 10.6.6                     |
+| `backend/`   | API de aplicación y lógica de negocio               | FastAPI, SQLAlchemy 2, Alembic, Pydantic v2, mypy (strict), ruff, pytest                      |
+| `ia/`        | Servicios de apoyo con inteligencia artificial      | Módulos de apoyo a la revisión clínica; no diagnostican ni sustituyen el criterio profesional |
+| `ocr/`       | Procesamiento de documentos y reconocimiento óptico | Extracción y normalización de texto desde documentos                                          |
+| `infra/`     | Operación y despliegue                              | nginx, systemd, respaldos                                                                     |
+| `contracts/` | Contrato de interfaz entre frontend y backend       | `openapi.json` (OpenAPI 3.1.0)                                                                |
+
+## Flujo de datos
+
+```text
+frontend  →  /api  →  backend  →  PostgreSQL
+               ↘
+                ia/
+```
+
+- El **frontend** consume la API bajo el prefijo `/api`.
+- El **backend** expone endpoints FastAPI, valida datos con Pydantic v2 y persiste en **PostgreSQL** mediante SQLAlchemy 2 y migraciones Alembic.
+- El servicio **`ia/`** provee apoyo a la revisión clínica; sus resultados se comunican como observación de apoyo que requiere revisión médica.
+- **`ocr/`** procesa documentos cuando el flujo lo requiere.
+
+## Contrato y tipos
+
+El contrato HTTP es la fuente de los tipos del cliente:
+
+- `contracts/openapi.json` define la API en formato OpenAPI 3.1.0.
+- `frontend/src/api/schema.d.ts` se genera con `openapi-typescript` a partir del contrato (`bun run gen:api` en `frontend/`).
+
+Los cambios de interfaz deben reflejarse primero en el contrato para mantener alineados backend, frontend y validaciones.
+
+## Dónde vive cada verdad
+
+| Artefacto                         | Ubicación                        | Qué define                                             |
+| --------------------------------- | -------------------------------- | ------------------------------------------------------ |
+| Contrato de API                   | `contracts/openapi.json`         | Endpoints, esquemas y tipos compartidos                |
+| Tipos generados del cliente       | `frontend/src/api/schema.d.ts`   | Tipado TypeScript derivado del contrato                |
+| Tokens visuales                   | `frontend/src/styles/tokens.css` | Colores, espaciado y decisiones visuales reutilizables |
+| Dirección de diseño               | `DESIGN.md`                      | Criterios y lineamientos de interfaz                   |
+| Restricciones de producto         | `PRODUCT.md`                     | Alcance, límites y reglas del producto                 |
+| Pantallas clave                   | `docs/diseno/pantallas-clave.md` | Referencia de pantallas prioritarias                   |
+| Reglas operativas del repositorio | `AGENTS.md`                      | Convenciones y restricciones de trabajo en el monorepo |

@@ -1,0 +1,28 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Sistema de diseño/Fundamentos/Dimensiones" tags={['ai-generated']} />
+
+# Dimensiones
+
+Las dimensiones compartidas fijan el ancho del panel lateral y el máximo del área de contenido. Los controles emplean alturas consistentes; sus clases se derivan de los componentes reales y no cambian entre temas.
+
+| Variable CSS o regla  | Claro   | Oscuro  |
+| --------------------- | ------- | ------- |
+| `--sidebar-width`     | `17rem` | `17rem` |
+| `--content-max-width` | `88rem` | `88rem` |
+| `body min-width`      | `20rem` | `20rem` |
+
+## Tamaños reales de controles
+
+| Componente         | Clases reales                    | Claro     | Oscuro    |
+| ------------------ | -------------------------------- | --------- | --------- |
+| `Button` (default) | `h-10 px-4 py-2`                 | `h-10`    | `h-10`    |
+| `Button` (sm)      | `h-9 px-3`                       | `h-9`     | `h-9`     |
+| `Button` (lg)      | `h-11 px-8`                      | `h-11`    | `h-11`    |
+| `Button` (icon)    | `size-10`                        | `size-10` | `size-10` |
+| `Input`            | `h-10 py-2`                      | `h-10`    | `h-10`    |
+| `Select`           | `h-10 appearance-none py-2 pr-9` | `h-10`    | `h-10`    |
+
+## Cuándo usarlo / Reglas
+
+Respeta `--content-max-width` y el ancho del shell compartido en vez de fijar un ancho de página nuevo. Usa las variantes de tamaño de `Button`; `Input` y `Select` comparten una altura de `h-10`. El contenido debe poder adaptarse a viewports menores sin desbordar el ancho mínimo establecido por `body`.

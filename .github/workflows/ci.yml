@@ -1,0 +1,271 @@
+# CI de OPTIMUS-THY (HT-003)
+#
+# CHECK REQUERIDO: el job `ci-ok`. Marcarlo como check obligatorio en la
+# protección de la rama `main` (Settings > Branches > reglas de protección):
+# es el único job que resume a los demás y falla si alguno falló o se canceló.
+#
+# Seguridad: `permissions: contents: read` a nivel de workflow, sin secretos
+# del repositorio y sin tokens propios: solo se usa el GITHUB_TOKEN por
+# defecto. Ningún `run:` interpola datos del evento (`github.event.*`).
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Cancela corridas anteriores del mismo ref cuando llega una nueva.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Python (${{ matrix.project }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [backend, ocr, ia]
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: optimus
+          POSTGRES_PASSWORD: cambiar-en-local
+          POSTGRES_DB: optimus
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: ${{ matrix.project }}/pyproject.toml
+      - name: Instalar dependencias
+        working-directory: ${{ matrix.project }}
+        run: python -m pip install -e ".[dev]"
+      - name: Formato (ruff format)
+        working-directory: ${{ matrix.project }}
+        run: ruff format --check .
+      - name: Lint (ruff check)
+        working-directory: ${{ matrix.project }}
+        run: ruff check .
+      - name: Tipos (mypy) — solo backend
+        if: matrix.project == 'backend'
+        working-directory: backend
+        run: mypy app
+      - name: Pruebas (pytest)
+        working-directory: ${{ matrix.project }}
+        env:
+          TEST_DATABASE_URL: postgresql+psycopg://optimus:cambiar-en-local@localhost:5432/optimus
+          # El backend no puede «pasar» saltándose las pruebas de base de datos.
+          REQUIRE_TEST_DB: "1"
+        run: pytest
+      - name: Esquema igual a los modelos (alembic check) — solo backend
+        if: matrix.project == 'backend'
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql+psycopg://optimus:cambiar-en-local@localhost:5432/optimus
+        run: alembic check
+      - name: Contrato OpenAPI al día — solo backend
+        if: matrix.project == 'backend'
+        working-directory: backend
+        run: |
+          python scripts/export_openapi.py
+          git diff --exit-code -- ../contracts/openapi.json
+  frontend:
+    name: Frontend (Bun)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - name: Instalar dependencias
+        run: bun install --frozen-lockfile
+      - name: Cliente de la API al día con el contrato
+        run: |
+          bun run gen:api
+          git diff --exit-code -- src/api/schema.d.ts
+      - name: Lint
+        run: bun run lint
+      - name: Composición visual y tamaños
+        run: bun run ui:check && bun run tamanos
+      - name: Formato
+        run: bun run format:check
+      - name: Tipos
+        run: bun run typecheck
+      - name: Pruebas
+        run: bun run test
+      - name: Build
+        run: bun run build
+      - name: Build catalogo
+        run: bun run catalogo:build
+      - name: Instalar Chromium para pruebas de historias
+        run: bun x playwright install --with-deps chromium
+      # Ejecuta los play y las comprobaciones a11y de cada historia.
+      - name: Pruebas de historias del catálogo
+        run: bun run catalogo:test
+      - name: Servir catálogo
+        run: |
+          bun run catalogo:preview > /tmp/catalogo-preview.log 2>&1 &
+          for intento in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:6105/index.json > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "El catálogo no respondió en http://127.0.0.1:6105/index.json."
+          cat /tmp/catalogo-preview.log
+          exit 1
+      # En CI solo capturamos; las fuentes del runner difieren de la línea base local.
+      - name: Capturas críticas
+        run: bun run capturar --base http://127.0.0.1:6105 --criticas --anchos 1440x900
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: capturas-criticas
+          path: frontend/test-results/capturas
+
+  compose:
+    name: Docker Compose
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validar docker-compose.yml
+        run: |
+          cp .env.example .env
+          docker compose config -q
+      - name: Generar certificado de prueba
+        run: bash infra/scripts/generar-certificado-dev.sh
+      - name: Validar configuración de nginx
+        run: |
+          mkdir -p infra/nginx/certs
+          openssl req -x509 -nodes -newkey rsa:2048 -days 1 \
+            -subj "/CN=localhost" \
+            -keyout infra/nginx/certs/dev.key \
+            -out infra/nginx/certs/dev.crt >/dev/null 2>&1
+          docker run --rm \
+            --add-host backend:127.0.0.1 \
+            --add-host frontend:127.0.0.1 \
+            -e HTTPS_PORT=18443 \
+            -e HTTP_PORT=8080 \
+            -e NGINX_ENVSUBST_FILTER='^(HTTPS_PORT|HTTP_PORT)$' \
+            -v "$PWD/infra/nginx:/etc/nginx/templates:ro" \
+            -v "$PWD/infra/nginx/certs:/etc/nginx/certs:ro" \
+            nginx:1.27-alpine nginx -t
+
+  secrets:
+    name: Secretos (gitleaks)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # La action necesita leer la lista de commits del PR para comparar contra la
+    # base; con `contents: read` a secas responde "GITHUB_TOKEN is now required".
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # gitleaks necesita el historial completo para auditar.
+          fetch-depth: 0
+      # Únicamente el GITHUB_TOKEN por defecto; no se pasa ningún token propio.
+      # (En un repositorio de organización esta action exigiría
+      # GITLEAKS_LICENSE, que aquí deliberadamente no se configura.)
+      - uses: gitleaks/gitleaks-action@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  deps:
+    name: Dependencias
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Historial completo: lo necesita dependency-review-action.
+          fetch-depth: 0
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            backend/pyproject.toml
+            ocr/pyproject.toml
+            ia/pyproject.toml
+      - name: Instalar pip-audit
+        run: python -m pip install pip-audit
+      - name: Instalar backend
+        working-directory: backend
+        run: python -m pip install -e ".[dev]"
+      - name: pip-audit (entorno con backend instalado)
+        working-directory: backend
+        run: pip-audit
+      - name: Instalar ocr
+        working-directory: ocr
+        run: python -m pip install -e ".[dev]"
+      - name: pip-audit (entorno con ocr instalado)
+        working-directory: ocr
+        run: pip-audit
+      - name: Instalar ia
+        working-directory: ia
+        run: python -m pip install -e ".[dev]"
+      - name: pip-audit (entorno con ia instalado)
+        working-directory: ia
+        run: pip-audit
+      - uses: oven-sh/setup-bun@v2
+      - name: bun audit (frontend)
+        working-directory: frontend
+        # `bun audit` necesita `bun.lock` y consulta el registro de avisos de
+        # npm en caliente: se marca continue-on-error para que la ausencia de
+        # lockfile o una indisponibilidad del servicio externo no bloqueen la
+        # CI. El fallo sigue siendo visible en la vista del job.
+        continue-on-error: true
+        run: bun audit
+      # dependency-review necesita el grafo de dependencias y GitHub Advanced
+      # Security, que este repositorio (privado, sin GHAS) no tiene: la action
+      # responde "Dependency review is not supported on this repository". El
+      # escaneo de dependencias real de este job son los `pip-audit` de arriba
+      # y `bun audit`; este paso queda visible pero sin bloquear la CI mientras
+      # el repositorio no tenga GHAS.
+      - name: Revisión de dependencias (solo en pull_request)
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        uses: actions/dependency-review-action@v5
+
+  # Resumen final: check que se marcará como requerido en la protección de
+  # la rama. `always()` lo ejecuta siempre; dentro se comprueba que ningún
+  # job anterior haya fallado ni se haya cancelado.
+  ci-ok:
+    name: CI OK
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [backend, frontend, compose, secrets, deps]
+    if: always()
+    steps:
+      - name: Comprobar que todos los trabajos pasaron
+        env:
+          RESULTS: "${{ join(needs.*.result, ' ') }}"
+        run: |
+          echo "Resultados: $RESULTS"
+          case "$RESULTS" in
+            *failure*|*cancelled*)
+              echo "Algún trabajo previo falló o se canceló."
+              exit 1
+              ;;
+          esac
+          echo "Todos los trabajos pasaron."

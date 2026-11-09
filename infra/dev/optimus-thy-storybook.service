@@ -1,0 +1,28 @@
+[Unit]
+Description=OPTIMUS-THY Storybook (HMR) en /storybook
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/code/optimus-thy-academico/frontend
+Environment=PATH=%h/.bun/bin:/usr/local/bin:/usr/bin:/bin
+Environment=STORYBOOK_BASE=/storybook/
+# Puerto/protocolo públicos del HMR: el cliente Vite corre en el navegador tras Cloudflare/nginx
+# y no ve el puerto interno 6104; --exact-port evita que Storybook elija otro puerto en silencio.
+Environment=STORYBOOK_HMR_PORT=443
+Environment=STORYBOOK_HMR_PROTOCOL=wss
+ExecStart=%h/.bun/bin/bun run catalogo -- --ci --no-version-updates --exact-port
+ExecStartPost=/usr/bin/bash -c 'for i in {1..120}; do curl -fsS http://127.0.0.1:6104/ >/dev/null 2>&1 && curl -fsS http://127.0.0.1:6104/index.json >/dev/null 2>&1 && exit 0; sleep 1; done; exit 1'
+Restart=always
+RestartSec=3
+KillMode=control-group
+TimeoutStartSec=150
+TimeoutStopSec=20
+SuccessExitStatus=130 143
+StandardOutput=journal
+StandardError=journal
+
+[X-Sablier]
+Enable=true
+Group=optimus-thy-storybook

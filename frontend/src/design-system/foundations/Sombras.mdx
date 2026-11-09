@@ -1,0 +1,18 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Sistema de diseño/Fundamentos/Sombras y elevación" tags={['ai-generated']} />
+
+# Sombras y elevación
+
+La elevación ayuda a separar superficies superpuestas y paneles sin depender únicamente del color de fondo. Los mismos niveles tienen sombras ajustadas para el tema claro y el oscuro.
+
+| Variable CSS        | Claro                                                                       | Oscuro                                                                 |
+| ------------------- | --------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `--elevation-xs`    | `0 1px 2px 0 rgb(15 23 42 / 0.05)`                                          | `0 1px 2px 0 rgb(0 0 0 / 0.24)`                                        |
+| `--elevation-sm`    | `0 1px 3px 0 rgb(15 23 42 / 0.1), 0 1px 2px -1px rgb(15 23 42 / 0.1)`       | `0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.3)`        |
+| `--elevation-md`    | `0 4px 6px -1px rgb(15 23 42 / 0.1), 0 2px 4px -2px rgb(15 23 42 / 0.1)`    | `0 4px 6px -1px rgb(0 0 0 / 0.35), 0 2px 4px -2px rgb(0 0 0 / 0.35)`   |
+| `--elevation-panel` | `0 20px 25px -5px rgb(15 23 42 / 0.1), 0 8px 10px -6px rgb(15 23 42 / 0.1)` | `0 20px 25px -5px rgb(0 0 0 / 0.55), 0 8px 10px -6px rgb(0 0 0 / 0.5)` |
+
+## Cuándo usarlo / Reglas
+
+Aplica la elevación solo cuando exprese jerarquía espacial, como una tarjeta elevada o un panel superpuesto. Usa los alias y clases existentes del sistema; no inventes sombras literales en cada componente. Mantén el orden visual y el foco comprensibles también sin sombra.

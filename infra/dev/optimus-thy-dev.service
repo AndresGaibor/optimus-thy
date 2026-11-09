@@ -1,0 +1,28 @@
+[Unit]
+Description=OPTIMUS-THY dev (Vite HMR, API reutilizada o propia) para la tailnet
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/code/optimus-thy
+Environment=PATH=%h/.local/share/fnm/aliases/default/bin:%h/.bun/bin:/usr/local/bin:/usr/bin:/bin
+Environment=OPTIMUS_DEV_WEB_PORT=5175
+Environment=OPTIMUS_DEV_API_PORT=8000
+ExecStart=%h/code/optimus-thy/infra/dev/optimus-thy-dev-run.sh
+Restart=always
+RestartSec=3
+KillMode=control-group
+SuccessExitStatus=143
+TimeoutStartSec=60
+TimeoutStopSec=20
+StandardOutput=journal
+StandardError=journal
+
+[X-Sablier]
+Enable=true
+Group=optimus-thy-dev
+
+# Sin [Install] a propósito: el enlace en default.target.wants se crea a mano
+# (systemctl enable borraría el enlace del repo). Mantener la unidad cargada
+# evita que Sablier la saque del grupo al escalar a cero.

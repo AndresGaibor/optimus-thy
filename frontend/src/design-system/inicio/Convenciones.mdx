@@ -1,0 +1,44 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Inicio/Convenciones de desarrollo" tags={['ai-generated']} />
+
+# Convenciones de desarrollo
+
+Reglas prácticas para mantener coherencia, accesibilidad y calidad en el código y el catálogo.
+
+## Idioma y comunicación
+
+- La interfaz, la documentación y los mensajes visibles se escriben en **español**.
+- Los nombres de código siguen las convenciones técnicas del ecosistema; los textos de usuario, etiquetas y descripciones permanecen en español.
+
+## Tokens y sistema de diseño
+
+- Usa los **tokens** definidos en `frontend/src/styles/tokens.css` y los componentes del sistema de diseño.
+- Evita **colores literales**, valores arbitrarios y estilos inline cuando exista un token o patrón equivalente.
+- Las restricciones de dirección visual están en `DESIGN.md`; las de producto, en `PRODUCT.md`.
+
+## Gates automáticos
+
+| Gate       | Qué valida                                                                                 | Referencia                      |
+| ---------- | ------------------------------------------------------------------------------------------ | ------------------------------- |
+| `ui:check` | Controles crudos, colores literales, valores arbitrarios y estilos inline                  | `frontend/`: `bun run ui:check` |
+| `tamanos`  | Tamaño máximo por archivo con baseline ratchet (220 UI / 150 hooks / 300 resto y fixtures) | `frontend/`: `bun run tamanos`  |
+
+`make check` y CI encadenan estas verificaciones. Los gates usan baseline ratchet: no se aceptan nuevas violaciones.
+
+## Pruebas e historias
+
+- Las pruebas de frontend usan **Vitest**.
+- Las historias interactivas del catálogo deben cubrir acciones relevantes con `play` cuando aporten verificación reproducible.
+- Cada componente o pantalla debe contar con historia autodocumentada; los estados relevantes (vacío, error, cargando, foco y diálogos) deben representarse.
+- Usa **datos sintéticos** en ejemplos, capturas y pruebas. No incluyas pacientes reales, datos identificables, imágenes médicas reales, pesos de modelos ni resultados de rendimiento reales.
+
+## Manejo de errores
+
+- Los mensajes al cliente deben ser claros y útiles, **sin exponer detalles internos** (trazas, SQL, rutas del servidor o información sensible).
+- El estado **Normal** en apoyo de IA significa **sin nódulo detectado** y se comunica como observación de apoyo que requiere revisión médica, no como diagnóstico.
+
+## Accesibilidad
+
+- Conserva nombre accesible, foco visible, operación por teclado y respeto por movimiento reducido.
+- Usa el conmutador **Motion** del catálogo para revisar comportamientos con movimiento reducido.

@@ -1,0 +1,74 @@
+# Borde TLS de OPTIMUS-THY (HT-012).
+# Solo este servicio publica puertos al host; el resto vive en la red interna.
+
+# --- Redirigir HTTP a HTTPS --------------------------------------------------
+server {
+    listen 8080;
+    server_name _;
+
+    server_tokens off;
+
+    # Todo el tráfico en claro se redirige a HTTPS.
+    location / {
+        return 301 https://$host:${HTTPS_PORT}$request_uri;
+    }
+}
+
+server {
+    listen 8443 ssl;
+    http2 on;
+    server_name _;
+
+    server_tokens off;
+
+    ssl_certificate     /etc/nginx/certs/dev.crt;
+    ssl_certificate_key /etc/nginx/certs/dev.key;
+
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 10m;
+
+    client_max_body_size 25m;
+
+    # Timeouts explícitos.
+    client_body_timeout   30s;
+    client_header_timeout 30s;
+    send_timeout          60s;
+    proxy_connect_timeout 10s;
+    proxy_send_timeout    60s;
+    proxy_read_timeout    60s;
+
+    # --- Cabeceras de seguridad ---------------------------------------------
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    # 'unsafe-inline' en style-src: el build de Vite/Tailwind inyecta estilos
+    # en línea en el HTML inicial; sin él la UI queda sin estilos. Los scripts
+    # NO permiten 'unsafe-inline' (solo 'self').
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    add_header X-Frame-Options "DENY" always;
+    add_header Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()" always;
+    add_header Cross-Origin-Opener-Policy "same-origin" always;
+    add_header Cross-Origin-Resource-Policy "same-origin" always;
+
+    proxy_hide_header X-Powered-By;
+
+    # Cabeceras reenviadas al upstream.
+    proxy_set_header Host              $host;
+    proxy_set_header X-Real-IP         $remote_addr;
+    proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+
+    location = /healthz {
+        access_log off;
+        return 200 "ok\n";
+        default_type text/plain;
+    }
+
+    location /api/ {
+        proxy_pass http://backend:8000/;
+    }
+    location / {
+        proxy_pass http://frontend:8080;
+    }
+}

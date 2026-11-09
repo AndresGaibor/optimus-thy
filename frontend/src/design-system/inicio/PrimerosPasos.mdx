@@ -1,0 +1,50 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Inicio/Primeros pasos" tags={['ai-generated']} />
+
+# Primeros pasos
+
+Esta guía orienta la navegación del catálogo de interfaz de OPTIMUS-THY y el uso de sus herramientas de consulta.
+
+## Raíces del catálogo
+
+| Raíz                  | Propósito                                                                                                  |
+| --------------------- | ---------------------------------------------------------------------------------------------------------- |
+| **Inicio**            | Introducción, primeros pasos, arquitectura, instalación, convenciones, contribución y registro de cambios. |
+| **Aplicación**        | Mapa de pantallas y flujos del producto, seguidos por las superficies organizadas por perfil.              |
+| **Sistema de diseño** | Fundamentos, primitivos, átomos, moléculas, organismos, plantillas y patrones compartidos.                 |
+| **Guías y calidad**   | Accesibilidad, adaptabilidad, contenido, rendimiento, evidencias visuales y gates de calidad.              |
+
+La sección **Aplicación** empieza por **Mapa de pantallas** y **Flujos**.
+
+## Barra de herramientas
+
+El catálogo expone conmutadores globales en la barra de herramientas de Storybook:
+
+| Control                  | Opciones                                                                 | Comportamiento                                                                       |
+| ------------------------ | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
+| **Shell**                | Sin sidebar / Con sidebar                                                | Define si se muestra la envoltura con barra lateral. Valor por defecto: sin sidebar. |
+| **Movimiento**           | Normal / Reducido                                                        | Simula la preferencia de movimiento reducido.                                        |
+| **Selector de tema**     | Claro / Oscuro                                                           | Cambia el tema de Storybook mediante la clase `dark`.                                |
+| **Selector de viewport** | Móvil 360×800, Tablet 768×1024, Escritorio 1366×768, Escritorio 1440×900 | Cambia el tamaño de visualización de la historia.                                    |
+
+## Citar un escenario reproducible
+
+Cada historia puede abrirse de forma aislada con su identificador:
+
+```text
+iframe.html?id=<storyId>&viewMode=story
+```
+
+El `<storyId>` corresponde al identificador estable de la historia (visible en la URL del catálogo o en el índice generado). Usar este enlace permite compartir un escenario concreto con tema, shell y movimiento definidos por quien lo revisa.
+
+## Consultar la API del catálogo
+
+El catálogo puede consultarse desde la línea de comandos para listar historias y ver su definición:
+
+```bash
+bun run consulta list
+bun run consulta show --id <storyId>
+```
+
+Estos comandos leen el índice del catálogo y devuelven la información de las APIs y escenarios registrados, útil para localizar un ejemplo o validar su identificador antes de citarlo.

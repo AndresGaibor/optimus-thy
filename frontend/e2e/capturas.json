@@ -1,0 +1,475 @@
+[
+  {
+    "id": "guías-y-calidad-accesibilidad--guia",
+    "titulo": "Accesibilidad WCAG AA",
+    "estado": "publico"
+  },
+  {
+    "id": "aplicación-pública-acceso-hu-001--credenciales-invalidas",
+    "titulo": "Acceso",
+    "estado": "error"
+  },
+  {
+    "id": "aplicación-pública-acceso-hu-001--predeterminada",
+    "titulo": "Acceso público",
+    "estado": "publico"
+  },
+  {
+    "id": "aplicación-administrador-gestión-de-usuarios-hu-010--cargando",
+    "titulo": "Aplicación/Administrador/Gestión de usuarios (HU-010)",
+    "estado": "Cargando"
+  },
+  {
+    "id": "aplicación-administrador-gestión-de-usuarios-hu-010--con-usuarios",
+    "titulo": "Aplicación/Administrador/Gestión de usuarios (HU-010)",
+    "estado": "Con Usuarios",
+    "critica": true
+  },
+  {
+    "id": "aplicación-administrador-gestión-de-usuarios-hu-010--error-de-carga",
+    "titulo": "Aplicación/Administrador/Gestión de usuarios (HU-010)",
+    "estado": "Error De Carga",
+    "critica": true
+  },
+  {
+    "id": "aplicación-administrador-gestión-de-usuarios-hu-010--sin-usuarios",
+    "titulo": "Aplicación/Administrador/Gestión de usuarios (HU-010)",
+    "estado": "Sin Usuarios"
+  },
+  {
+    "id": "aplicación-administrador-roles-y-permisos-hu-011--cargando",
+    "titulo": "Aplicación/Administrador/Roles y permisos (HU-011)",
+    "estado": "Cargando"
+  },
+  {
+    "id": "aplicación-administrador-roles-y-permisos-hu-011--error-de-carga",
+    "titulo": "Aplicación/Administrador/Roles y permisos (HU-011)",
+    "estado": "Error De Carga",
+    "critica": true
+  },
+  {
+    "id": "aplicación-administrador-roles-y-permisos-hu-011--predeterminada",
+    "titulo": "Aplicación/Administrador/Roles y permisos (HU-011)",
+    "estado": "Predeterminada",
+    "critica": true
+  },
+  {
+    "id": "aplicación-administrador-roles-y-permisos-hu-011--sin-roles",
+    "titulo": "Aplicación/Administrador/Roles y permisos (HU-011)",
+    "estado": "Sin Roles"
+  },
+  {
+    "id": "aplicación-flujos--acceso-denegado-por-rol",
+    "titulo": "Aplicación/Flujos",
+    "estado": "Acceso denegado por rol"
+  },
+  {
+    "id": "aplicación-flujos--administrador-usuarios-y-roles",
+    "titulo": "Aplicación/Flujos",
+    "estado": "Administrador, usuarios y roles (HU-010, HU-011)"
+  },
+  {
+    "id": "aplicación-flujos--cambio-de-rol-activo",
+    "titulo": "Aplicación/Flujos",
+    "estado": "Cambio de rol activo"
+  },
+  {
+    "id": "aplicación-flujos--medico-del-acceso-a-pacientes",
+    "titulo": "Aplicación/Flujos",
+    "estado": "Médico, del acceso a pacientes (HU-001, HU-031)"
+  },
+  {
+    "id": "aplicación-flujos--recuperacion-de-contrasena",
+    "titulo": "Aplicación/Flujos",
+    "estado": "Recuperación de contraseña (HU-111)"
+  },
+  {
+    "id": "aplicación-flujos--ruta-inexistente",
+    "titulo": "Aplicación/Flujos",
+    "estado": "Ruta inexistente"
+  },
+  {
+    "id": "aplicación-mapa-de-pantallas--docs",
+    "titulo": "Aplicación/Mapa de pantallas",
+    "estado": "Docs"
+  },
+  {
+    "id": "aplicación-médico-pacientes-hu-031--cargando",
+    "titulo": "Aplicación/Médico/Pacientes (HU-031)",
+    "estado": "Cargando"
+  },
+  {
+    "id": "aplicación-médico-pacientes-hu-031--datos-parciales",
+    "titulo": "Aplicación/Médico/Pacientes (HU-031)",
+    "estado": "Datos Parciales"
+  },
+  {
+    "id": "aplicación-médico-pacientes-hu-031--error-de-validacion",
+    "titulo": "Aplicación/Médico/Pacientes (HU-031)",
+    "estado": "Error De Validacion",
+    "critica": true
+  },
+  {
+    "id": "aplicación-médico-pacientes-hu-031--no-autenticado",
+    "titulo": "Aplicación/Médico/Pacientes (HU-031)",
+    "estado": "No Autenticado",
+    "critica": true
+  },
+  {
+    "id": "aplicación-médico-pacientes-hu-031--respuesta-lenta",
+    "titulo": "Aplicación/Médico/Pacientes (HU-031)",
+    "estado": "Respuesta Lenta"
+  },
+  {
+    "id": "aplicación-médico-pacientes-hu-031--sesion-expirada",
+    "titulo": "Aplicación/Médico/Pacientes (HU-031)",
+    "estado": "Sesion Expirada",
+    "critica": true
+  },
+  {
+    "id": "aplicación-médico-pacientes-hu-031--sin-permiso",
+    "titulo": "Aplicación/Médico/Pacientes (HU-031)",
+    "estado": "Sin Permiso",
+    "critica": true
+  },
+  {
+    "id": "aplicación-pública-acceso-hu-001--enviando",
+    "titulo": "Aplicación/Pública/Acceso (HU-001)",
+    "estado": "Enviando"
+  },
+  {
+    "id": "aplicación-pública-recuperar-contraseña-hu-111--contrasena-actualizada",
+    "titulo": "Aplicación/Pública/Recuperar contraseña (HU-111)",
+    "estado": "Contrasena Actualizada"
+  },
+  {
+    "id": "aplicación-pública-recuperar-contraseña-hu-111--enlace-caducado",
+    "titulo": "Aplicación/Pública/Recuperar contraseña (HU-111)",
+    "estado": "Enlace Caducado"
+  },
+  {
+    "id": "aplicación-pública-recuperar-contraseña-hu-111--error-al-enviar",
+    "titulo": "Aplicación/Pública/Recuperar contraseña (HU-111)",
+    "estado": "Error Al Enviar",
+    "critica": true
+  },
+  {
+    "id": "aplicación-pública-recuperar-contraseña-hu-111--nueva-contrasena",
+    "titulo": "Aplicación/Pública/Recuperar contraseña (HU-111)",
+    "estado": "Nueva Contrasena"
+  },
+  {
+    "id": "aplicación-pública-recuperar-contraseña-hu-111--solicitud",
+    "titulo": "Aplicación/Pública/Recuperar contraseña (HU-111)",
+    "estado": "Solicitud"
+  },
+  {
+    "id": "aplicación-pública-recuperar-contraseña-hu-111--solicitud-enviada",
+    "titulo": "Aplicación/Pública/Recuperar contraseña (HU-111)",
+    "estado": "Solicitud Enviada"
+  },
+  {
+    "id": "inicio-arquitectura--docs",
+    "titulo": "Arquitectura",
+    "estado": "publico"
+  },
+  {
+    "id": "sistema-de-diseño-átomos-badge--predeterminado",
+    "titulo": "Badge",
+    "estado": "datos",
+    "critica": true
+  },
+  {
+    "id": "sistema-de-diseño-fundamentos-bordes-y-radios--docs",
+    "titulo": "Bordes y radios",
+    "estado": "publico"
+  },
+  {
+    "id": "sistema-de-diseño-átomos-button--variantes",
+    "titulo": "Button",
+    "estado": "datos",
+    "critica": true
+  },
+  {
+    "id": "sistema-de-diseño-patrones-búsqueda--resultados",
+    "titulo": "Búsqueda",
+    "estado": "datos"
+  },
+  {
+    "id": "sistema-de-diseño-patrones-búsqueda--sin-resultados",
+    "titulo": "Búsqueda",
+    "estado": "vacio"
+  },
+  {
+    "id": "sistema-de-diseño-patrones-carga-de-archivos--predeterminado",
+    "titulo": "Carga de archivos",
+    "estado": "publico"
+  },
+  {
+    "id": "inicio-changelog--docs",
+    "titulo": "Changelog",
+    "estado": "publico"
+  },
+  {
+    "id": "sistema-de-diseño-fundamentos-colores--docs",
+    "titulo": "Colores",
+    "estado": "publico"
+  },
+  {
+    "id": "sistema-de-diseño-patrones-confirmaciones--destructiva",
+    "titulo": "Confirmaciones",
+    "estado": "publico"
+  },
+  {
+    "id": "guías-y-calidad-contenido-y-microcopy--glosario",
+    "titulo": "Contenido y glosario",
+    "estado": "publico"
+  },
+  {
+    "id": "inicio-cómo-contribuir--docs",
+    "titulo": "Contribuir",
+    "estado": "publico"
+  },
+  {
+    "id": "inicio-convenciones-de-desarrollo--docs",
+    "titulo": "Convenciones",
+    "estado": "publico"
+  },
+  {
+    "id": "sistema-de-diseño-fundamentos-dimensiones--docs",
+    "titulo": "Dimensiones",
+    "estado": "publico"
+  },
+  {
+    "id": "guías-y-calidad-diseño-adaptable--anchos",
+    "titulo": "Diseño adaptable",
+    "estado": "publico"
+  },
+  {
+    "id": "sistema-de-diseño-fundamentos-espaciado--docs",
+    "titulo": "Espaciado",
+    "estado": "publico"
+  },
+  {
+    "id": "sistema-de-diseño-patrones-estados--guia",
+    "titulo": "Estados",
+    "estado": "publico"
+  },
+  {
+    "id": "guías-y-calidad-estados-y-casos-límite--texto-largo-sin-espacios",
+    "titulo": "Estados y casos límite",
+    "estado": "publico"
+  },
+  {
+    "id": "guías-y-calidad-evidencias-visuales--indice",
+    "titulo": "Evidencias",
+    "estado": "publico"
+  },
+  {
+    "id": "sistema-de-diseño-patrones-filtros--criterios-activos",
+    "titulo": "Filtros",
+    "estado": "datos"
+  },
+  {
+    "id": "sistema-de-diseño-patrones-flujos-clínicos--confirmacion-ocr",
+    "titulo": "Flujos clínicos",
+    "estado": "publico"
+  },
+  {
+    "id": "sistema-de-diseño-patrones-formularios--con-errores",
+    "titulo": "Formularios",
+    "estado": "error"
+  },
+  {
+    "id": "sistema-de-diseño-patrones-formularios--simple",
+    "titulo": "Formularios",
+    "estado": "datos",
+    "critica": true
+  },
+  {
+    "id": "sistema-de-diseño-fundamentos-tokens-semánticos--claro",
+    "titulo": "Fundamentos tokens",
+    "estado": "publico",
+    "critica": true
+  },
+  {
+    "id": "sistema-de-diseño-fundamentos-tokens-semánticos--oscuro",
+    "titulo": "Fundamentos tokens oscuro",
+    "estado": "publico"
+  },
+  {
+    "id": "guías-y-calidad-gates-de-calidad--guia",
+    "titulo": "Gates de calidad",
+    "estado": "publico",
+    "critica": true
+  },
+  {
+    "id": "sistema-de-diseño-fundamentos-grid-y-breakpoints--docs",
+    "titulo": "Grid y breakpoints",
+    "estado": "publico"
+  },
+  {
+    "id": "sistema-de-diseño-fundamentos-iconografía--docs",
+    "titulo": "Iconografía",
+    "estado": "publico"
+  },
+  {
+    "id": "sistema-de-diseño-fundamentos-ilustraciones--docs",
+    "titulo": "Ilustraciones",
+    "estado": "publico"
+  },
+  {
+    "id": "guías-y-calidad-evidencias-visuales-imágenes-anonimizadas--galeria",
+    "titulo": "Imágenes de referencia",
+    "estado": "publico"
+  },
+  {
+    "id": "inicio-instalación-y-configuración--docs",
+    "titulo": "Instalación",
+    "estado": "publico"
+  },
+  {
+    "id": "inicio-introducción--docs",
+    "titulo": "Introducción",
+    "estado": "publico"
+  },
+  {
+    "id": "sistema-de-diseño-patrones-modales--informativo",
+    "titulo": "Modales",
+    "estado": "publico",
+    "critica": true
+  },
+  {
+    "id": "sistema-de-diseño-patrones-navegación--pestañas",
+    "titulo": "Navegación",
+    "estado": "publico"
+  },
+  {
+    "id": "sistema-de-diseño-patrones-notificaciones--tonos",
+    "titulo": "Notificaciones",
+    "estado": "publico"
+  },
+  {
+    "id": "aplicación-médico-pacientes-hu-031--con-pacientes",
+    "titulo": "Pacientes del médico",
+    "estado": "datos",
+    "critica": true
+  },
+  {
+    "id": "aplicación-médico-pacientes-hu-031--error-de-carga",
+    "titulo": "Pacientes del médico",
+    "estado": "error"
+  },
+  {
+    "id": "aplicación-médico-pacientes-hu-031--sin-pacientes",
+    "titulo": "Pacientes del médico",
+    "estado": "vacio"
+  },
+  {
+    "id": "sistema-de-diseño-patrones-paginación--por-desplazamiento",
+    "titulo": "Paginación",
+    "estado": "datos"
+  },
+  {
+    "id": "sistema-de-diseño-patrones-permisos--matriz-de-permisos",
+    "titulo": "Permisos",
+    "estado": "publico"
+  },
+  {
+    "id": "sistema-de-diseño-plantillas-formulario-de-registro--con-errores",
+    "titulo": "Plantilla formulario",
+    "estado": "error"
+  },
+  {
+    "id": "sistema-de-diseño-plantillas-formulario-de-registro--guardando",
+    "titulo": "Plantilla formulario",
+    "estado": "publico"
+  },
+  {
+    "id": "sistema-de-diseño-plantillas-formulario-de-registro--inicial",
+    "titulo": "Plantilla formulario",
+    "estado": "datos"
+  },
+  {
+    "id": "sistema-de-diseño-plantillas-lista-y-detalle--con-datos",
+    "titulo": "Plantilla lista y detalle",
+    "estado": "datos"
+  },
+  {
+    "id": "sistema-de-diseño-plantillas-lista-y-detalle--sin-datos",
+    "titulo": "Plantilla lista y detalle",
+    "estado": "vacio"
+  },
+  {
+    "id": "sistema-de-diseño-plantillas-panel-de-métricas--cargando",
+    "titulo": "Plantilla panel de métricas",
+    "estado": "publico"
+  },
+  {
+    "id": "sistema-de-diseño-plantillas-panel-de-métricas--con-datos",
+    "titulo": "Plantilla panel de métricas",
+    "estado": "datos",
+    "critica": true
+  },
+  {
+    "id": "sistema-de-diseño-plantillas-panel-de-métricas--un-panel-con-error",
+    "titulo": "Plantilla panel de métricas",
+    "estado": "error"
+  },
+  {
+    "id": "inicio-primeros-pasos--docs",
+    "titulo": "Primeros pasos",
+    "estado": "publico"
+  },
+  {
+    "id": "guías-y-calidad-rendimiento--presupuesto",
+    "titulo": "Rendimiento",
+    "estado": "publico"
+  },
+  {
+    "id": "aplicación-shell-y-navegación--guia",
+    "titulo": "Shell del catálogo",
+    "estado": "publico"
+  },
+  {
+    "id": "sistema-de-diseño-fundamentos-temas-en-oscuro--guia",
+    "titulo": "Sistema de diseño/Fundamentos/Temas en oscuro",
+    "estado": "Guia"
+  },
+  {
+    "id": "sistema-de-diseño-fundamentos-sombras-y-elevación--docs",
+    "titulo": "Sombras y elevación",
+    "estado": "publico"
+  },
+  {
+    "id": "sistema-de-diseño-patrones-tablas-y-listados--con-datos",
+    "titulo": "Tablas y listados",
+    "estado": "datos",
+    "critica": true
+  },
+  {
+    "id": "sistema-de-diseño-patrones-tablas-y-listados--vacia",
+    "titulo": "Tablas y listados",
+    "estado": "vacio"
+  },
+  {
+    "id": "sistema-de-diseño-fundamentos-temas--docs",
+    "titulo": "Temas",
+    "estado": "publico"
+  },
+  {
+    "id": "sistema-de-diseño-fundamentos-tipografía--docs",
+    "titulo": "Tipografía",
+    "estado": "publico"
+  },
+  {
+    "id": "sistema-de-diseño-primitivos-tonos--default",
+    "titulo": "Tonos",
+    "estado": "publico"
+  },
+  {
+    "id": "sistema-de-diseño-patrones-validación--con-errores",
+    "titulo": "Validación",
+    "estado": "error"
+  }
+]

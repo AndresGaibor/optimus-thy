@@ -1,0 +1,45 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Sistema de diseño/Fundamentos/Iconografía" tags={['ai-generated']} />
+
+# Iconografía
+
+Los iconos de interfaz proceden de `lucide-react` y acompañan acciones, estados y perfiles. Las tablas siguientes reflejan los mapas tipados reales de iconos por tono y rol.
+
+## Tamaños usados
+
+| Uso encontrado                          | Clase      |
+| --------------------------------------- | ---------- |
+| Marca de punto o marcador compacto      | `size-2`   |
+| Icono compacto de Badge o RoleBadge     | `size-3`   |
+| Spinner compacto y marcador de Timeline | `size-3.5` |
+| Icono de botón y control                | `size-4`   |
+| Icono de apoyo/indicador                | `size-5`   |
+| Icono de estado destacado o rol         | `size-6`   |
+| Icono de BrandMark pequeño              | `size-7`   |
+| Icono de carga o marca de autenticación | `size-8`   |
+| Marca de producto                       | `size-16`  |
+
+## Iconos por tono (`TONE_ICONS`)
+
+| Tono        | Icono Lucide    |
+| ----------- | --------------- |
+| `neutral`   | `Info`          |
+| `info`      | `Info`          |
+| `success`   | `CircleCheck`   |
+| `warning`   | `TriangleAlert` |
+| `attention` | `TriangleAlert` |
+| `danger`    | `OctagonAlert`  |
+| `ai`        | `Sparkles`      |
+
+## Iconos por rol (`ROLE_ICONS`)
+
+| Rol             | Icono Lucide   |
+| --------------- | -------------- |
+| `medico`        | `Stethoscope`  |
+| `investigador`  | `FlaskConical` |
+| `administrador` | `ShieldCheck`  |
+
+## Cuándo usarlo / Reglas
+
+Usa un icono Lucide cuando refuerce una acción o estado, y acompáñalo de texto: icono + texto, nunca solo color. Los iconos decorativos deben ocultarse a tecnologías de asistencia; los iconos funcionales necesitan un nombre accesible. Conserva el tamaño de los componentes existentes y no sustituyas etiquetas por glifos ambiguos.

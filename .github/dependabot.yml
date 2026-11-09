@@ -1,0 +1,28 @@
+# Actualizaciones semanales de dependencias (HT-003).
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: pip
+    directory: "/backend"
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: pip
+    directory: "/ocr"
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: pip
+    directory: "/ia"
+    schedule:
+      interval: weekly
+
+  # Bun usa el ecosistema npm de GitHub para los Dependabot PR.
+  - package-ecosystem: npm
+    directory: "/frontend"
+    schedule:
+      interval: weekly
