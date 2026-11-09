@@ -37,6 +37,8 @@ Cada servicio expone un chequeo de salud; `docker compose ps` muestra su estado.
 
 Este repositorio (`optimus-thy-operativo`) es el de entrega/producción. El repositorio académico conserva la tesis, los requisitos, el backlog y la evidencia; las correcciones nacidas en producción se preparan como PR separado contra el académico.
 
-- Runbook de despliegue y corte: [docs/operacion/despliegue-tiroides2.md](docs/operacion/despliegue-tiroides2.md)
+- Runbook del nuevo despliegue aislado por Tailscale: [docs/operacion/despliegue-produccion.md](docs/operacion/despliegue-produccion.md)
+- Runbook de despliegue y corte de tiroides2 (instalación existente): [docs/operacion/despliegue-tiroides2.md](docs/operacion/despliegue-tiroides2.md)
+- Decisiones del despliegue: [ADR-018](docs/adr/ADR-018-despliegue-por-releases.md) y [ADR-019](docs/adr/ADR-019-respaldos-cifrados.md)
 - Sincronización académico ↔ producción: [docs/operacion/sincronizar-academico.md](docs/operacion/sincronizar-academico.md)
 - Registro de decisiones (ADR): [docs/adr/README.md](docs/adr/README.md)

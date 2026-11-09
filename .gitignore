@@ -48,4 +48,9 @@ test-results/
 .wrangler/
 mcp.json
 frontend/.vitest-attachments/
+
+# Releases and deployment metadata
+releases/
+deployments/
+.deploy.lock
 frontend/local:/

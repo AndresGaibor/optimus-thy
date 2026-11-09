@@ -1,6 +1,16 @@
-.PHONY: up down check certificado-dev db-test respaldo-prueba comparar-academico
+.PHONY: up down check certificado-dev db-test respaldo-prueba comparar-academico help deploy-check deploy-status
+
 
 ACADEMICO_DIR ?= /home/ubuntu/code/optimus-thy-academico
+
+help:
+	@printf '%s\n' 'Targets: up down check deploy-check deploy-status certificado-dev db-test respaldo-prueba comparar-academico'
+
+deploy-check:
+	./deploy.sh check
+
+deploy-status:
+	./deploy.sh status
 ACADEMICO_REF ?= HEAD
 
 up:
