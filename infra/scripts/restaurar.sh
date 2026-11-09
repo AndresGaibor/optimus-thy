@@ -16,7 +16,8 @@ fail() { echo "ERROR: $*" >&2; exit 1; }
 [[ -f "$ARCHIVO" ]] || fail "uso: restaurar.sh <db-*.sql.gz.gpg> [--sql]"
 [[ -s "$CLAVE" ]] || fail "define BACKUP_KEY_FILE con la clave del respaldo"
 
-export GNUPGHOME="$(mktemp -d)"
+GNUPGHOME="$(mktemp -d)"
+export GNUPGHOME
 descifrar() {
     gpg --batch --quiet --pinentry-mode loopback --passphrase-file "$CLAVE" --decrypt "$ARCHIVO" \
         | gunzip

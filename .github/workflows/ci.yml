@@ -140,6 +140,38 @@ jobs:
           name: capturas-criticas
           path: frontend/test-results/capturas
 
+
+  deploy:
+    name: Despliegue (scripts)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Instalar shellcheck si falta
+        run: |
+          if ! command -v shellcheck >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y shellcheck
+          fi
+      - name: Revisar scripts
+        run: |
+          shellcheck deploy.sh infra/deploy/*.sh infra/scripts/*.sh
+          bash -n deploy.sh infra/deploy/*.sh infra/scripts/*.sh
+      - name: Validar compose de servidor
+        env:
+          DEPLOY_ENV: production
+          COMPOSE_PROJECT_NAME: optimus-thy
+          IMAGE_PREFIX: optimus-thy
+          COMPOSE_NETWORK: optimus-thy-net
+          RELEASE: test
+          TAILSCALE_IP: 127.0.0.1
+          HTTPS_PORT: "18443"
+          APP_DIR: ${{ github.workspace }}
+          RELEASE_DIR: ${{ github.workspace }}
+        run: docker compose -f docker-compose.yml -f compose.server.example.yaml config -q
+      - name: Probar retención de respaldos
+        run: bash infra/scripts/probar-retencion.sh
+
   compose:
     name: Docker Compose
     runs-on: ubuntu-latest
@@ -189,6 +221,7 @@ jobs:
       - uses: gitleaks/gitleaks-action@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_CONFIG: .gitleaks.toml
 
   deps:
     name: Dependencias
@@ -254,7 +287,7 @@ jobs:
     name: CI OK
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    needs: [backend, frontend, compose, secrets, deps]
+    needs: [backend, frontend, compose, deploy, secrets, deps]
     if: always()
     steps:
       - name: Comprobar que todos los trabajos pasaron

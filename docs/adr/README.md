@@ -32,6 +32,8 @@ Registro de decisiones para el repositorio operativo `AndresGaibor/optimus-thy`.
 - [ADR-015 — Cookie SameSite=Strict y verificación de Origin](ADR-015-cookie-strict-origin.md)
 - [ADR-016 — Despliegue de producción en tiroides2](ADR-016-despliegue-tiroides2.md)
 - [ADR-017 — Estructura del backend de producción](ADR-017-estructura-backend.md)
+- [ADR-018 — Despliegue por releases con migraciones explícitas](ADR-018-despliegue-por-releases.md)
+- [ADR-019 — Respaldos cifrados y retención escalonada](ADR-019-respaldos-cifrados.md)
 
 ## Verificación del corte (2026-11-09)
 

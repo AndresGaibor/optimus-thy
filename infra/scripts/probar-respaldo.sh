@@ -7,7 +7,10 @@ export BACKUP_DIR="${BACKUP_DIR:-$(mktemp -d)}"
 : "${BACKUP_KEY_FILE:?define BACKUP_KEY_FILE}"
 
 "$AQUI/respaldo.sh"
+# El respaldo más reciente se identifica por fecha de modificación.
+# shellcheck disable=SC2012
 DB="$(ls -1t "$BACKUP_DIR"/db-*.gpg | head -1)"
+# shellcheck disable=SC2012
 ( cd "$BACKUP_DIR" && sha256sum -c "$(ls -1t SHA256SUMS-* | head -1)" )
 
 # 1. Cifrado real: el contenido no es legible sin la clave y no trae SQL en claro.

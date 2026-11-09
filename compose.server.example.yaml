@@ -1,0 +1,65 @@
+# Overlay de producción. La instalación lo copia como compose.server.yaml.
+# RELEASE, TAILSCALE_IP, APP_DIR y RELEASE_DIR son requeridos.
+networks:
+  default:
+    name: ${COMPOSE_NETWORK:?COMPOSE_NETWORK requerido}
+
+services:
+  postgres:
+    deploy:
+      resources:
+        limits:
+          cpus: "1.50"
+          memory: 2g
+
+  storage:
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 512m
+
+  backend:
+    image: ${IMAGE_PREFIX:?IMAGE_PREFIX requerido}-backend:${RELEASE:?RELEASE requerido}
+    ports: !override []
+    deploy:
+      resources:
+        limits:
+          cpus: "1.50"
+          memory: 2g
+
+  frontend:
+    image: ${IMAGE_PREFIX:?IMAGE_PREFIX requerido}-frontend:${RELEASE:?RELEASE requerido}
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 256m
+
+  ocr:
+    image: ${IMAGE_PREFIX:?IMAGE_PREFIX requerido}-ocr:${RELEASE:?RELEASE requerido}
+    deploy:
+      resources:
+        limits:
+          cpus: "1.00"
+          memory: 1g
+
+  ia:
+    image: ${IMAGE_PREFIX:?IMAGE_PREFIX requerido}-ia:${RELEASE:?RELEASE requerido}
+    deploy:
+      resources:
+        limits:
+          cpus: "1.00"
+          memory: 1g
+
+  edge:
+    ports: !override
+      - "${TAILSCALE_IP:?TAILSCALE_IP requerido}:${HTTPS_PORT:-18443}:8443"
+    volumes: !override
+      - "${RELEASE_DIR:?RELEASE_DIR requerido}/infra/nginx:/etc/nginx/templates:ro"
+      - "${APP_DIR:?APP_DIR requerido}/infra/nginx/certs:/etc/nginx/certs:ro"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 256m

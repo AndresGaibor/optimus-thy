@@ -4,6 +4,8 @@ After=docker.service
 
 [Service]
 Type=oneshot
+Environment=COMPOSE_PROJECT_NAME=optimus-thy
+Environment=DEPLOY_ENV=production
 Environment=BACKUP_KEY_FILE=%h/.optimus-respaldo.key
 Environment=BACKUP_DIR=%h/backups/optimus
 ExecStart=%h/code/optimus-thy-operativo/infra/scripts/respaldo.sh
