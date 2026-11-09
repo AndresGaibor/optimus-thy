@@ -16,4 +16,4 @@ El dominio `tiroides2.andresgaibor.com` se sirve desde el repo `optimus-thy-oper
 - Los units systemd, el runbook y el mount del edge deben apuntar al path del repo operativo.
 - El corte exige reconstruir frontend, recrear el edge y verificar `/`, `/login`, un asset, `/api/auth/me` y `/storybook/`.
 - El backend no puede quedar solo dentro de la red del compose: el edge lo alcanza por `127.0.0.1:8000`.
-- Al preparar el corte se observó `502` en `/api/auth/me` porque nada escuchaba en 8000; la verificación post-corte queda pendiente de ejecución.
+- Verificado el 2026-11-09: `/`, `/login` y un asset responden 200; `/api/auth/me` responde 401; el edge monta `optimus-thy-operativo/frontend/dist` y el backend se publica en `127.0.0.1:8000`.

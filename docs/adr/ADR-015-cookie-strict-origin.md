@@ -15,4 +15,4 @@ La cookie de sesión se emite con `HttpOnly`, `Path=/`, sin `Domain`, `Secure` f
 
 - El frontend debe ser same-origin o estar listado en `ALLOWED_ORIGINS`.
 - Se elimina la dependencia exclusiva de `SameSite=Lax`.
-- La decisión se implementa en producción y se propone al académico en el PR de endurecimiento. Su verificación operativa/pruebas en el entorno desplegado queda como pendiente hasta ejecutar el corte y las comprobaciones correspondientes.
+- La decisión se implementa en producción y se propone al académico en el PR de endurecimiento. Verificado en producción el 2026-11-09: `Origin` ajeno responde 403 y `Origin` propio 204; la cookie `SameSite=Strict` está cubierta por pruebas y `SESSION_COOKIE_SECURE=true` en el backend desplegado.

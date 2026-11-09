@@ -33,11 +33,13 @@ Registro de decisiones para el repositorio operativo `AndresGaibor/optimus-thy`.
 - [ADR-016 — Despliegue de producción en tiroides2](ADR-016-despliegue-tiroides2.md)
 - [ADR-017 — Estructura del backend de producción](ADR-017-estructura-backend.md)
 
-## Pendiente de verificación (corte)
+## Verificación del corte (2026-11-09)
 
-- Implementación y pruebas de ADR-015 en producción.
-- Aplicación operativa de paths/configuración de ADR-016 (units, nginx, edge).
-- Pin de MinIO aplicado en `docker-compose.yml` (configuración lista en repo; ejecución del stack pendiente según entorno).
-- Publicación de `127.0.0.1:8000` para el backend (configuración lista en repo).
-- Verificación de `/api/auth/me` (al preparar el corte respondió 502 porque nada escuchaba en 8000).
-- PR de backport al académico con ADR-012…017 y el endurecimiento de cookie/Origin.
+- Backend `optimus-thy-backend-1` healthy y migración `0009 (head)`.
+- `/` 200, `/login` 200, asset 200 y `/api/auth/me` 401.
+- `POST /api/auth/logout`: `Origin` ajeno 403; `Origin` propio 204.
+- Edge `optimus-thy-edge` monta `optimus-thy-operativo/frontend/dist`; el contenedor viejo fue retirado.
+- Storybook local 200; público 302 por Cloudflare Access.
+- MinIO fijado por digest y backend publicado en `127.0.0.1:8000`.
+- PII rotada a clave real; la única identidad descifra con la clave nueva.
+- PR de backport: https://github.com/AndresGaibor/optimus/pull/20.
