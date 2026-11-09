@@ -26,9 +26,16 @@ assert_fail_without_containers() {
 [[ -d /src/.git ]] || fail "/src no contiene el repositorio git"
 git config --global --add safe.directory /src
 git config --global --add safe.directory /src/.git
-git clone --branch dev /src "$APP_DIR"
-git -C "$APP_DIR" fetch origin dev
-[[ "$(git -C "$APP_DIR" rev-parse HEAD)" == "$(git -C "$APP_DIR" rev-parse origin/dev)" ]] || fail "el clon no está alineado con origin/dev"
+[[ -n "${E2E_HEAD_SHA:-}" ]] || fail "E2E_HEAD_SHA requerido"
+[[ -n "${E2E_BASE_SHA:-}" ]] || fail "E2E_BASE_SHA requerido"
+git -C /src cat-file -e "${E2E_HEAD_SHA}^{commit}" 2>/dev/null || fail "E2E_HEAD_SHA no existe en /src: $E2E_HEAD_SHA"
+git -C /src cat-file -e "${E2E_BASE_SHA}^{commit}" 2>/dev/null || fail "E2E_BASE_SHA no existe en /src: $E2E_BASE_SHA"
+git init --bare /e2e/origin.git >/dev/null
+git -C /e2e/origin.git fetch /src "+${E2E_HEAD_SHA}:refs/heads/dev" "+${E2E_BASE_SHA}:refs/heads/main" >/dev/null
+git clone /e2e/origin.git "$APP_DIR" >/dev/null
+git -C "$APP_DIR" checkout dev >/dev/null
+git -C "$APP_DIR" merge-base --is-ancestor "$E2E_BASE_SHA" "$E2E_HEAD_SHA" || fail "el checkout E2E no desciende de main (HEAD=$E2E_HEAD_SHA BASE=$E2E_BASE_SHA); en CI debe ser el merge commit del PR"
+[[ "$(git -C "$APP_DIR" rev-parse HEAD)" == "$E2E_HEAD_SHA" ]] || fail "el clon no está alineado con E2E_HEAD_SHA"
 mkdir -p "$APP_DIR/infra/nginx/certs" /e2e/backups
 openssl req -x509 -nodes -newkey rsa:2048 -days 2 \
   -subj '/CN=127.0.0.1' -addext 'subjectAltName=IP:127.0.0.1,DNS:localhost' \
@@ -114,8 +121,31 @@ fi
 printf 'OK no hay down -v en scripts de despliegue\n'
 
 cd "$APP_DIR"
+# Escenario de adopción: stack «heredado» existente antes del primer deploy gestionado.
+COMPOSE_PROJECT_NAME="$PROJECT" docker compose -p "$PROJECT" --env-file "$ENV_FILE" -f docker-compose.yml up -d --wait postgres storage
+PG_E2E="${PROJECT}-postgres-1"
+docker exec "$PG_E2E" sh -c 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' <<'SQL'
+CREATE TABLE IF NOT EXISTS e2e_adopcion (id integer primary key, marca text not null);
+INSERT INTO e2e_adopcion (id, marca) VALUES (1, 'persistir') ON CONFLICT (id) DO NOTHING;
+SQL
+CREATED_AT_BEFORE="$(docker volume inspect "${PROJECT}_pgdata" --format '{{.CreatedAt}}')"
+[[ -n "$CREATED_AT_BEFORE" ]] || fail "no se pudo registrar CreatedAt de ${PROJECT}_pgdata"
+ADOPT_OUT="$(./deploy.sh adopt 2>&1)"
+ADOPT_RC=$?
+printf '%s\n' "$ADOPT_OUT"
+[[ "$ADOPT_RC" -eq 0 ]] || fail "deploy.sh adopt falló (rc=$ADOPT_RC)"
+echo "$ADOPT_OUT" | grep -qi 'Instalación existente: SÍ\|existe_instalacion' || fail "deploy.sh adopt no reporta instalación existente"
+echo "$ADOPT_OUT" | grep -q "$PROJECT" || fail "deploy.sh adopt no reporta el proyecto $PROJECT"
+printf 'OK adopt detecta instalación heredada existente\n'
+
 ./deploy.sh check --ref origin/dev
 ./deploy.sh deploy --ref origin/dev --yes
+SYNTHETIC="$(docker exec "$PG_E2E" sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "SELECT marca FROM e2e_adopcion WHERE id = 1;"')"
+[[ "$SYNTHETIC" == "persistir" ]] || fail "registro sintético e2e_adopcion no persiste tras deploy ($SYNTHETIC)"
+CREATED_AT_AFTER="$(docker volume inspect "${PROJECT}_pgdata" --format '{{.CreatedAt}}')"
+[[ "$CREATED_AT_AFTER" == "$CREATED_AT_BEFORE" ]] || fail "CreatedAt de ${PROJECT}_pgdata cambió tras deploy (antes=$CREATED_AT_BEFORE después=$CREATED_AT_AFTER)"
+printf 'OK datos sintéticos y volumen pgdata preservados tras adopción+deploy\n'
+
 RELEASE_SHA="$(git -C "$APP_DIR" rev-parse origin/dev)"
 STATUS_OUT="$(./deploy.sh status 2>&1 || true)"
 echo "$STATUS_OUT" | grep -q "$RELEASE_SHA" || fail "status no muestra el release desplegado ($RELEASE_SHA)"

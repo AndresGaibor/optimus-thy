@@ -155,8 +155,8 @@ jobs:
           fi
       - name: Revisar scripts
         run: |
-          shellcheck deploy.sh infra/deploy/*.sh infra/scripts/*.sh
-          bash -n deploy.sh infra/deploy/*.sh infra/scripts/*.sh
+          shellcheck deploy.sh infra/deploy/*.sh infra/scripts/*.sh scripts/auditoria-dependencias.sh tests/e2e/*.sh
+          bash -n deploy.sh infra/deploy/*.sh infra/scripts/*.sh scripts/auditoria-dependencias.sh tests/e2e/*.sh
       - name: Validar compose de servidor
         env:
           DEPLOY_ENV: production
@@ -171,6 +171,17 @@ jobs:
         run: docker compose -f docker-compose.yml -f compose.server.example.yaml config -q
       - name: Probar retención de respaldos
         run: bash infra/scripts/probar-retencion.sh
+
+  e2e:
+    name: E2E despliegue (DinD)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Ejecutar E2E aislado
+        run: bash tests/e2e/run-isolated.sh
 
   compose:
     name: Docker Compose
@@ -247,37 +258,28 @@ jobs:
         run: python -m pip install -e ".[dev]"
       - name: pip-audit (entorno con backend instalado)
         working-directory: backend
-        run: pip-audit
+        run: bash ../scripts/auditoria-dependencias.sh pip
       - name: Instalar ocr
         working-directory: ocr
         run: python -m pip install -e ".[dev]"
       - name: pip-audit (entorno con ocr instalado)
         working-directory: ocr
-        run: pip-audit
+        run: bash ../scripts/auditoria-dependencias.sh pip
       - name: Instalar ia
         working-directory: ia
         run: python -m pip install -e ".[dev]"
       - name: pip-audit (entorno con ia instalado)
         working-directory: ia
-        run: pip-audit
+        run: bash ../scripts/auditoria-dependencias.sh pip
       - uses: oven-sh/setup-bun@v2
       - name: bun audit (frontend)
         working-directory: frontend
-        # `bun audit` necesita `bun.lock` y consulta el registro de avisos de
-        # npm en caliente: se marca continue-on-error para que la ausencia de
-        # lockfile o una indisponibilidad del servicio externo no bloqueen la
-        # CI. El fallo sigue siendo visible en la vista del job.
-        continue-on-error: true
-        run: bun audit
-      # dependency-review necesita el grafo de dependencias y GitHub Advanced
-      # Security, que este repositorio (privado, sin GHAS) no tiene: la action
-      # responde "Dependency review is not supported on this repository". El
-      # escaneo de dependencias real de este job son los `pip-audit` de arriba
-      # y `bun audit`; este paso queda visible pero sin bloquear la CI mientras
-      # el repositorio no tenga GHAS.
-      - name: Revisión de dependencias (solo en pull_request)
-        if: github.event_name == 'pull_request'
-        continue-on-error: true
+        run: bash ../scripts/auditoria-dependencias.sh bun
+      # dependency-review requiere GitHub Advanced Security (GHAS). Por defecto está
+      # apagado; se habilita solo cuando el repositorio tiene GHAS configurado y
+      # la variable HABILITAR_DEPENDENCY_REVIEW=true.
+      - name: Revisión de dependencias (solo en pull_request con GHAS)
+        if: github.event_name == 'pull_request' && vars.HABILITAR_DEPENDENCY_REVIEW == 'true'
         uses: actions/dependency-review-action@v5
 
   # Resumen final: check que se marcará como requerido en la protección de
@@ -287,7 +289,7 @@ jobs:
     name: CI OK
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    needs: [backend, frontend, compose, deploy, secrets, deps]
+    needs: [backend, frontend, compose, deploy, secrets, deps, e2e]
     if: always()
     steps:
       - name: Comprobar que todos los trabajos pasaron
@@ -302,3 +304,4 @@ jobs:
               ;;
           esac
           echo "Todos los trabajos pasaron."
+

@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-REPO=/home/ubuntu/code/optimus-thy-operativo
 E2E_TESTS="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+REPO="${E2E_REPO:-$(cd -- "$E2E_TESTS/../.." && pwd -P)}"
 [[ -d "$REPO/.git" ]] || { printf 'ERROR: no existe repositorio fuente %s\n' "$REPO" >&2; exit 1; }
 command -v docker >/dev/null 2>&1 || { printf 'ERROR: docker no está instalado\n' >&2; exit 1; }
 docker info >/dev/null || { printf 'ERROR: daemon Docker exterior no disponible\n' >&2; exit 1; }
 
+E2E_HEAD_SHA="$(git -C "$REPO" rev-parse HEAD)" || { printf 'ERROR: no se pudo resolver HEAD en %s\n' "$REPO" >&2; exit 1; }
+E2E_BASE_SHA="$(git -C "$REPO" rev-parse origin/main)" || { printf 'ERROR: no se pudo resolver origin/main en %s (ejecuta git fetch origin main)\n' "$REPO" >&2; exit 1; }
 snapshot() {
   {
     docker ps -aq --filter label=com.docker.compose.project=optimus-thy | sort
@@ -18,7 +20,7 @@ snapshot() {
 }
 
 before="$(snapshot)"
-e2e_dir="$(mktemp -d /home/ubuntu/optimus-thy-e2e.XXXXXX)"
+e2e_dir="$(mktemp -d "${TMPDIR:-/tmp}/optimus-thy-e2e.XXXXXX")"
 name="optimus-thy-e2e-dind-$$"
 cleanup() {
   local status=$?
@@ -50,4 +52,4 @@ for attempt in $(seq 1 60); do
   sleep 2
 done
 docker exec "$name" sh -ec 'apk add --no-cache git bash curl python3 openssl util-linux coreutils gnupg'
-docker exec "$name" bash /tests/inside.sh
+docker exec -e "E2E_HEAD_SHA=$E2E_HEAD_SHA" -e "E2E_BASE_SHA=$E2E_BASE_SHA" "$name" bash /tests/inside.sh
