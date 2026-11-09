@@ -37,13 +37,15 @@ adopt_plan() {
   elif [[ ! -r "$BACKUP_KEY_FILE" ]]; then
     bloqueos+=("BACKUP_KEY_FILE no es legible: $BACKUP_KEY_FILE")
   else
-    local key_mode
+    local key_mode app_dir_real backup_key_real
     key_mode="$(stat -c '%a' "$BACKUP_KEY_FILE" 2>/dev/null || true)"
     if [[ ! "$key_mode" =~ ^[46]00$ ]]; then
       bloqueos+=("BACKUP_KEY_FILE debe tener modo 600 o 400 (actual: $key_mode)")
     fi
-    case "$(realpath "$BACKUP_KEY_FILE" 2>/dev/null || printf '%s' "$BACKUP_KEY_FILE")" in
-      "$APP_DIR"/*) bloqueos+=("BACKUP_KEY_FILE no puede estar dentro del repositorio: $BACKUP_KEY_FILE") ;;
+    app_dir_real="$(realpath "$APP_DIR" 2>/dev/null || printf '%s' "$APP_DIR")"
+    backup_key_real="$(realpath "$BACKUP_KEY_FILE" 2>/dev/null || printf '%s' "$BACKUP_KEY_FILE")"
+    case "$backup_key_real" in
+      "$app_dir_real"/*) bloqueos+=("BACKUP_KEY_FILE no puede estar dentro del repositorio: $BACKUP_KEY_FILE") ;;
     esac
   fi
 
@@ -84,15 +86,25 @@ adopt_plan() {
     advertencias+=("ya gestionado por releases: existe $DEPLOYMENTS_DIR/current.json; no se propone adopción")
   fi
 
-  # compose config -q
+  # compose config -q y validación del target efectivo
   if ! compose config -q >/dev/null 2>&1; then
     bloqueos+=("la configuración Compose no resuelve (compose config -q falló)")
+  fi
+  local target_error
+  if ! target_error="$( (verify_compose_target) 2>&1)"; then
+    bloqueos+=("el target Compose no es seguro: $target_error")
   fi
 
   # --- Inspección de instalación existente (solo lectura) ---
   local ps_json="[]"
-  if compose ps -a --format json >/dev/null 2>&1; then
-    ps_json="$(compose ps -a --format json 2>/dev/null || printf '[]')"
+  local ps_output
+  if ps_output="$(compose ps -a --format json 2>&1)"; then
+    ps_json="$ps_output"
+  else
+    bloqueos+=("no se pudo inspeccionar el estado de Compose: $ps_output")
+  fi
+  if ! docker info >/dev/null 2>&1; then
+    bloqueos+=("el daemon Docker no responde (docker info falló)")
   fi
   # compose ps --format json puede ser un objeto por línea o un array según versión; normalizar a array
   servicios_json="$(python3 - "$ps_json" <<'PY'
@@ -138,7 +150,8 @@ PY
   local vol_entries=()
   local vol_count=0
   for vn in "${vol_names[@]}"; do
-    if docker volume inspect "$vn" >/dev/null 2>&1; then
+    local inspect_output inspect_error
+    if inspect_output="$(docker volume inspect "$vn" 2>&1)"; then
       vol_count=$((vol_count + 1))
       local vlabel vcreated vmount
       vlabel="$(docker volume inspect "$vn" --format '{{index .Labels "com.docker.compose.project"}}' 2>/dev/null || true)"
@@ -161,11 +174,24 @@ print(json.dumps({
 PY
 )")
     else
-      vol_entries+=("$(python3 - "$vn" <<'PY'
+      inspect_error="$inspect_output"
+      case "$inspect_error" in
+        *[Nn]o\ such\ volume*|*[Nn]ot\ found*)
+          vol_entries+=("$(python3 - "$vn" <<'PY'
 import json, sys
 print(json.dumps({'name': sys.argv[1], 'exists': False}, ensure_ascii=False))
 PY
 )")
+          ;;
+        *)
+          bloqueos+=("no se pudo inspeccionar el volumen $vn: $inspect_error")
+          vol_entries+=("$(python3 - "$vn" "$inspect_error" <<'PY'
+import json, sys
+print(json.dumps({'name': sys.argv[1], 'exists': None, 'error': sys.argv[2]}, ensure_ascii=False))
+PY
+)")
+          ;;
+      esac
     fi
   done
   volumenes_json="$(python3 - "${vol_entries[@]}" <<'PY'
@@ -176,7 +202,8 @@ PY
 
   # Red
   local red_info_json='{"name":"'"$red"'","exists":false}'
-  if docker network inspect "$red" >/dev/null 2>&1; then
+  local network_output
+  if network_output="$(docker network inspect "$red" 2>&1)"; then
     local nlabel
     nlabel="$(docker network inspect "$red" --format '{{index .Labels "com.docker.compose.project"}}' 2>/dev/null || true)"
     if [[ -n "$nlabel" && "$nlabel" != "$proyecto" ]]; then
@@ -189,6 +216,18 @@ import json, sys
 print(json.dumps({'name': sys.argv[1], 'project_label': sys.argv[2] or None, 'exists': True}, ensure_ascii=False))
 PY
 )"
+  else
+    case "$network_output" in
+      *[Nn]o\ such\ network*|*[Nn]ot\ found*) ;;
+      *)
+        bloqueos+=("no se pudo inspeccionar la red $red: $network_output")
+        red_info_json="$(python3 - "$red" "$network_output" <<'PY'
+import json, sys
+print(json.dumps({'name': sys.argv[1], 'exists': None, 'error': sys.argv[2]}, ensure_ascii=False))
+PY
+)"
+        ;;
+    esac
   fi
 
   # Clasificación
@@ -199,18 +238,28 @@ PY
   fi
 
   # Comprobación de que deploy.sh deploy no recreará postgres/storage
-  local deploy_no_recrea_db="desconocido"
-  if [[ "$existe_instalacion" == true ]]; then
-    # stack_has_postgres (de deploy.sh) usa compose ps --status running -q postgres; aquí solo leemos
-    local pg_running=false st_running=false
-    if compose ps --status running --services 2>/dev/null | grep -Fxq postgres; then pg_running=true; fi
-    if compose ps --status running --services 2>/dev/null | grep -Fxq storage; then st_running=true; fi
-    if [[ "$pg_running" == true || "$st_running" == true ]]; then
-      deploy_no_recrea_db="true (postgres/storage detectados en ejecución; deploy.sh deploy no los recrea ni borra volúmenes)"
+  local deploy_no_recrea_db="false (no se ha confirmado postgres en ejecución)"
+  local pg_exists=false pg_running=false storage_exists=false
+  read -r pg_exists pg_running storage_exists < <(python3 - "$servicios_json" <<'PY'
+import json, sys
+rows = json.loads(sys.argv[1])
+postgres = [row for row in rows if row.get('service') == 'postgres']
+storage = any(row.get('service') == 'storage' for row in rows)
+print(str(bool(postgres)).lower(), str(any(str(row.get('state', '')).lower() == 'running' for row in postgres)).lower(), str(storage).lower())
+PY
+)
+  if [[ "$pg_exists" == true ]]; then
+    if [[ "$pg_running" == true ]]; then
+      deploy_no_recrea_db="true (postgres está en ejecución; deploy.sh deploy no recrea postgres/storage ni borra volúmenes)"
     else
-      deploy_no_recrea_db="sin postgres/storage en ejecución; verificar estado antes de deploy"
-      advertencias+=("postgres o storage no están en ejecución; deploy.sh deploy podría comportarse como stack nuevo")
+      bloqueos+=("postgres existe pero no está corriendo; deploy se detendrá")
+      deploy_no_recrea_db="false (postgres existe pero no está corriendo)"
     fi
+  elif [[ "$storage_exists" == true || "$vol_count" -gt 0 ]]; then
+    advertencias+=("pila parcial sin postgres: deploy la tratará como primera instalación y podría omitir el respaldo")
+    deploy_no_recrea_db="false (pila parcial sin postgres; deploy la tratará como primera instalación)"
+  else
+    deploy_no_recrea_db="false (no existe contenedor postgres; deploy la tratará como primera instalación)"
   fi
 
   # Recomendación
@@ -222,16 +271,21 @@ PY
   elif [[ "$existe_instalacion" == false ]]; then
     recomendacion="primera instalación: usar ./deploy.sh deploy"
   else
-    recomendacion="instalación existente detectada: tras revisar este plan, usar ./deploy.sh deploy (con respaldo y migraciones explícitas; no recrea postgres/storage ni reemplaza volúmenes)"
+    recomendacion="instalación existente detectada: revisar bloqueos y advertencias antes de usar ./deploy.sh deploy; el estado de postgres/storage está indicado arriba"
   fi
 
   # Backup info (sin credenciales)
   local backup_info_json
-  backup_info_json="$(python3 - "${BACKUP_KEY_FILE:-}" "${BACKUP_DIR:-}" <<'PY'
+  backup_info_json="$(python3 - "${BACKUP_KEY_FILE:-}" "${BACKUP_DIR:-}" "$APP_DIR" <<'PY'
 import json, os, sys
 key = sys.argv[1]
 bdir = sys.argv[2]
-info = {'key_configured': bool(key), 'key_outside_repo': None, 'key_mode_ok': None, 'dir_configured': bool(bdir), 'dir_exists': os.path.isdir(bdir) if bdir else False}
+repo = os.path.realpath(sys.argv[3])
+key_outside_repo = None
+if key and os.path.exists(key):
+    key_real = os.path.realpath(key)
+    key_outside_repo = not (key_real == repo or key_real.startswith(repo.rstrip(os.sep) + os.sep))
+info = {'key_configured': bool(key), 'key_outside_repo': key_outside_repo, 'key_mode_ok': None, 'dir_configured': bool(bdir), 'dir_exists': os.path.isdir(bdir) if bdir else False}
 if key and os.path.exists(key):
     try:
         mode = oct(os.stat(key).st_mode)[-3:]
@@ -307,8 +361,10 @@ PY
     python3 - "$volumenes_json" <<'PY'
 import json, sys
 for v in json.loads(sys.argv[1]):
-    if v.get('exists'):
+    if v.get('exists') is True:
         print(f"  - {v['name']}: existe, etiqueta proyecto={v.get('project_label')}, creado={v.get('created_at')}")
+    elif v.get('exists') is None:
+        print(f"  - {v['name']}: inspección fallida: {v.get('error')}")
     else:
         print(f"  - {v['name']}: no existe")
 PY

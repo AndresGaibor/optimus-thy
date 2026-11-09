@@ -27,7 +27,7 @@ Usar `infra/scripts/restaurar-archivos.sh` para respaldos `archivos-AAAA...tar.g
 
 - Verificar huellas: `sha256sum -c SHA256SUMS-AAAAMMDD-HHMMSS`.
 - Recuperar por canal autorizado `BACKUP_KEY_FILE`, custodiarlo fuera del repositorio y con modo `600`/`400`.
-- Para `--volumen`, el volumen destino debe ser **nuevo o vacío** y estar identificado; obtener autorización, ventana y copia previa si aplica. No extraer directamente en un volumen activo.
+- Para `--volumen`, el volumen destino debe ser **nuevo o vacío** y estar identificado; el nombre debe corresponder a `${COMPOSE_PROJECT_NAME}_miniodata` del entorno verificado. Obtener autorización, ventana y copia previa si aplica. No extraer directamente en un volumen activo.
 
 **Modos (comandos exactos)**
 
@@ -42,7 +42,7 @@ BACKUP_KEY_FILE=~/.optimus-respaldo.key \
 
 # 3) Restaurar dentro de un volumen Docker vacío (confirmación explícita; usa alpine:3 efímero)
 BACKUP_KEY_FILE=~/.optimus-respaldo.key RESTORE_VOLUMEN_CONFIRMADO=si \
-  infra/scripts/restaurar-archivos.sh archivos-AAAAMMDD-HHMMSS.tar.gz.gpg --volumen optimus-prod_miniodata
+  infra/scripts/restaurar-archivos.sh archivos-AAAAMMDD-HHMMSS.tar.gz.gpg --volumen optimus-thy_miniodata
 ```
 
 **Límites**

@@ -10,6 +10,7 @@
 set -euo pipefail
 
 RAIZ="${RAIZ:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
+RAIZ="$(realpath "$RAIZ")"
 ARCHIVO="${1:-}"
 MODO="${2:---verificar}"
 ARG="${3:-}"
@@ -110,7 +111,7 @@ case "$MODO" in
         [[ "$ocupado" -eq 0 ]] || fail "el volumen no está vacío ($ocupado entradas): $ARG; no se borra nada"
         rechazar_rutas_peligrosas
         verificar_flujo >/dev/null
-        descifrar | docker run --rm -i -v "$ARG:/v" alpine:3 sh -c 'tar -xzf - -C /v --no-same-owner --no-same-permissions' \
+        descifrar | docker run --rm -i -v "$ARG:/v" alpine:3 sh -c 'tar -xzf - -C /v --no-same-permissions' \
             || fail "la restauración al volumen falló"
         n="$(docker run --rm -v "$ARG:/v:ro" alpine:3 sh -c 'find /v -mindepth 1 | wc -l' | tr -d ' ')"
         [[ "$n" -ge 1 ]] || fail "la restauración al volumen no produjo entradas"
