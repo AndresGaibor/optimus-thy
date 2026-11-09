@@ -1,134 +1,116 @@
-# Despliegue de producción en el servidor Tailscale
+# Despliegue de producción: contrato operativo
 
-> Runbook para `labturingserver.tail0a220d.ts.net` (`100.107.225.79`), Ubuntu 24.04. No ejecutar en `tiroides2` ni reutilizar sus volúmenes. Los comandos que modifican producción requieren ventana de mantenimiento, respaldo comprobado y confirmación humana.
+Documento de contrato para despliegues de producción y entornos aislados (E2E) de OPTIMUS-THY. Complementa el runbook de corte actual en [despliegue-tiroides2.md](despliegue-tiroides2.md). No contiene secretos.
 
-## Topología y separación
+## Referencias
 
-La instalación nueva vive en `/opt/apps/optimus-thy`, expuesta solo en la tailnet por HTTPS `18443`. Compose orquesta PostgreSQL, almacenamiento MinIO, backend, frontend, OCR, IA y edge; el backend no publica puerto al host. El edge publica `TAILSCALE_IP:HTTPS_PORT`, usa certificado montado desde `infra/nginx/certs` y sirve los servicios internos. El volumen PostgreSQL y el volumen de archivos son datos durables; nunca borrar con `down -v`.
+- Runbook de corte/operación tiroides2: [despliegue-tiroides2.md](despliegue-tiroides2.md)
+- Incidente E2E/rollback 2026-11-09: [incidente-e2e-rollback-2026-11-09.md](incidente-e2e-rollback-2026-11-09.md)
+- Custodia de respaldos y secretos: [custodia-respaldos.md](custodia-respaldos.md)
 
-La aplicación `tiroides2` actual está en otro host (`100.114.65.117`, puerto `5033`), con sus propios datos. Este despliegue no la detiene, modifica ni comparte datos. El nuevo destino no es un reemplazo de ese host hasta que se apruebe y ejecute una migración independiente.
+## Identidad obligatoria de entorno
 
-## Requisitos y preparación
+Todo despliegue gestionado por el flujo con el nuevo contrato debe definir explícitamente estas variables. Son obligatorias; la ausencia o inconsistencia debe bloquear la operación antes de tocar contenedores, redes o volúmenes.
 
-- Ubuntu 24.04, Docker Engine y Docker Compose v2, `git`, `curl`, `python3`, `flock`, Tailscale conectado a la tailnet y espacio libre suficiente para imágenes, releases, base y respaldos. Dimensionar el disco según uso real; revisar `df -h` antes de cada release.
-- Tailscale debe asignar `100.107.225.79`; la política/ACL debe permitir a los operadores acceder a TCP `18443`.
-- Certificados presentes en `/opt/apps/optimus-thy/infra/nginx/certs/dev.crt` y `dev.key`. No versionar certificados ni claves. Protege la clave privada (solo lectura para quien lo requiera).
-- La clave GPG del respaldo se guarda fuera del repositorio, en archivo con modo `600` o `400`. Mantener una copia segura independiente; perderla impide restaurar respaldos.
+| Variable | Producción (valor exacto esperado) | E2E | Propósito |
+|---|---|---|---|
+| `DEPLOY_ENV` | `production` | valor de entorno aislado, p. ej. `e2e` | Identidad lógica del entorno. |
+| `COMPOSE_PROJECT_NAME` | `optimus-thy` | prefijo único `optimus-thy-e2e-...` | Aísla proyecto Compose, contenedores y nombres derivados. |
+| `IMAGE_PREFIX` | `optimus-thy` | prefijo único `optimus-thy-e2e-...` | Identidad de imágenes/etiquetas usadas por el overlay. |
+| `COMPOSE_NETWORK` | `optimus-thy-net` | red única del entorno E2E | Evita colisiones de red con producción u otros entornos. |
 
-## Primera instalación
+Reglas:
 
-Desde una sesión administrativa del servidor (estos pasos preparan el host; el primer deploy se hace con el CLI):
+- Producción usa los valores exactos: `DEPLOY_ENV=production`, `COMPOSE_PROJECT_NAME=optimus-thy`, `IMAGE_PREFIX=optimus-thy`, `COMPOSE_NETWORK=optimus-thy-net`.
+- E2E usa prefijo `optimus-thy-e2e-` para identidad derivada (proyecto, imágenes, redes/volúmenes/directorios según aplique), garantizando unicidad por ejecución.
+- El overlay de Compose usa `IMAGE_PREFIX` y `COMPOSE_NETWORK`; no hardcodear valores de producción en el overlay.
+- Antes de ejecutar, validar que `.env`, overlay y contexto operativo correspondan al mismo entorno. No asumir identidad por directorio o por defecto implícito.
 
-```bash
-sudo mkdir -p /opt/apps/optimus-thy
-sudo chown "$USER":"$(id -gn)" /opt/apps/optimus-thy
-cd /opt/apps/optimus-thy
-git clone <URL_DEL_REPOSITORIO> .
-cp .env.example .env
-chmod 600 .env
-cp compose.server.example.yaml compose.server.yaml
-mkdir -p infra/nginx/certs
-```
+## E2E aislado en DinD
 
-Completa `.env` sin copiar secretos de ejemplo: `TAILSCALE_IP=100.107.225.79`, `HTTPS_PORT=18443`, `PUBLIC_URL=https://100.107.225.79:18443`, `ENVIRONMENT=production`, `SESSION_COOKIE_SECURE=true`, `ALLOWED_ORIGINS=https://100.107.225.79:18443`. Configura credenciales fuertes de PostgreSQL y S3/MinIO, `PII_ENCRYPTION_KEY` real y valores de respaldo. Instala `dev.crt`/`dev.key` desde un canal seguro. No uses datos ficticios de `.env.example` en producción.
+Los entornos E2E deben correr aislados, preferentemente en Docker-in-Docker (DinD) o contexto equivalente sin acceso destructivo a producción.
 
-Para un stack existente, configura `BACKUP_KEY_FILE` y `BACKUP_DIR` en `.env` (clave fuera del repo, con modo `600` o `400`) antes de ejecutar `./deploy.sh backup`; el CLI carga `.env`, pide confirmación y verifica los checksums. No uses `backup` en la primera instalación antes de crear PostgreSQL: el primer `deploy` inicializa la base vacía y omite el respaldo previo.
+- Proyecto, red, volúmenes y directorios únicos por ejecución, con prefijo `optimus-thy-e2e-`.
+- No reutilizar `COMPOSE_PROJECT_NAME`, `COMPOSE_NETWORK`, volúmenes ni bind mounts de producción.
+- No publicar puertos/hosts que entren en conflicto con producción.
+- No usar secretos reales de producción; usar datos sintéticos o fixtures controlados.
+- Al terminar, limpiar solo los recursos identificados del entorno E2E, tras verificar su metadata/contexto.
 
-Configura los respaldos conforme a [ADR-019](../adr/ADR-019-respaldos-cifrados.md). No habilites copia S3 hasta configurar credenciales de mínimo privilegio. El unit `infra/systemd/optimus-thy-respaldo.service` referencia actualmente la ruta de otro checkout y una clave bajo `$HOME`; **no lo habilites sin adaptarlo** para que `ExecStart` apunte a `/opt/apps/optimus-thy/infra/scripts/respaldo.sh` y definir `BACKUP_KEY_FILE`/`BACKUP_DIR` correctos y protegidos para el usuario del servicio. Verifica luego que el timer apunte a ese unit y que el último servicio terminó correctamente.
+## Guards obligatorios
 
+Antes de cualquier acción mutante (deploy, rollback, limpieza):
 
-## Comprobación y primer despliegue
+1. Cargar y validar variables de identidad (`DEPLOY_ENV`, `COMPOSE_PROJECT_NAME`, `IMAGE_PREFIX`, `COMPOSE_NETWORK`).
+2. Confirmar que el entorno objetivo coincide con la intención operativa (producción vs E2E).
+3. Verificar metadata/contexto de Docker Compose, contenedores, red y volúmenes involucrados.
+4. Si hay inconsistencia, detenerse con error explícito; no “corregir” silenciosamente valores de producción.
 
-Ejecuta desde el checkout en el servidor. `check` y `status` son de solo lectura. El CLI soporta `help|status|check|backup|deploy|rollback` y opciones `--ref`, `--yes`; confirma primero la salida de `./deploy.sh help` si cambia la versión:
+## Operaciones prohibidas
 
-```bash
-cd /opt/apps/optimus-thy
-./deploy.sh help
-./deploy.sh check
-./deploy.sh status
-./deploy.sh deploy --ref <SHA_O_TAG>
-```
+- **No ejecutar `docker compose down -v`** en producción ni en contextos donde pueda afectar volúmenes de PostgreSQL/MinIO u otros datos persistentes.
+- No recrear o reemplazar PostgreSQL/storage durante upgrades normales.
+- No reemplazar `.env` ni `compose.server.yaml`/overlay con valores de ejemplo.
+- No ejecutar rollback o limpieza sin validación previa de metadata/contexto.
+- No usar imágenes de MinIO no fijadas por digest; mantener la política de [ADR-014](../adr/ADR-014-minio-fijado.md).
 
-El primer deploy debe señalar un SHA o tag revisado y aprobado. En una instalación nueva sin PostgreSQL existente, `deploy` inicializa `postgres` y `storage` y omite el backup previo porque todavía no hay datos; si existe una base, el CLI crea y valida el backup antes de migrar. No ejecutes `backup` en el host vacío antes de inicializar PostgreSQL. `deploy` requiere confirmación; no usar `--yes` en operación interactiva. Antes de aceptar, comprobar salud del edge y del backend, y que la versión de base es compatible. El CLI crea un worktree bajo `RELEASES_DIR/<sha>`, construye imágenes con etiquetas `optimus-thy-<servicio>:<sha>` y registra metadatos en `DEPLOYMENTS_DIR/current.json`.
+## Rollback
 
-## Actualizaciones y migraciones
+El rollback debe ser conservador y estar acotado al entorno validado.
 
-Para fijar un commit/tag usa `--ref`; sin `--ref`, el CLI resuelve `MAIN_REF` (por defecto `origin/main`). Antes de cada cambio: leer notas/cambios, revisar espacio, comprobar la salud y tomar un respaldo cifrado. `check` valida que el SHA resuelto sea ancestro de `MAIN_REF`; no desplegar un ref que no pase esa comprobación.
+1. Cargar variables de identidad y verificar que apuntan al entorno correcto.
+2. Capturar metadata y contexto antes de tocar contenedores: proyecto Compose, contenedores objetivo, imágenes, red, volúmenes montados y estado de salud.
+3. Confirmar que los recursos a modificar pertenecen al mismo `DEPLOY_ENV`/`COMPOSE_PROJECT_NAME`/`COMPOSE_NETWORK` esperado.
+4. Solo después de validar metadata+contexto, aplicar el rollback a los contenedores/servicios acordados.
+5. No usar `down -v`. No tocar volúmenes de datos salvo procedimiento de restauración aprobado con respaldo verificado.
+6. Verificar salud, rutas críticas y ausencia de impacto en datos. Registrar evidencia.
 
-El backend arranca Uvicorn y **no ejecuta migraciones automáticamente**. El CLI ejecuta explícitamente `alembic upgrade head`, comprueba que la imagen tenga exactamente una `head` y valida el camino desde la revisión actual. El despliegue exige al menos 5 GiB libres. Si una migración falla, conserva logs y respaldo; el CLI no realiza downgrade ni restauración automática. No ejecutar `alembic downgrade`.
+Referencia de incidente y lecciones: [incidente-e2e-rollback-2026-11-09.md](incidente-e2e-rollback-2026-11-09.md).
 
-El CLI valida `GET /healthz`, `GET /api/health` (200), `HEAD /` (200), `/api/auth/me` (401 sin sesión), que ningún servicio esté detenido/`unhealthy`, y la revisión Alembic activa. Después del despliegue comprueba:
+## Upgrade desde 69feaf6 con código local bb693c0
 
-```bash
-cd /opt/apps/optimus-thy
-./deploy.sh status
-curl -k -sS -o /dev/null -w '%{http_code}\n' https://100.107.225.79:18443/healthz
-curl -k -sS -o /dev/null -w '%{http_code}\n' https://100.107.225.79:18443/api/health
-curl -k -sS -o /dev/null -w '%{http_code}\n' https://100.107.225.79:18443/api/auth/me
-```
+Este procedimiento aplica al upgrade desde el estado asociado a `69feaf6` hacia el código local `bb693c0`, bajo el nuevo contrato de identidad/aislamiento. **El servidor destino no se inspeccionó por SSH en esta preparación documental**; antes de ejecutar en un host real, confirmar estado actual, rutas, Compose activo, volúmenes, respaldos y variables efectivas.
 
-Para inspeccionar Compose, usa los archivos y entorno del SHA activo (sustituye `<SHA>` por `release` de `./deploy.sh status`):
+### Principios
 
-```bash
-APP_DIR=/opt/apps/optimus-thy
-RELEASE=<SHA>
-RELEASE_DIR="$APP_DIR/releases/$RELEASE"
-export APP_DIR RELEASE RELEASE_DIR
-docker compose -p optimus-thy --project-directory "$RELEASE_DIR" --env-file "$APP_DIR/.env" \
-  -f "$RELEASE_DIR/docker-compose.yml" -f "$APP_DIR/compose.server.yaml" ps
-docker compose -p optimus-thy --project-directory "$RELEASE_DIR" --env-file "$APP_DIR/.env" \
-  -f "$RELEASE_DIR/docker-compose.yml" -f "$APP_DIR/compose.server.yaml" logs --tail=200 edge backend postgres storage ocr ia
-```
+- No reemplazar `.env`.
+- No reemplazar `compose.server.yaml` ni el overlay activo con ejemplos.
+- No reemplazar ni borrar volúmenes.
+- No recrear PostgreSQL ni storage.
+- No ejecutar `down -v`.
+- Hacer backup antes de cambios.
 
+### Pasos seguros
 
-## Respaldo, retención y restauración
+1. **Preparación local/remota controlada**:
+   - Confirmar que el código a desplegar corresponde a `bb693c0` o al artefacto aprobado derivado de ese estado.
+   - Revisar diferencias relevantes entre `69feaf6` y `bb693c0` sin asumir que el servidor tiene la misma estructura local.
+2. **Respaldo**:
+   - Ejecutar/validar respaldo cifrado reciente de base y archivos MinIO.
+   - Verificar huellas (`SHA256SUMS-*`) y registrar el identificador del respaldo.
+   - Confirmar la limitación de custodia de clave: la copia externa no está verificada según [custodia-respaldos.md](custodia-respaldos.md).
+3. **`.env` (sin sobrescribir secretos)**:
+   - Añadir las cuatro variables de identidad requeridas: `DEPLOY_ENV`, `COMPOSE_PROJECT_NAME`, `IMAGE_PREFIX`, `COMPOSE_NETWORK`.
+   - En producción, usar los valores exactos: `production`, `optimus-thy`, `optimus-thy`, `optimus-thy-net`.
+   - Preservar todos los secretos y valores reales existentes (PII/DB/S3/sesión/orígenes/cookies, etc.).
+   - No copiar `.env.production.example` sobre `.env`.
+4. **Overlay `compose.server.yaml`**:
+   - Actualizar el overlay tomando el ejemplo como referencia, pero preservando valores reales, certificados, mounts, rutas y ajustes del host.
+   - Asegurar que el overlay use `IMAGE_PREFIX` y `COMPOSE_NETWORK`.
+   - No reemplazar ciegamente el archivo activo.
+5. **Deploy**:
+   - Ejecutar el flujo de deploy con guards de identidad/metadata.
+   - El deploy debe detectar PostgreSQL existente y **no recrear `postgres` ni `storage`**.
+   - Aplicar cambios solo a servicios previstos por el upgrade.
+6. **Migraciones**:
+   - Correr migraciones explícitamente (`alembic upgrade head` o el comando aprobado por el entorno) tras confirmar respaldo y salud previa.
+   - No ejecutar migraciones como efecto colateral no controlado.
+7. **Validación**:
+   - Verificar salud de servicios (`/health` o checks equivalentes).
+   - Verificar rutas críticas y datos: login/sesión según aplique, consultas básicas, acceso a archivos, y ausencia de errores 502 inesperados.
+   - Revisar logs de backend/migraciones/compose ante anomalías.
+8. **Evidencia**:
+   - Registrar commit/artefacto desplegado, respaldo usado, migración aplicada, resultado de salud/datos y cualquier desviación.
 
-Respaldos generados por `infra/scripts/respaldo.sh` contienen dump de PostgreSQL, archivos MinIO y `SHA256SUMS-*`; el contenido se cifra con GPG AES-256. La política conserva 14 diarios, 8 semanales y 6 mensuales, y siempre mantiene el set recién generado. La copia externa S3 es opcional; comprobar presencia y checksum en destino. Mantener también fuera del host una copia segura de la clave.
+### Nota sobre inspección del destino
 
-El timer systemd debe ejecutar el respaldo automáticamente. Verifica su programación con `systemctl list-timers --all | grep optimus-thy-respaldo` y el último resultado con `journalctl -u optimus-thy-respaldo.service`. El unit actualmente referencia otro checkout; antes de habilitarlo en este host, cambia `ExecStart` para apuntar a `/opt/apps/optimus-thy/infra/scripts/respaldo.sh` y define `BACKUP_KEY_FILE`/`BACKUP_DIR` protegidos para el usuario del servicio.
-
-Para respaldo manual de un stack existente, configura `BACKUP_KEY_FILE` y `BACKUP_DIR` en `.env` (clave fuera del repo, modo `600` o `400`) y ejecuta `./deploy.sh backup` desde `/opt/apps/optimus-thy`; el CLI carga `.env`, pide confirmación y verifica checksums. No ejecutes `backup` en el host vacío antes de crear PostgreSQL: el primer `deploy` inicializa la base vacía y omite el respaldo previo.
-
-Restauración de prueba verificada: el script `infra/scripts/restaurar.sh <db-*.sql.gz.gpg>` descarga/descifra en un PostgreSQL desechable, comprueba `alembic_version` y tablas, y no toca la base real. El resultado reportado fue `OK: restauración verificada`, migración `0009`, 24 tablas. El dump se genera con `--no-owner --no-privileges`: **no restaura roles ni ACL** (incluido el rol `defensor`); si la recuperación los necesita, obtenerlos aparte con `pg_dumpall --globals-only` antes de considerar la restauración completa. Para emitir SQL descifrado sin cargarlo en el contenedor de prueba, `BACKUP_KEY_FILE=... infra/scripts/restaurar.sh <db-*.sql.gz.gpg> --sql`; redirige ese resultado solo a un destino protegido. Restaurar archivos MinIO desde el artefacto `archivos-*.tar.gz.gpg` requiere recuperación coordinada aparte. No ejecutes sobre los datos de `tiroides2`.
-
-## Rollback de aplicación
-
-El rollback del CLI solo es seguro si la revisión de esquema de la release destino es compatible con la base ya migrada. Las migraciones no se deshacen automáticamente ni se ejecutan downgrades. Si no hay compatibilidad documentada, mantener el servicio aislado y recuperar según el procedimiento específico de la migración y un respaldo validado. Antes de operar:
-
-```bash
-cd /opt/apps/optimus-thy
-./deploy.sh status
-./deploy.sh rollback
-```
-
-Revisar el SHA/revisión que propone el CLI y confirmar; no usar `--yes` sin aprobación explícita. Después, validar healthchecks, logs y versión de esquema.
-
-## Diagnóstico y recuperación
-
-- Servicios/logs: `./deploy.sh status` y los comandos `docker compose ps`/`logs` con los archivos y variables del release activo descritos arriba.
-- Salud externa: `curl -k -i https://100.107.225.79:18443/healthz` y `curl -k -i https://100.107.225.79:18443/api/health`; auth sin sesión: `/api/auth/me` debe dar 401.
-- Disco: `df -h`; liberar solo artefactos/release obsoletos verificados, nunca volúmenes de datos ni el release actual.
-- Fallo antes de migrar: no cambiar el esquema; volver a la release previa mediante CLI solo tras validar su identidad y compatibilidad.
-- Fallo después de migrar: no hacer downgrade. Aislar tráfico si procede, conservar estado/logs y decidir entre rollback compatible de aplicación o restauración coordinada de DB y archivos desde copia verificada.
-- Pérdida de volumen: no recrear ni limpiar más datos; detener escrituras, inventariar volúmenes y restaurar dump/archivos emparejados y checksums.
-- Certificado: confirmar que `dev.crt` corresponde a `dev.key`, que existen en el mount del edge y son legibles. Reemplazar desde fuente segura y reiniciar solo el servicio edge si el procedimiento Compose lo permite; no generar claves de prueba para producción.
-- Tailscale: verificar que el host está conectado y conserva su IP, y que ACL/firewall permite `18443`. No publicar el edge en una interfaz pública como alternativa.
-
-## Migración desde la instalación existente
-
-La instancia actual en OCI (`100.114.65.117:5033`, revisión `69feaf6`, servicio conocido como tiroides2) permanece intacta durante preparación y pruebas. No ejecutar allí `down`, `down -v`, migraciones, rotaciones, ni cambios de edge. El corte requerirá plan y ventana aprobados, respaldo/restauración de prueba, transferencia de datos coherente, verificación de esquema y decisión explícita del endpoint. Hasta completar ese plan, ambas instalaciones son separadas y no se afirma que la nueva contenga los datos antiguos.
-
-## Seguridad operativa
-
-- Solo Tailscale debe alcanzar HTTPS `18443`; configurar firewall del host y ACL de tailnet, sin exponer PostgreSQL, MinIO o backend.
-- `.env` modo `600`; no guardar secretos, claves privadas, claves GPG ni respaldos sin cifrar en Git.
-- No imprimir valores secretos en comandos, logs, capturas ni tickets. Restringir logs y acceso al host.
-- Rotar credenciales expuestas y guardar `BACKUP_KEY_FILE` fuera del repo y separada de los respaldos.
-- Antes de comandos destructivos, comprobar host, directorio, proyecto Compose y volúmenes.
-
-
-## Evidencia y límites
-
-Verificado localmente: `shellcheck` y `bash -n` de los scripts; `docker compose config` del overlay de servidor; `deploy.sh check` positivo y negativo (rechaza publicación de puertos no permitida); `infra/scripts/probar-retencion.sh`; y `infra/scripts/probar-respaldo.sh`, que informó `OK: restauración verificada`, migración `0009`, 24 tablas. La subida S3 sin configuración opcional termina con código 0. El script de respaldo excluye owner y privilegios (`--no-owner --no-privileges`), por lo que no recupera roles/ACL, incluido `defensor`; para restaurarlos se necesita un `pg_dumpall --globals-only` independiente.
-
-Verificado para el destino únicamente: probes por Tailscale a `/healthz` y `/api/health` respondieron 200. No se accedió por SSH al destino ni se inspeccionaron sus contenedores, discos, certificados, ACL, timer, archivos o datos. No se instaló ni desplegó, ni se ejecutaron allí migraciones, backup o restauración. Esto no afirma que el despliegue nuevo esté instalado o validado. Para la instalación anterior, consultar [runbook de tiroides2](despliegue-tiroides2.md).
+El servidor destino no se inspeccionó por SSH durante la elaboración de este documento. Por tanto, los comandos concretos de sistema, rutas reales, nombres efectivos de contenedores, estado de migraciones y configuración activa deben confirmarse en el host antes de ejecutar el upgrade.

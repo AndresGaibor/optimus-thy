@@ -159,6 +159,10 @@ jobs:
           bash -n deploy.sh infra/deploy/*.sh infra/scripts/*.sh
       - name: Validar compose de servidor
         env:
+          DEPLOY_ENV: production
+          COMPOSE_PROJECT_NAME: optimus-thy
+          IMAGE_PREFIX: optimus-thy
+          COMPOSE_NETWORK: optimus-thy-net
           RELEASE: test
           TAILSCALE_IP: 127.0.0.1
           HTTPS_PORT: "18443"

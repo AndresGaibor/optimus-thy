@@ -74,11 +74,26 @@ PY
 }
 
 show_status() {
-  local current_file="$DEPLOYMENTS_DIR/current.json" release='' deployed_at='' previous='' last_backup='' health_ok=false
-  if ! load_env 2>/dev/null; then
-    log "entorno: no verificado (falta/corrupto $ENV_FILE o variables de identidad requeridas)"
-  else
+  local current_file='' release='' deployed_at='' previous='' last_backup='' health_ok=false env_ok=false
+  if [[ -f "$ENV_FILE" ]]; then
+    if ( set -Eeuo pipefail; load_env >/dev/null 2>&1 ); then
+      set -a
+      # shellcheck source=/dev/null
+      source "$ENV_FILE"
+      set +a
+      if ( set -Eeuo pipefail; verify_environment >/dev/null 2>&1 ); then env_ok=true; fi
+    fi
+  fi
+  if [[ "$env_ok" == true ]]; then
     log "entorno: ${DEPLOY_ENV} project=${COMPOSE_PROJECT_NAME} prefix=${IMAGE_PREFIX} network=${COMPOSE_NETWORK}"
+    DEPLOYMENTS_DIR="${DEPLOYMENTS_DIR:-$APP_DIR/deployments}"
+    RELEASES_DIR="${RELEASES_DIR:-$APP_DIR/releases}"
+    current_file="$DEPLOYMENTS_DIR/current.json"
+  else
+    log "entorno: no verificado (falta/corrupto $ENV_FILE o variables de identidad requeridas)"
+    DEPLOYMENTS_DIR="${DEPLOYMENTS_DIR:-$APP_DIR/deployments}"
+    RELEASES_DIR="${RELEASES_DIR:-$APP_DIR/releases}"
+    current_file="$DEPLOYMENTS_DIR/current.json"
   fi
   if [[ -f "$current_file" ]]; then
     release="$(json_get "$current_file" release 2>/dev/null || true)"
@@ -90,7 +105,7 @@ show_status() {
   log "fecha despliegue: ${deployed_at:-desconocida}"
   log "release anterior: ${previous:-ninguno}"
   log "último backup: ${last_backup:-ninguno registrado}"
-  if [[ -n "$release" && -n "${COMPOSE_PROJECT_NAME:-}" && -n "${DEPLOY_ENV:-}" ]]; then
+  if [[ "$env_ok" == true && -n "$release" && -n "${COMPOSE_PROJECT_NAME:-}" && -n "${DEPLOY_ENV:-}" ]]; then
     export RELEASE="$release" RELEASE_DIR="$RELEASES_DIR/$release"
     if check_health "$release" >/dev/null 2>&1; then
       log "salud: OK"
