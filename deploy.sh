@@ -121,6 +121,7 @@ case "$command_name" in
     ;;
   deploy)
     lock_deploy; confirm
+    load_env
     declare -g MIGRATION_STARTED=false
     recovery_notice() {
       local status=$?
