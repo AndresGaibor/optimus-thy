@@ -169,6 +169,9 @@ async function intento(browser: Browser, item: Item, res: Res): Promise<Informe>
     const mensaje = `console: ${m.text()}`;
     if (/WebSocket|wss?:|HMR|hot-update|vite/i.test(m.text())) ruido.push(mensaje);
     // En historias de estado `error`, la respuesta de error del API simulado (MSW) es intencional.
+    // GET /auth/me devuelve 401 en arranque sin sesión: intencional, se trata como ruido.
+    else if (/Failed to load resource/i.test(m.text()) && /\b401\b/.test(m.text()))
+      ruido.push(mensaje);
     else if (
       historiaError &&
       /Failed to load resource/i.test(m.text()) &&
@@ -185,7 +188,9 @@ async function intento(browser: Browser, item: Item, res: Res): Promise<Informe>
     const url = item.ruta
       ? `${appUrl.replace(/\/$/, '')}${item.ruta}`
       : `${base}/iframe.html?id=${id}&viewMode=story&globals=theme:${tema}`;
-    await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
+    await page.goto(url, { waitUntil: 'load', timeout: 30000 });
+    // Las historias de estado «cargando» dejan una petición abierta a propósito: se espera la red sin fallar.
+    await page.waitForLoadState('networkidle', { timeout: 8000 }).catch(() => {});
     await preparar(page);
     const texto = await page.evaluate(() => document.body.innerText.trim().length);
     await page.screenshot({ path: archivo, fullPage: false });
