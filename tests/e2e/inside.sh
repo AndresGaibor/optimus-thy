@@ -12,18 +12,22 @@ fail() { printf 'E2E ERROR: %s\n' "$*" >&2; exit 1; }
 assert_fail_without_containers() {
   local label="$1" before after rc
   shift
-  before="$(docker ps -aq --filter "label=com.docker.compose.project=$PROJECT" | sort)"
+  if ! before="$(docker ps -aq --filter "label=com.docker.compose.project=$PROJECT" | sort)"; then
+    fail "$label: no se pudo enumerar contenedores antes del caso guard"
+  fi
   set +e
   "$@" >/tmp/e2e-failure.log 2>&1
   rc=$?
   set -e
-  after="$(docker ps -aq --filter "label=com.docker.compose.project=$PROJECT" | sort)"
+  if ! after="$(docker ps -aq --filter "label=com.docker.compose.project=$PROJECT" | sort)"; then
+    fail "$label: no se pudo enumerar contenedores después del caso guard"
+  fi
   [[ $rc -ne 0 ]] || fail "$label debía fallar"
   [[ "$before" == "$after" ]] || fail "$label creó o eliminó contenedores"
   printf 'OK fallo esperado: %s (exit=%s)\n' "$label" "$rc"
 }
 
-[[ -d /src/.git ]] || fail "/src no contiene el repositorio git"
+[[ -e /src/.git ]] || fail "/src no contiene el repositorio git"
 git config --global --add safe.directory /src
 git config --global --add safe.directory /src/.git
 [[ -n "${E2E_HEAD_SHA:-}" ]] || fail "E2E_HEAD_SHA requerido"
@@ -124,36 +128,50 @@ cd "$APP_DIR"
 # Escenario de adopción: stack «heredado» existente antes del primer deploy gestionado.
 COMPOSE_PROJECT_NAME="$PROJECT" docker compose -p "$PROJECT" --env-file "$ENV_FILE" -f docker-compose.yml up -d --wait postgres storage
 PG_E2E="${PROJECT}-postgres-1"
-docker exec "$PG_E2E" sh -c 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' <<'SQL'
+docker exec -i "$PG_E2E" sh -c 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' <<'SQL'
 CREATE TABLE IF NOT EXISTS e2e_adopcion (id integer primary key, marca text not null);
 INSERT INTO e2e_adopcion (id, marca) VALUES (1, 'persistir') ON CONFLICT (id) DO NOTHING;
 SQL
-CREATED_AT_BEFORE="$(docker volume inspect "${PROJECT}_pgdata" --format '{{.CreatedAt}}')"
-[[ -n "$CREATED_AT_BEFORE" ]] || fail "no se pudo registrar CreatedAt de ${PROJECT}_pgdata"
-ADOPT_OUT="$(./deploy.sh adopt 2>&1)"
-ADOPT_RC=$?
+if ! CREATED_AT_BEFORE="$(docker volume inspect "${PROJECT}_pgdata" --format '{{.CreatedAt}}')"; then
+  fail "no se pudo consultar CreatedAt de ${PROJECT}_pgdata antes de adopt"
+fi
+if [[ -z "$CREATED_AT_BEFORE" ]]; then
+  fail "docker volume inspect no devolvió CreatedAt para ${PROJECT}_pgdata antes de adopt"
+fi
+if ! ADOPT_OUT="$(./deploy.sh adopt 2>&1)"; then
+  printf '%s\n' "$ADOPT_OUT" >&2
+  fail "deploy.sh adopt falló"
+fi
 printf '%s\n' "$ADOPT_OUT"
-[[ "$ADOPT_RC" -eq 0 ]] || fail "deploy.sh adopt falló (rc=$ADOPT_RC)"
 echo "$ADOPT_OUT" | grep -qi 'Instalación existente: SÍ\|existe_instalacion' || fail "deploy.sh adopt no reporta instalación existente"
 echo "$ADOPT_OUT" | grep -q "$PROJECT" || fail "deploy.sh adopt no reporta el proyecto $PROJECT"
 printf 'OK adopt detecta instalación heredada existente\n'
 
 ./deploy.sh check --ref origin/dev
 ./deploy.sh deploy --ref origin/dev --yes
-SYNTHETIC="$(docker exec "$PG_E2E" sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "SELECT marca FROM e2e_adopcion WHERE id = 1;"')"
-[[ "$SYNTHETIC" == "persistir" ]] || fail "registro sintético e2e_adopcion no persiste tras deploy ($SYNTHETIC)"
-CREATED_AT_AFTER="$(docker volume inspect "${PROJECT}_pgdata" --format '{{.CreatedAt}}')"
+if ! SYNTHETIC="$(docker exec "$PG_E2E" sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "SELECT marca FROM e2e_adopcion WHERE id = 1;"')"; then
+  fail "no se pudo consultar el registro sintético e2e_adopcion después del deploy"
+fi
+[[ "$SYNTHETIC" == "persistir" ]] || fail "registro sintético e2e_adopcion no persiste tras deploy (resultado: ${SYNTHETIC:-vacío})"
+if ! CREATED_AT_AFTER="$(docker volume inspect "${PROJECT}_pgdata" --format '{{.CreatedAt}}')"; then
+  fail "no se pudo consultar CreatedAt de ${PROJECT}_pgdata después del deploy"
+fi
+[[ -n "$CREATED_AT_AFTER" ]] || fail "docker volume inspect no devolvió CreatedAt para ${PROJECT}_pgdata después del deploy"
 [[ "$CREATED_AT_AFTER" == "$CREATED_AT_BEFORE" ]] || fail "CreatedAt de ${PROJECT}_pgdata cambió tras deploy (antes=$CREATED_AT_BEFORE después=$CREATED_AT_AFTER)"
 printf 'OK datos sintéticos y volumen pgdata preservados tras adopción+deploy\n'
 
-RELEASE_SHA="$(git -C "$APP_DIR" rev-parse origin/dev)"
+if ! RELEASE_SHA="$(git -C "$APP_DIR" rev-parse origin/dev)"; then
+  fail "no se pudo resolver origin/dev para comprobar el release desplegado"
+fi
 STATUS_OUT="$(./deploy.sh status 2>&1 || true)"
 echo "$STATUS_OUT" | grep -q "$RELEASE_SHA" || fail "status no muestra el release desplegado ($RELEASE_SHA)"
 echo "$STATUS_OUT" | grep -q "salud: OK" || fail "status no reporta salud: OK tras primer deploy"
 ./deploy.sh status
 assert_http() {
   local path="$1" expected="$2" actual
-  actual="$(curl -ksS -o /dev/null -w '%{http_code}' "https://127.0.0.1:$PORT$path")"
+  if ! actual="$(curl -ksS -o /dev/null -w '%{http_code}' "https://127.0.0.1:$PORT$path")"; then
+    fail "falló la petición HTTPS a $path"
+  fi
   [[ "$actual" == "$expected" ]] || fail "$path respondió HTTP $actual, esperado $expected"
   printf 'OK HTTPS %s = %s\n' "$path" "$actual"
 }
