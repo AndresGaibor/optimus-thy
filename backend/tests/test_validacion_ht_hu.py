@@ -80,7 +80,7 @@ def test_hu001_login_pone_una_sola_cookie_httponly_samesite(client, escenario):
     cookies = resp.headers.get_list("set-cookie")
     assert len(cookies) == 1, cookies
     c = cookies[0].lower()
-    assert "httponly" in c and "samesite=lax" in c and "max-age=" in c
+    assert "httponly" in c and "samesite=strict" in c and "max-age=" in c
 
 
 def test_hu001_credenciales_incorrectas_no_revelan_cual_fallo(client, escenario):

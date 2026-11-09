@@ -305,8 +305,8 @@ function OcrReview({ record, onValid }: { record: DemoRecord; onValid: () => voi
         )}
       </div>
       <Callout tone="ai" title="Lectura OCR ilustrativa">
-        No se ejecutó OCR ni se leyó ningún archivo. La extracción es una
-        ayuda; verifica cada campo contra la fuente. No es un diagnóstico.
+        No se ejecutó OCR ni se leyó ningún archivo. La extracción es una ayuda; verifica cada campo
+        contra la fuente. No es un diagnóstico.
       </Callout>
       {reviewable ? (
         <form noValidate onSubmit={submit} className="space-y-4">

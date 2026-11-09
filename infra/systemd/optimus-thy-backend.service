@@ -8,8 +8,8 @@ StartLimitBurst=8
 
 [Service]
 Type=simple
-WorkingDirectory=%h/code/optimus-thy-academico/backend
-ExecStart=%h/code/optimus-thy-academico/backend/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000
+WorkingDirectory=%h/code/optimus-thy-operativo/backend
+ExecStart=%h/code/optimus-thy-operativo/backend/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000
 Restart=always
 RestartSec=3
 KillMode=control-group

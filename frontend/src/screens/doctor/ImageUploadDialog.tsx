@@ -26,7 +26,6 @@ function UploadForm({ patients, onValid }: { patients: DemoPatient[]; onValid: (
   };
   return (
     <form noValidate onSubmit={submit} className="space-y-4">
-
       <Field label="Paciente demo" error={errors.paciente} required>
         <Select
           id="imagen-paciente"

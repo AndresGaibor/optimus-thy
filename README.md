@@ -32,3 +32,10 @@ Cada servicio expone un chequeo de salud; `docker compose ps` muestra su estado.
 - Catálogo visual: `cd frontend && bun run catalogo`. Las pantallas sintéticas viven en Storybook (puerto 6104); la guía visual está en `DESIGN.md`.
 - Trabajo por Kanban, un pull request por historia. Ver `CLAUDE.md` y la plantilla de PR en `.github/`.
 - Requisitos y backlog: `docs/referencia/04-requisitos/` y `docs/referencia/05-backlog/`.
+
+## Producción
+
+Este repositorio (`optimus-thy-operativo`) es el de entrega/producción. El repositorio académico conserva la tesis, los requisitos, el backlog y la evidencia; las correcciones nacidas en producción se preparan como PR separado contra el académico.
+
+- Runbook de despliegue y corte: [docs/operacion/despliegue-tiroides2.md](docs/operacion/despliegue-tiroides2.md)
+- Registro de decisiones (ADR): [docs/adr/README.md](docs/adr/README.md)

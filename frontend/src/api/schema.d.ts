@@ -480,9 +480,7 @@ export interface operations {
             };
             header?: never;
             path?: never;
-            cookie?: {
-                optimus_session?: string | null;
-            };
+            cookie?: never;
         };
         requestBody?: never;
         responses: {
@@ -511,9 +509,7 @@ export interface operations {
             query?: never;
             header?: never;
             path?: never;
-            cookie?: {
-                optimus_session?: string | null;
-            };
+            cookie?: never;
         };
         requestBody: {
             content: {
@@ -548,9 +544,7 @@ export interface operations {
             path: {
                 id: string;
             };
-            cookie?: {
-                optimus_session?: string | null;
-            };
+            cookie?: never;
         };
         requestBody?: never;
         responses: {
@@ -581,9 +575,7 @@ export interface operations {
             path: {
                 id: string;
             };
-            cookie?: {
-                optimus_session?: string | null;
-            };
+            cookie?: never;
         };
         requestBody?: never;
         responses: {
@@ -614,9 +606,7 @@ export interface operations {
             path: {
                 id: string;
             };
-            cookie?: {
-                optimus_session?: string | null;
-            };
+            cookie?: never;
         };
         requestBody?: never;
         responses: {
@@ -645,9 +635,7 @@ export interface operations {
             query?: never;
             header?: never;
             path?: never;
-            cookie?: {
-                optimus_session?: string | null;
-            };
+            cookie?: never;
         };
         requestBody?: never;
         responses: {
@@ -660,15 +648,6 @@ export interface operations {
                     "application/json": unknown;
                 };
             };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
         };
     };
     put_permisos_rol_roles__id__permisos_put: {
@@ -678,9 +657,7 @@ export interface operations {
             path: {
                 id: string;
             };
-            cookie?: {
-                optimus_session?: string | null;
-            };
+            cookie?: never;
         };
         requestBody: {
             content: {
@@ -713,9 +690,7 @@ export interface operations {
             query?: never;
             header?: never;
             path?: never;
-            cookie?: {
-                optimus_session?: string | null;
-            };
+            cookie?: never;
         };
         requestBody?: never;
         responses: {
@@ -726,15 +701,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -750,9 +716,7 @@ export interface operations {
             };
             header?: never;
             path?: never;
-            cookie?: {
-                optimus_session?: string | null;
-            };
+            cookie?: never;
         };
         requestBody?: never;
         responses: {
@@ -781,9 +745,7 @@ export interface operations {
             query?: never;
             header?: never;
             path?: never;
-            cookie?: {
-                optimus_session?: string | null;
-            };
+            cookie?: never;
         };
         requestBody: {
             content: {
@@ -818,9 +780,7 @@ export interface operations {
             path: {
                 id: string;
             };
-            cookie?: {
-                optimus_session?: string | null;
-            };
+            cookie?: never;
         };
         requestBody: {
             content: {
@@ -855,9 +815,7 @@ export interface operations {
             path: {
                 id: string;
             };
-            cookie?: {
-                optimus_session?: string | null;
-            };
+            cookie?: never;
         };
         requestBody: {
             content: {
@@ -890,9 +848,7 @@ export interface operations {
             query?: never;
             header?: never;
             path?: never;
-            cookie?: {
-                optimus_session?: string | null;
-            };
+            cookie?: never;
         };
         requestBody: {
             content: {
@@ -927,9 +883,7 @@ export interface operations {
             path: {
                 id: string;
             };
-            cookie?: {
-                optimus_session?: string | null;
-            };
+            cookie?: never;
         };
         requestBody?: never;
         responses: {
@@ -960,9 +914,7 @@ export interface operations {
             path: {
                 id: string;
             };
-            cookie?: {
-                optimus_session?: string | null;
-            };
+            cookie?: never;
         };
         requestBody?: never;
         responses: {
@@ -1042,9 +994,7 @@ export interface operations {
             query?: never;
             header?: never;
             path?: never;
-            cookie?: {
-                optimus_session?: string | null;
-            };
+            cookie?: never;
         };
         requestBody?: never;
         responses: {
@@ -1057,15 +1007,6 @@ export interface operations {
                     "application/json": unknown;
                 };
             };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
         };
     };
     put_rol_activo_auth_rol_activo_put: {
@@ -1073,9 +1014,7 @@ export interface operations {
             query?: never;
             header?: never;
             path?: never;
-            cookie?: {
-                optimus_session?: string | null;
-            };
+            cookie?: never;
         };
         requestBody: {
             content: {

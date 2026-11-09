@@ -49,6 +49,11 @@ class Settings(BaseSettings):
         ge=1,
         le=1440,
     )
+    allowed_origins: str = Field(
+        default="http://localhost:5173,http://127.0.0.1:5173,http://testserver",
+        alias="ALLOWED_ORIGINS",
+        description="Orígenes permitidos para requests que cambian estado.",
+    )
     session_cookie_name: str = Field(default="optimus_session", alias="SESSION_COOKIE_NAME")
     session_cookie_secure: bool = Field(default=False, alias="SESSION_COOKIE_SECURE")
     s3_endpoint: str = Field(default="http://storage:9000", alias="S3_ENDPOINT")
@@ -84,6 +89,15 @@ class Settings(BaseSettings):
                 "PII_ENCRYPTION_KEY debe configurarse fuera del repositorio en este entorno"
             )
         return self
+
+    @property
+    def allowed_origins_set(self) -> frozenset[str]:
+        """Devuelve un conjunto inmutable de orígenes permitidos normalizados."""
+        return frozenset(
+            origin.strip().rstrip("/")
+            for origin in self.allowed_origins.split(",")
+            if origin.strip()
+        )
 
 
 @lru_cache(maxsize=1)

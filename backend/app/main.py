@@ -41,6 +41,27 @@ def create_app() -> FastAPI:
     )
 
     @app.middleware("http")
+    async def origin_middleware(
+        request: Request, call_next: Callable[[Request], Awaitable[JSONResponse]]
+    ) -> JSONResponse:
+        if request.method in {"POST", "PUT", "PATCH", "DELETE"}:
+            origin = request.headers.get("origin")
+            if origin is not None:
+                normalized = origin.strip().rstrip("/")
+                if normalized not in get_settings().allowed_origins_set:
+                    return JSONResponse(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        content={
+                            "error": {
+                                "code": "origin_forbidden",
+                                "message": "El origen de la solicitud no está permitido.",
+                            },
+                            "request_id": _get_request_id(request),
+                        },
+                    )
+        return await call_next(request)
+
+    @app.middleware("http")
     async def logging_middleware(
         request: Request, call_next: Callable[[Request], Awaitable[JSONResponse]]
     ) -> JSONResponse:

@@ -56,7 +56,6 @@ export function RoleSelectionScreen({ onSelect, onBack }: RoleSelectionScreenPro
           <p className="text-muted-foreground">Seleccione su rol para acceder al sistema</p>
         </div>
 
-
         <section aria-labelledby="role-options-title">
           <h2 id="role-options-title" className="sr-only">
             Perfiles disponibles

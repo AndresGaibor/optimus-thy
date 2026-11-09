@@ -27,8 +27,8 @@ services:
       retries: 5
 
   storage:
-    # MinIO sirve como almacenamiento compatible con S3 en local.
-    image: bitnamilegacy/minio:latest
+    # MinIO sirve como almacenamiento compatible con S3 en local (ADR-014, fijado por digest).
+    image: bitnamilegacy/minio@sha256:451fe6858cb770cc9d0e77ba811ce287420f781c7c1b806a386f6896471a349c
     user: "0:0"
     restart: unless-stopped
     command: server /data --console-address ":9001"
@@ -51,6 +51,8 @@ services:
       DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://optimus:cambiar-en-local@postgres:5432/optimus}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       ENVIRONMENT: ${ENVIRONMENT:-development}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}
+      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-false}
       S3_ENDPOINT: ${S3_ENDPOINT:-http://storage:9000}
       S3_ACCESS_KEY: ${S3_ACCESS_KEY:-cambiar-en-local}
       S3_SECRET_KEY: ${S3_SECRET_KEY:-cambiar-en-local}
@@ -58,6 +60,8 @@ services:
       PII_ENCRYPTION_KEY: ${PII_ENCRYPTION_KEY:-cambiar-en-local-no-usar-fuera-de-desarrollo}
       OCR_URL: ${OCR_URL:-http://ocr:8001}
       IA_URL: ${IA_URL:-http://ia:8002}
+    ports:
+      - "127.0.0.1:8000:8000"
     expose:
       - "8000"
     depends_on:

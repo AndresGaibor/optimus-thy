@@ -52,7 +52,6 @@ export function Settings({
           title="Preferencias de demostración"
           description="Los controles no persisten cambios ni afectan servicios reales."
         >
-
           <form
             className="grid gap-4 lg:grid-cols-2"
             onSubmit={(e) => {

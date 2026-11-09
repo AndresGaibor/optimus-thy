@@ -5,7 +5,7 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-WorkingDirectory=%h/code/optimus-thy-academico/frontend
+WorkingDirectory=%h/code/optimus-thy-operativo/frontend
 Environment=PATH=%h/.bun/bin:/usr/local/bin:/usr/bin:/bin
 Environment=STORYBOOK_BASE=/storybook/
 # Puerto/protocolo públicos del HMR: el cliente Vite corre en el navegador tras Cloudflare/nginx

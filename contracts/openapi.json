@@ -30,22 +30,9 @@
         ],
         "summary": "Crear Paciente",
         "operationId": "crear_paciente_pacientes_post",
-        "parameters": [
+        "security": [
           {
-            "name": "optimus_session",
-            "in": "cookie",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Optimus Session"
-            }
+            "SessionCookie": []
           }
         ],
         "requestBody": {
@@ -87,6 +74,11 @@
         ],
         "summary": "Listar Pacientes",
         "operationId": "listar_pacientes_pacientes_get",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
         "parameters": [
           {
             "name": "q",
@@ -126,22 +118,6 @@
               "default": 0,
               "title": "Desplazamiento"
             }
-          },
-          {
-            "name": "optimus_session",
-            "in": "cookie",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Optimus Session"
-            }
           }
         ],
         "responses": {
@@ -175,6 +151,11 @@
         ],
         "summary": "Obtener Paciente",
         "operationId": "obtener_paciente_pacientes__id__get",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
@@ -183,22 +164,6 @@
             "schema": {
               "type": "string",
               "title": "Id"
-            }
-          },
-          {
-            "name": "optimus_session",
-            "in": "cookie",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Optimus Session"
             }
           }
         ],
@@ -231,6 +196,11 @@
         ],
         "summary": "Crear Caso",
         "operationId": "crear_caso_pacientes__id__casos_post",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
@@ -239,22 +209,6 @@
             "schema": {
               "type": "string",
               "title": "Id"
-            }
-          },
-          {
-            "name": "optimus_session",
-            "in": "cookie",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Optimus Session"
             }
           }
         ],
@@ -287,6 +241,11 @@
         ],
         "summary": "Obtener Caso",
         "operationId": "obtener_caso_casos__id__get",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
@@ -295,22 +254,6 @@
             "schema": {
               "type": "string",
               "title": "Id"
-            }
-          },
-          {
-            "name": "optimus_session",
-            "in": "cookie",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Optimus Session"
             }
           }
         ],
@@ -343,24 +286,6 @@
         ],
         "summary": "Matriz Roles",
         "operationId": "matriz_roles_roles_get",
-        "parameters": [
-          {
-            "name": "optimus_session",
-            "in": "cookie",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Optimus Session"
-            }
-          }
-        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -369,18 +294,13 @@
                 "schema": {}
               }
             }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
           }
-        }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
       }
     },
     "/roles/{id}/permisos": {
@@ -390,6 +310,11 @@
         ],
         "summary": "Put Permisos Rol",
         "operationId": "put_permisos_rol_roles__id__permisos_put",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
@@ -398,22 +323,6 @@
             "schema": {
               "type": "string",
               "title": "Id"
-            }
-          },
-          {
-            "name": "optimus_session",
-            "in": "cookie",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Optimus Session"
             }
           }
         ],
@@ -456,24 +365,6 @@
         ],
         "summary": "Listar Instituciones",
         "operationId": "listar_instituciones_instituciones_get",
-        "parameters": [
-          {
-            "name": "optimus_session",
-            "in": "cookie",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Optimus Session"
-            }
-          }
-        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -482,18 +373,13 @@
                 "schema": {}
               }
             }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
           }
-        }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
       }
     },
     "/usuarios": {
@@ -503,6 +389,11 @@
         ],
         "summary": "Listar Usuarios",
         "operationId": "listar_usuarios_usuarios_get",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
         "parameters": [
           {
             "name": "institucion_id",
@@ -573,22 +464,6 @@
               "default": 0,
               "title": "Desplazamiento"
             }
-          },
-          {
-            "name": "optimus_session",
-            "in": "cookie",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Optimus Session"
-            }
           }
         ],
         "responses": {
@@ -618,22 +493,9 @@
         ],
         "summary": "Crear Usuario",
         "operationId": "crear_usuario_usuarios_post",
-        "parameters": [
+        "security": [
           {
-            "name": "optimus_session",
-            "in": "cookie",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Optimus Session"
-            }
+            "SessionCookie": []
           }
         ],
         "requestBody": {
@@ -675,6 +537,11 @@
         ],
         "summary": "Patch Usuario",
         "operationId": "patch_usuario_usuarios__id__patch",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
@@ -683,22 +550,6 @@
             "schema": {
               "type": "string",
               "title": "Id"
-            }
-          },
-          {
-            "name": "optimus_session",
-            "in": "cookie",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Optimus Session"
             }
           }
         ],
@@ -741,6 +592,11 @@
         ],
         "summary": "Put Roles Usuario",
         "operationId": "put_roles_usuario_usuarios__id__roles_put",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
@@ -749,22 +605,6 @@
             "schema": {
               "type": "string",
               "title": "Id"
-            }
-          },
-          {
-            "name": "optimus_session",
-            "in": "cookie",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Optimus Session"
             }
           }
         ],
@@ -807,33 +647,15 @@
         ],
         "summary": "Crear Trabajo",
         "operationId": "crear_trabajo_trabajos_post",
-        "parameters": [
-          {
-            "name": "optimus_session",
-            "in": "cookie",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Optimus Session"
-            }
-          }
-        ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/CrearTrabajoRequest"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "202": {
@@ -854,7 +676,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
       }
     },
     "/trabajos/{id}": {
@@ -864,6 +691,11 @@
         ],
         "summary": "Obtener Trabajo",
         "operationId": "obtener_trabajo_trabajos__id__get",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
@@ -872,22 +704,6 @@
             "schema": {
               "type": "string",
               "title": "Id"
-            }
-          },
-          {
-            "name": "optimus_session",
-            "in": "cookie",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Optimus Session"
             }
           }
         ],
@@ -921,6 +737,11 @@
         "summary": "Reintentar Trabajo",
         "description": "Reintento manual (HT-010): solo un trabajo en ``error``.",
         "operationId": "reintentar_trabajo_trabajos__id__reintentar_post",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
@@ -929,22 +750,6 @@
             "schema": {
               "type": "string",
               "title": "Id"
-            }
-          },
-          {
-            "name": "optimus_session",
-            "in": "cookie",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Optimus Session"
             }
           }
         ],
@@ -1030,24 +835,6 @@
         ],
         "summary": "Me",
         "operationId": "me_auth_me_get",
-        "parameters": [
-          {
-            "name": "optimus_session",
-            "in": "cookie",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Optimus Session"
-            }
-          }
-        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -1056,18 +843,13 @@
                 "schema": {}
               }
             }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
           }
-        }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
       }
     },
     "/auth/rol-activo": {
@@ -1077,33 +859,15 @@
         ],
         "summary": "Put Rol Activo",
         "operationId": "put_rol_activo_auth_rol_activo_put",
-        "parameters": [
-          {
-            "name": "optimus_session",
-            "in": "cookie",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Optimus Session"
-            }
-          }
-        ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RolActivoRequest"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -1124,7 +888,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
       }
     }
   },
@@ -1456,6 +1225,13 @@
           "type"
         ],
         "title": "ValidationError"
+      }
+    },
+    "securitySchemes": {
+      "SessionCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "optimus_session"
       }
     }
   }

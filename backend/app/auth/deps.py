@@ -5,7 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Annotated, Any
 
-from fastapi import Cookie, Depends, Request
+from fastapi import Depends, Request, Security
+from fastapi.security import APIKeyCookie
 from sqlalchemy import exists, select
 from sqlalchemy.orm import Session
 
@@ -23,6 +24,12 @@ from app.config import get_settings
 from app.db import session_dep
 from app.models.usuarios import Permiso, Rol, RolPermiso, Usuario, UsuarioRol
 
+_session_cookie_scheme = APIKeyCookie(
+    name=get_settings().session_cookie_name,
+    scheme_name="SessionCookie",
+    auto_error=False,
+)
+
 
 @dataclass
 class SesionActual:
@@ -36,12 +43,9 @@ class SesionActual:
 def sesion_actual(
     request: Request,
     db: Annotated[Session, Depends(session_dep)],
-    optimus_session: str | None = Cookie(default=None),
+    optimus_session: Annotated[str | None, Security(_session_cookie_scheme)],
 ) -> SesionActual:
-    settings = get_settings()
     token = optimus_session
-    if token is None:
-        token = request.cookies.get(settings.session_cookie_name)
     if token is None:
         raise NoAutenticado
 

@@ -77,7 +77,7 @@ def test_login_correcto_e_incorrecto_con_db(db_url: str | None, db_session, clie
     if not cookies_header:
         cookies_header = str(r.cookies.get("optimus_session", ""))
     assert "HttpOnly" in cookies_header
-    assert "samesite" in cookies_header.lower()
+    assert "samesite=strict" in cookies_header.lower()
     # Login incorrecto
     r2 = client.post("/auth/login", json={"correo": "doc@hosp.com", "password": "mal"})
     assert r2.status_code == 401

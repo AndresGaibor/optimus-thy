@@ -204,7 +204,7 @@ def login(
         key=settings.session_cookie_name,
         value=token,
         httponly=True,
-        samesite="lax",
+        samesite="strict",
         secure=settings.session_cookie_secure,
         path="/",
         # La cookie no vive más que la inactividad permitida (HU-005).

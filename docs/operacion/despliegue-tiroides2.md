@@ -8,16 +8,17 @@ flowchart LR
     B -->|Access solo /storybook| C[Túnel cloudflared]
     C --> D["nginx 127.0.0.1:5033<br/>contenedor optimus-thy-edge"]
     D -->|/| E["/srv<br/>build estático frontend/dist"]
-    D -->|/api/ y /auth/| F["127.0.0.1:8000<br/>backend uvicorn"]
+    D -->|/api/ y /auth/| F["127.0.0.1:8000<br/>backend compose optimus-thy-backend-1"]
     D -->|/storybook/| G["127.0.0.1:6104<br/>Storybook"]
     G -.-> H["Sablier 127.0.0.1:10001<br/>escala a cero"]
     D -.->|/_optimus-thy-storybook-wake| H
 ```
 
 Notas de borde:
+
 - `cloudflared.service` usa token y enruta hacia el contenedor `optimus-thy-edge` con `--network host`.
 - nginx dentro de `optimus-thy-edge` escucha en `127.0.0.1:5033`.
-- Montajes del contenedor: `~/.config/optimus-thy/nginx.conf` → `/etc/nginx/nginx.conf` (ro) y `/home/ubuntu/code/optimus-thy-academico/frontend/dist` → `/srv` (ro).
+- Montajes del contenedor: `~/.config/optimus-thy/nginx.conf` → `/etc/nginx/nginx.conf` (ro) y `/home/ubuntu/code/optimus-thy-operativo/frontend/dist` → `/srv` (ro).
 - `root /srv`; `location /` usa `try_files $uri $uri/ /index.html`.
 - `location /api/` y `/auth/` usan `proxy_pass http://127.0.0.1:8000/`.
 - `/storybook/` proxyea a `127.0.0.1:6104`; `/_optimus-thy-storybook-wake` proxyea a Sablier en `127.0.0.1:10001`.
@@ -31,7 +32,6 @@ Notas de borde:
 | `/assets/...` | `200` (o `304` si aplica caché) para un asset real del build | `ASSET=$(curl -sS https://tiroides2.andresgaibor.com/ \| grep -oE '/assets/[^"]+' \| head -n1); curl -sS -o /dev/null -w '%{http_code}\n' "https://tiroides2.andresgaibor.com${ASSET}"` |
 | `/api/auth/me` | `401` si el backend está vivo y no hay sesión; `502` indica backend sin proceso | `curl -sS -o /dev/null -w '%{http_code}\n' https://tiroides2.andresgaibor.com/api/auth/me` |
 | `/storybook/` | `200` con sesión válida de Cloudflare Access; sin cookie, redirección al login de Access | `curl -sS -o /dev/null -w '%{http_code}\n' https://tiroides2.andresgaibor.com/storybook/` |
-
 
 ## Acceso por Tailscale
 
@@ -69,7 +69,7 @@ bun run build
 ```
 
 - El resultado se genera en `frontend/dist` (build de Vite).
-- Como `/srv` del contenedor `optimus-thy-edge` es un bind mount de `/home/ubuntu/code/optimus-thy-academico/frontend/dist`, reconstruir publica al instante sin reiniciar nginx.
+- Como `/srv` del contenedor `optimus-thy-edge` es un bind mount de `/home/ubuntu/code/optimus-thy-operativo/frontend/dist`, reconstruir publica al instante sin reiniciar nginx.
 - Verificación posterior:
 
 ```bash
@@ -84,7 +84,7 @@ Usar el montaje real del repo y la configuración de nginx del host:
 ```bash
 docker run -d --name optimus-thy-edge --restart unless-stopped --network host \
   -v ~/.config/optimus-thy/nginx.conf:/etc/nginx/nginx.conf:ro \
-  -v /home/ubuntu/code/optimus-thy-academico/frontend/dist:/srv:ro \
+  -v /home/ubuntu/code/optimus-thy-operativo/frontend/dist:/srv:ro \
   nginx:alpine
 ```
 
@@ -95,7 +95,7 @@ docker rename optimus-thy-edge optimus-thy-edge-old
 docker stop optimus-thy-edge-old
 docker run -d --name optimus-thy-edge --restart unless-stopped --network host \
   -v ~/.config/optimus-thy/nginx.conf:/etc/nginx/nginx.conf:ro \
-  -v /home/ubuntu/code/optimus-thy-academico/frontend/dist:/srv:ro \
+  -v /home/ubuntu/code/optimus-thy-operativo/frontend/dist:/srv:ro \
   nginx:alpine
 # verificar antes de borrar
 curl -sS -o /dev/null -w '%{http_code}\n' https://tiroides2.andresgaibor.com/
@@ -106,16 +106,36 @@ No editar el nginx del contenedor en caliente; la fuente es `~/.config/optimus-t
 
 ## Backend
 
-- Unit de usuario: `infra/systemd/optimus-thy-backend.service` (uvicorn en `127.0.0.1:8000`).
-- Si `/api/auth/me` responde `502`, el backend no está corriendo. Revisar el estado del servicio de usuario y los logs antes de asumir fallo de nginx.
-- Base: contenedor `optimus-thy-postgres-1`, usuario `optimus`, base `optimus`. La base puede estar en Alembic `0008` mientras el repo tiene hasta `0009_bloqueo_y_actividad.py`; queda pendiente `alembic upgrade head` (0008→0009) cuando corresponda.
-- `DATABASE_URL` debe apuntar a la IP actual del contenedor de Postgres. Obtener la IP actual:
+- Forma principal en este corte: la API corre como contenedor Compose `optimus-thy-backend-1` (servicio `backend` de `docker-compose.yml`), publicada en `127.0.0.1:8000` para que el edge en `--network host` la alcance. PostgreSQL y MinIO permanecen en la red `optimus-thy-net`.
+- Alternativa: unit de usuario `infra/systemd/optimus-thy-backend.service` (uvicorn en `127.0.0.1:8000`, paths del repo operativo). No debe competir con el contenedor Compose por el mismo puerto.
+- MinIO está fijado por digest (ADR-014) en `docker-compose.yml`; una actualización exige cambiar el digest y verificar backup/restauración.
+- El backend recibe `ALLOWED_ORIGINS` y `SESSION_COOKIE_SECURE` desde `.env`/compose. `.env` de producción debe llevar `ENVIRONMENT=production`, `SESSION_COOKIE_SECURE=true` y `ALLOWED_ORIGINS=https://tiroides2.andresgaibor.com`.
+- Diagnóstico del 502 observado al preparar el corte: `GET /api/auth/me` respondía `502` porque **nada escuchaba en `127.0.0.1:8000`** (el backend no estaba publicado hacia el host). Comprobación directa:
 
 ```bash
-docker inspect optimus-thy-postgres-1 --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}'
+curl -sS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8000/health
 ```
 
-- Aviso: la IP del contenedor cambia si se recrea `optimus-thy-postgres-1`; tras recrearlo hay que recalcular la IP y actualizar la configuración del backend.
+Si responde `200`, el backend está vivo; si falla la conexión o nginx sigue devolviendo `502`, revisar estado/logs del servicio activo (`docker compose ps backend` y `docker compose logs backend`, o el unit systemd si se usa la alternativa) antes de asumir fallo de nginx.
+- Base: contenedor `optimus-thy-postgres-1`, usuario `optimus`, base `optimus`. La base puede estar en Alembic `0008` mientras el repo tiene hasta `0009_bloqueo_y_actividad.py`; queda pendiente `alembic upgrade head` (0008→0009) cuando corresponda.
+- `DATABASE_URL` debe usar el nombre de servicio `postgres:5432` (DNS interno del compose); no usar IPs de contenedor.
+
+
+## Corte al repo operativo
+
+Este runbook deja el repo y la configuración listos; **no ejecuta el corte real** (no reinstala, no reconstruye, no recrea contenedores). Pasos seguros, en orden, cuando se ejecute el corte:
+
+1. **Preparar entorno:** confirmar que `.env` existe con valores de producción y, como mínimo, `ENVIRONMENT=production`, `SESSION_COOKIE_SECURE=true` y `ALLOWED_ORIGINS=https://tiroides2.andresgaibor.com`. Verificar que MinIO sigue fijado por digest en `docker-compose.yml`.
+2. **Frontend:** desde `frontend/`, instalar dependencias si hace falta y ejecutar `bun run build`. El resultado queda en `frontend/dist`.
+3. **Servicios de datos/API:** `docker compose up -d backend storage` (y `postgres` si corresponde al estado del stack). Confirmar que el backend publica `127.0.0.1:8000`.
+4. **Verificar backend antes del edge:** `curl -sS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8000/health` debe responder `200`.
+5. **Recrear el edge con el mount del repo operativo** (procedimiento seguro de rename, evita conflicto en `127.0.0.1:5033`): capturar mounts (`docker inspect optimus-thy-edge --format '{{json .Mounts}}'`), `docker rename optimus-thy-edge optimus-thy-edge-old && docker stop optimus-thy-edge-old`, crear el nuevo edge montando `/home/ubuntu/code/optimus-thy-operativo/frontend/dist:/srv:ro` y `~/.config/optimus-thy/nginx.conf:/etc/nginx/nginx.conf:ro`, verificar, y solo entonces `docker rm optimus-thy-edge-old`.
+6. **Verificar corte completo:**
+   - `/` → `200`
+   - `/login` → `200`
+   - un asset real bajo `/assets/...` → `200` o `304`
+   - `/api/auth/me` → `401` (backend vivo, sin sesión), **no** `502`
+   - `/storybook/` → `200` con sesión válida de Cloudflare Access (sin cookie, redirección a Access)
 
 ## Storybook y HMR
 
@@ -134,7 +154,7 @@ docker inspect optimus-thy-postgres-1 --format '{{range .NetworkSettings.Network
 |---|---|---|
 | `403` en `/` | `/srv` montado a un directorio vacío o inexistente (p. ej. `frontend/dist` vacío o bind mount apuntando al repo equivocado) | `docker inspect optimus-thy-edge --format '{{json .Mounts}}'`; verificar que el origen del bind mount de `/srv` contiene `index.html` |
 | `500` en `/images/*` (raíz) | Rutas absolutas `/images/...` en stories/MDX; la ruta válida bajo el despliegue es `/storybook/images/...` | Revisar referencias a `/images/` en stories/MDX y confirmar que usan `import.meta.env.BASE_URL` o rutas relativas |
-| `502` en `/api/*` | Backend sin proceso en `127.0.0.1:8000` o nginx sin upstream alcanzable | `curl -sS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8000/health` (si existe) y estado de `optimus-thy-backend.service` |
+| `502` en `/api/*` | Backend sin proceso/publicación en `127.0.0.1:8000` o nginx sin upstream alcanzable | `curl -sS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8000/health` y estado de `optimus-thy-backend-1` / `optimus-thy-backend.service` |
 | `500` en `/login` | La SPA no se sirve correctamente (build ausente, `try_files` sin `index.html`) o error del frontend servido desde `/srv` | Comprobar `/` y existencia de `index.html` en el origen montado como `/srv` |
 | WebSocket sin `101` en Storybook HMR | Storybook apagado/escalado a cero, variables HMR incorrectas, o falta sesión de Cloudflare Access (devuelve 302) | Probar acceso autenticado a `/storybook/`; revisar `STORYBOOK_HMR_PORT=443` y `STORYBOOK_HMR_PROTOCOL=wss` en el servicio |
 | `bind() to 127.0.0.1:5033 failed (98: Address in use)` al recrear el edge | El contenedor viejo (`optimus-thy-edge` u otro proceso) sigue ocupando `127.0.0.1:5033` | `docker ps --format '{{.Names}} {{.Ports}}'` y `docker logs optimus-thy-edge`/logs del contenedor nuevo; parar el viejo antes de arrancar el nuevo |
@@ -154,6 +174,8 @@ docker inspect optimus-thy-postgres-1 --format '{{range .NetworkSettings.Network
 ## Qué no hacer
 
 - No editar el nginx del contenedor `optimus-thy-edge` en caliente; modificar `~/.config/optimus-thy/nginx.conf` y recrear el contenedor si hace falta.
-- No montar `/srv` desde otro repo; el origen correcto del frontend es `/home/ubuntu/code/optimus-thy-academico/frontend/dist`.
+- No montar `/srv` desde otro repo; el origen correcto del frontend es `/home/ubuntu/code/optimus-thy-operativo/frontend/dist`.
 - No borrar `optimus-thy-edge` sin capturar antes sus montajes (`docker inspect optimus-thy-edge --format '{{json .Mounts}}'`): es la única copia de su configuración, porque el contenedor se creó a mano, no con Compose.
 - No ejecutar `docker compose down -v` sobre el stack antiguo: borra los volúmenes de PostgreSQL y MinIO.
+- No usar `bitnamilegacy/minio:latest`; mantener MinIO fijado por digest (ADR-014).
+- No ejecutar el corte sin verificar `http://127.0.0.1:8000/health` primero; un `502` en `/api/*` suele indicar backend no publicado/no vivo.
