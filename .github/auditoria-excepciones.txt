@@ -1,0 +1,3 @@
+# Excepciones temporales: ID|AAAA-MM-DD|motivo
+# Ejemplo: GHSA-xxxx-xxxx-xxxx|2026-12-31|Dependencia transitiva en actualización coordinada
+# Ejemplo: CVE-2026-12345|2026-12-31|No hay versión corregida disponible

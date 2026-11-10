@@ -37,8 +37,9 @@ Cada servicio expone un chequeo de salud; `docker compose ps` muestra su estado.
 
 Este repositorio (`optimus-thy-operativo`) es el de entrega/producción. El repositorio académico conserva la tesis, los requisitos, el backlog y la evidencia; las correcciones nacidas en producción se preparan como PR separado contra el académico.
 
-- Runbook del nuevo despliegue aislado por Tailscale: [docs/operacion/despliegue-produccion.md](docs/operacion/despliegue-produccion.md)
-- Runbook de despliegue y corte de tiroides2 (instalación existente): [docs/operacion/despliegue-tiroides2.md](docs/operacion/despliegue-tiroides2.md)
+- Índice operativo (entornos, runbooks y checklists): [docs/operacion/README.md](docs/operacion/README.md)
+- Runbook del servidor nuevo (labturingserver, Docker Compose + Tailscale): [docs/operacion/labturingserver.md](docs/operacion/labturingserver.md)
+- Runbook de tiroides2 (instalación existente, Cloudflare/nginx 5033): [docs/operacion/despliegue-tiroides2.md](docs/operacion/despliegue-tiroides2.md)
 - Custodia de respaldos y secretos: [docs/operacion/custodia-respaldos.md](docs/operacion/custodia-respaldos.md)
 - Incidente E2E/rollback 2026-11-09: [docs/operacion/incidente-e2e-rollback-2026-11-09.md](docs/operacion/incidente-e2e-rollback-2026-11-09.md)
 - Decisiones del despliegue: [ADR-018](docs/adr/ADR-018-despliegue-por-releases.md) y [ADR-019](docs/adr/ADR-019-respaldos-cifrados.md)

@@ -12,7 +12,7 @@ Los volúmenes `optimus-thy_pgdata` y `optimus-thy_miniodata` conservan `Created
 
 Runbooks relacionados:
 
-- [Despliegue de producción en el servidor Tailscale](despliegue-produccion.md)
+- [Runbook de labturingserver](labturingserver.md)
 - [Despliegue en tiroides2.andresgaibor.com](despliegue-tiroides2.md)
 
 ## Línea de tiempo

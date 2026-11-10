@@ -122,8 +122,9 @@ Frecuencia recomendada: al menos trimestral y tras cambios relevantes (clave, in
 
 ## Referencias
 
-- Runbook de despliegue/producción: [despliegue-produccion.md](despliegue-produccion.md)
-- Runbook de corte tiroides2: [despliegue-tiroides2.md](despliegue-tiroides2.md)
+- Índice operativo: [README.md](README.md)
+- Runbook labturingserver: [labturingserver.md](labturingserver.md)
+- Runbook tiroides2: [despliegue-tiroides2.md](despliegue-tiroides2.md)
 - Incidente E2E/rollback 2026-11-09: [incidente-e2e-rollback-2026-11-09.md](incidente-e2e-rollback-2026-11-09.md)
 - Scripts: [`infra/scripts/respaldo.sh`](../../infra/scripts/respaldo.sh), [`infra/scripts/restaurar.sh`](../../infra/scripts/restaurar.sh), [`infra/scripts/probar-respaldo.sh`](../../infra/scripts/probar-respaldo.sh)
 - Unidades systemd: [`infra/systemd/optimus-thy-respaldo.service`](../../infra/systemd/optimus-thy-respaldo.service), [`infra/systemd/optimus-thy-respaldo.timer`](../../infra/systemd/optimus-thy-respaldo.timer)
