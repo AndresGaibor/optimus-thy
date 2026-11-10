@@ -23,9 +23,13 @@ Sistema web de gestión de datos clínicos con IA para cáncer de tiroides (tesi
 
 ## Flujo de trabajo
 
-- Kanban: Pendiente, En proceso, Revisión, Finalizado. Límite por persona: 2 en proceso, 3 en revisión.
+- Linear es la única fuente de verdad del trabajo: equipo `TESIS`, proyecto «OPTIMUS-THY · Backlog de producto». Cada historia es un issue `TES-nnn` que lleva su ID de backlog en el título (`HU-001 · …`, `HT-007 · …`).
+- GitHub es solo para código, PR e integración continua: no se abren issues en GitHub ni se replica el estado de las tareas en archivos del repositorio.
+- Este repo (producción) consulta el tablero, solo en lectura, con `make tareas`; filtra con `ARGS="--estado progress"`, `ARGS="--estado revision"`, `ARGS="--estado done"`, `ARGS="--estado todo"` o `ARGS="--persona daniel"`.
+- Desde aquí **no** se cambia el estado ni ningún otro campo del issue: el estado lo mueve únicamente el repo `optimus-thy-academico`, su dueño.
+- El progreso de este repo se registra como comentario: `make comentar ISSUE=TES-nnn TEXTO="…"`. Las notas locales que no se commitean también valen.
 - Un pull request por historia (`HT-xxx` / `HU-xxx`). Rama `ht-001-estructura`, commit `tipo(HT-001): resumen`.
-- La rama `main` solo recibe cambios por PR con integración continua en verde. El PR cita requisito, historia y tarjeta.
+- La rama `main` solo recibe cambios por PR con integración continua en verde. El PR cita requisito, historia e issue de Linear.
 - Catálogo de requisitos y backlog: `docs/referencia/04-requisitos/`, `docs/referencia/05-backlog/`.
 - Una historia de más de 8 h se parte.
 

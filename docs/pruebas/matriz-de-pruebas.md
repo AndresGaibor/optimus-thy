@@ -11,11 +11,14 @@ el texto íntegro de cada requisito, está en `docs/referencia/04-requisitos/cat
 - **Resultado**: `Pendiente` (aún no se ejecuta), `En curso` (parcial, con la parte
   que falta indicada en la evidencia), `Aprobado` (caso en verde y evidencia
   guardada), `Falló` (el caso no pasa; se abre un error) o `Bloqueado` (depende de
-  otra tarjeta o de datos que no existen).
+  otro issue o de datos que no existen).
 - **Evidencia**: ruta de la prueba, captura o documento. Nunca datos clínicos reales.
+- **Tablero**: el tablero de Linear y su historial viven en
+  `https://linear.app/andres-gaibor/project/optimus-thy-backlog-de-producto-6faf8a7b8035`;
+  no hay tablero en el repositorio ni en GitHub.
 - **Error asociado**: identificador del registro de errores (`ERR-###`).
 
-Al cerrar una tarjeta se actualizan las filas de los requisitos que cubre: cambiar
+Al cerrar un issue se actualizan las filas de los requisitos que cubre: cambiar
 `Pendiente` por `Aprobado` y añadir la evidencia es parte de la definición de terminado.
 
 ## Resumen
@@ -213,7 +216,7 @@ Al cerrar una tarjeta se actualizan las filas de los requisitos que cubre: cambi
 
 | Requisito | Texto del requisito (resumen) | Caso de prueba | Resultado | Evidencia | Error |
 | --- | --- | --- | --- | --- | --- |
-| RP-01 | Tablero Kanban con los estados pendiente, en proceso, revisión y finalizado; cada historia es una tarjeta | CP-149 | Pendiente | — | — |
+| RP-01 | Tablero Kanban con los estados pendiente, en proceso, revisión y finalizado; cada historia es una tarjeta | CP-149 | Pendiente | Tablero de Linear `https://linear.app/andres-gaibor/project/optimus-thy-backlog-de-producto-6faf8a7b8035` (el tablero y su historial viven ahí; no hay tablero en el repositorio ni en GitHub) | — |
 | RP-03 | Historias de usuario con criterios de aceptación verificables | CP-150 | Pendiente | — | — |
 | RP-04 | Matriz de trazabilidad: compromiso, requisito, historia y prueba | CP-151 | Pendiente | — | — |
 | RP-05 | Matriz de pruebas funcionales y de integración con evidencias | CP-152 | Aprobado | `docs/pruebas/matriz-de-pruebas.md` | — |

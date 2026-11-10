@@ -30,7 +30,7 @@ Cada servicio expone un chequeo de salud; `docker compose ps` muestra su estado.
 
 - `make check` ejecuta formato, tipos, pruebas, build frontend y catálogo de componentes (Storybook), además de los checks de backend.
 - Catálogo visual: `cd frontend && bun run catalogo`. Las pantallas sintéticas viven en Storybook (puerto 6104); la guía visual está en `DESIGN.md`.
-- Trabajo por Kanban, un pull request por historia. Ver `CLAUDE.md` y la plantilla de PR en `.github/`.
+- Las tareas viven en Linear (proyecto «OPTIMUS-THY · Backlog de producto»): desde este repo solo se consultan con `make tareas` y se comentan con `make comentar`, sin mover estados. Un pull request por historia; ver `CLAUDE.md` y la plantilla de PR en `.github/`.
 - Requisitos y backlog: `docs/referencia/04-requisitos/` y `docs/referencia/05-backlog/`.
 
 ## Producción
