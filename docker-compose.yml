@@ -92,10 +92,20 @@ services:
   ocr:
     build:
       context: ./ocr
+      # El SDK de GLM-OCR (torch, transformers) solo entra en la imagen si se pide.
+      args:
+        INSTALAR_GLM: ${OCR_INSTALAR_GLM:-false}
     restart: unless-stopped
     environment:
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       ENVIRONMENT: ${ENVIRONMENT:-development}
+      OCR_MOTOR: ${OCR_MOTOR:-glm}
+      OCR_MODELO_DIR: /modelos/glm-ocr
+      OCR_MAX_BYTES: ${OCR_MAX_BYTES:-20971520}
+      OCR_PERMITIR_API_EXTERNA: ${OCR_PERMITIR_API_EXTERNA:-false}
+    volumes:
+      # Pesos de GLM-OCR (layout + modelo) montados de solo lectura.
+      - ${OCR_MODELOS_DIR:-./var/modelos-glm}:/modelos:ro
     expose:
       - "8001"
     depends_on:
@@ -110,10 +120,19 @@ services:
   ia:
     build:
       context: ./ia
+      # El stack de inferencia (~2 GB) solo entra en la imagen si se pide:
+      # sin esta bandera el servicio arranca en degradado.
+      args:
+        INSTALAR_MODELOS: ${IA_INSTALAR_MODELOS:-false}
     restart: unless-stopped
     environment:
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       ENVIRONMENT: ${ENVIRONMENT:-development}
+      IA_MODELOS_DIR: /modelos
+      IA_DISPOSITIVO: ${IA_DISPOSITIVO:-cpu}
+    volumes:
+      # Solo lectura: los pesos viven fuera del repo y nunca se versionan.
+      - ${IA_MODELOS_DIR:-./var/modelos}:/modelos:ro
     expose:
       - "8002"
     depends_on:

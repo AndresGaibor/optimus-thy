@@ -9,7 +9,7 @@ compose (MinIO, compatible con S3). Cumple RD-03, RS-CIF-04 y RS-ANO-07.
 | --- | --- |
 | Bucket siempre privado | Se crea sin ACL y se le aplica `BlockPublicAcls`, `IgnorePublicAcls`, `BlockPublicPolicy` y `RestrictPublicBuckets` |
 | Solo lectura por enlace firmado | `generate_presigned_link` es el único camino de descarga; no existe URL pública |
-| Enlace de corta duración | 3600 s por defecto, configurable entre 60 s y 24 h (`S3_PRESIGNED_SECONDS`) |
+| Enlace de corta duración | 3600 s por defecto, configurable entre 60 s y 24 h (`S3_PRESIGNED_SECONDS`). La apertura o descarga de un documento (HU-053) pide un enlace explícito de 300 s |
 | Nombres sin datos personales | La clave es `prefijo/AAAA/MM/DD/<uuid4>.ext`; nunca se usa el nombre original del archivo |
 | La base guarda solo metadatos | `documents`, `medical_images` e `inference_artifacts` guardan bucket, clave, tipo, tamaño y SHA-256 |
 | Integridad | El SHA-256 se calcula al subir y viaja en los metadatos del objeto |

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import uuid
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 import sqlalchemy as sa
@@ -20,6 +21,10 @@ class Documento(Base):
     __table_args__ = (
         sa.UniqueConstraint(
             "caso_id", "nombre_original", "version", name="uq_documentos_caso_nombre_version"
+        ),
+        sa.CheckConstraint(
+            "estado_ocr IN ('no_solicitado','en_cola','procesando','listo','error')",
+            name="ck_documentos_estado_ocr",
         ),
     )
 
@@ -39,10 +44,17 @@ class Documento(Base):
     hash_sha256: Mapped[str] = mapped_column(sa.String(64), nullable=False)
     version: Mapped[int] = mapped_column(sa.Integer, nullable=False)
     tipo_mime: Mapped[str | None] = mapped_column(sa.String(128))
-    creado_en: Mapped[sa.DateTime] = mapped_column(
+    tamano_bytes: Mapped[int] = mapped_column(sa.Integer, nullable=False)
+    # Estado del OCR (HU-051). ``ocr_motivo`` solo lleva texto cuando falla.
+    estado_ocr: Mapped[str] = mapped_column(
+        sa.String(16), nullable=False, server_default=sa.text("'no_solicitado'")
+    )
+    ocr_motivo: Mapped[str | None] = mapped_column(sa.String(255))
+    ocr_actualizado_en: Mapped[datetime | None] = mapped_column(sa.TIMESTAMP(timezone=True))
+    creado_en: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.func.now()
     )
-    actualizado_en: Mapped[sa.DateTime] = mapped_column(
+    actualizado_en: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True),
         nullable=False,
         server_default=sa.func.now(),
@@ -72,14 +84,14 @@ class ExtraccionOCR(Base):
     estado: Mapped[str] = mapped_column(sa.String(32), nullable=False)
     modelo_ocr: Mapped[str | None] = mapped_column(sa.String(128))
     version_modelo: Mapped[str | None] = mapped_column(sa.String(64))
-    iniciado_en: Mapped[sa.DateTime] = mapped_column(
+    iniciado_en: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.func.now()
     )
-    finalizado_en: Mapped[sa.DateTime | None] = mapped_column(sa.TIMESTAMP(timezone=True))
-    creado_en: Mapped[sa.DateTime] = mapped_column(
+    finalizado_en: Mapped[datetime | None] = mapped_column(sa.TIMESTAMP(timezone=True))
+    creado_en: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.func.now()
     )
-    actualizado_en: Mapped[sa.DateTime] = mapped_column(
+    actualizado_en: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True),
         nullable=False,
         server_default=sa.func.now(),
@@ -119,11 +131,11 @@ class CampoOCR(Base):
     confirmado_por_humano: Mapped[bool] = mapped_column(
         sa.Boolean, nullable=False, server_default=sa.text("false")
     )
-    confirmado_en: Mapped[sa.DateTime | None] = mapped_column(sa.TIMESTAMP(timezone=True))
-    creado_en: Mapped[sa.DateTime] = mapped_column(
+    confirmado_en: Mapped[datetime | None] = mapped_column(sa.TIMESTAMP(timezone=True))
+    creado_en: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.func.now()
     )
-    actualizado_en: Mapped[sa.DateTime] = mapped_column(
+    actualizado_en: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True),
         nullable=False,
         server_default=sa.func.now(),

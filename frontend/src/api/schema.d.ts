@@ -21,6 +21,156 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/casos/{caso_id}/consentimientos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listar Consentimientos */
+        get: operations["listar_consentimientos_casos__caso_id__consentimientos_get"];
+        put?: never;
+        /** Crear Consentimiento */
+        post: operations["crear_consentimiento_casos__caso_id__consentimientos_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/casos/{caso_id}/consentimientos/{consentimiento_id}/revocar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Revocar Consentimiento
+         * @description Retiro del consentimiento: efecto inmediato, sin paso de aprobación.
+         */
+        post: operations["revocar_consentimiento_casos__caso_id__consentimientos__consentimiento_id__revocar_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/casos/{caso_id}/ficha": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Obtener Ficha
+         * @description Ficha del caso y el historial de versiones, de la más reciente a la más antigua.
+         */
+        get: operations["obtener_ficha_casos__caso_id__ficha_get"];
+        /**
+         * Guardar Ficha
+         * @description Upsert de la ficha; cada guardado crea una versión con su snapshot.
+         */
+        put: operations["guardar_ficha_casos__caso_id__ficha_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/casos/{caso_id}/documentos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Listar Documentos
+         * @description Lista los documentos del caso, cada uno con su enlace firmado.
+         */
+        get: operations["listar_documentos_casos__caso_id__documentos_get"];
+        put?: never;
+        /**
+         * Cargar Documento
+         * @description Carga un documento del caso y lo guarda en el almacenamiento privado.
+         */
+        post: operations["cargar_documento_casos__caso_id__documentos_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/casos/{caso_id}/documentos/{documento_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Obtener Documento
+         * @description El documento del caso con su estado de OCR y su enlace firmado.
+         */
+        get: operations["obtener_documento_casos__caso_id__documentos__documento_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/casos/{caso_id}/documentos/{documento_id}/enlace": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Crear Enlace Documento
+         * @description Emite un enlace firmado de corta vida y registra el acceso en la bitácora.
+         */
+        post: operations["crear_enlace_documento_casos__caso_id__documentos__documento_id__enlace_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/casos/{caso_id}/imagenes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Listar Imagenes
+         * @description Lista las ecografías del caso, cada una con su enlace firmado.
+         */
+        get: operations["listar_imagenes_casos__caso_id__imagenes_get"];
+        put?: never;
+        /**
+         * Cargar Imagen
+         * @description Carga una ecografía del caso y guarda una copia sin metadatos.
+         */
+        post: operations["cargar_imagen_casos__caso_id__imagenes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/pacientes": {
         parameters: {
             query?: never;
@@ -319,6 +469,37 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** Body_cargar_documento_casos__caso_id__documentos_post */
+        Body_cargar_documento_casos__caso_id__documentos_post: {
+            /**
+             * Archivo
+             * @description Documento en PDF, JPEG o PNG
+             */
+            archivo: string;
+        };
+        /** Body_cargar_imagen_casos__caso_id__imagenes_post */
+        Body_cargar_imagen_casos__caso_id__imagenes_post: {
+            /**
+             * Archivo
+             * @description Ecografía en PNG o JPEG
+             */
+            archivo: string;
+        };
+        /**
+         * CrearConsentimientoRequest
+         * @description Finalidad y versión del texto firmado; nunca contenido clínico.
+         */
+        CrearConsentimientoRequest: {
+            /**
+             * Base Legal
+             * @enum {string}
+             */
+            base_legal: "consentimiento" | "atencion_de_salud" | "investigacion_con_anonimizacion";
+            /** Version Texto */
+            version_texto: string;
+            /** Otorgado En */
+            otorgado_en?: string | null;
+        };
         /**
          * CrearPacienteRequest
          * @description Solo los datos mínimos para identificar a la persona (RF-PAC-01).
@@ -360,6 +541,53 @@ export interface components {
             roles: string[];
             /** Password */
             password: string;
+        };
+        /**
+         * FichaClinicaRequest
+         * @description Secciones de la ficha (RF-CLI-09); todos los campos son opcionales.
+         *
+         *     Solo se actualizan los campos enviados: así cada sección se puede guardar
+         *     por separado sin borrar las demás. Un ``null`` explícito limpia el campo.
+         */
+        FichaClinicaRequest: {
+            /** Tsh */
+            tsh?: number | string | null;
+            /** Tsh Unidad */
+            tsh_unidad?: string | null;
+            /** Tsh Fecha */
+            tsh_fecha?: string | null;
+            /** T3 */
+            t3?: number | string | null;
+            /** T3 Unidad */
+            t3_unidad?: string | null;
+            /** T3 Fecha */
+            t3_fecha?: string | null;
+            /** T4 */
+            t4?: number | string | null;
+            /** T4 Unidad */
+            t4_unidad?: string | null;
+            /** T4 Fecha */
+            t4_fecha?: string | null;
+            /** Tamano Nodulo Mm */
+            tamano_nodulo_mm?: number | string | null;
+            /** Lateralidad */
+            lateralidad?: string | null;
+            /** Tirads */
+            tirads?: string | null;
+            /** Bethesda */
+            bethesda?: string | null;
+            /** Cie10 */
+            cie10?: string | null;
+            /** Tipo Diagnostico */
+            tipo_diagnostico?: string | null;
+            /** Tipo Consulta */
+            tipo_consulta?: string | null;
+            /** Origen Datos */
+            origen_datos?: {
+                [key: string]: string;
+            } | null;
+            /** Motivo Cambio */
+            motivo_cambio?: string | null;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -467,6 +695,366 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Health"];
+                };
+            };
+        };
+    };
+    listar_consentimientos_casos__caso_id__consentimientos_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                caso_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    crear_consentimiento_casos__caso_id__consentimientos_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                caso_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CrearConsentimientoRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    revocar_consentimiento_casos__caso_id__consentimientos__consentimiento_id__revocar_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                caso_id: string;
+                consentimiento_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    obtener_ficha_casos__caso_id__ficha_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                caso_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    guardar_ficha_casos__caso_id__ficha_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                caso_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FichaClinicaRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listar_documentos_casos__caso_id__documentos_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                caso_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cargar_documento_casos__caso_id__documentos_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                caso_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_cargar_documento_casos__caso_id__documentos_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    obtener_documento_casos__caso_id__documentos__documento_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                caso_id: string;
+                documento_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    crear_enlace_documento_casos__caso_id__documentos__documento_id__enlace_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                caso_id: string;
+                documento_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listar_imagenes_casos__caso_id__imagenes_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                caso_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cargar_imagen_casos__caso_id__imagenes_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                caso_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_cargar_imagen_casos__caso_id__imagenes_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

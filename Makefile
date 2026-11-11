@@ -1,4 +1,4 @@
-.PHONY: up down check certificado-dev db-test respaldo-prueba comparar-academico tareas comentar help deploy-check deploy-status
+.PHONY: up down check modelos certificado-dev db-test respaldo-prueba comparar-academico tareas comentar help deploy-check deploy-status
 
 
 ACADEMICO_DIR ?= /home/ubuntu/code/optimus-thy-academico
@@ -26,6 +26,11 @@ check:
 	@if [ -f frontend/package.json ]; then \
 		cd frontend && bun run lint && bun run ui:check && bun run tamanos && bun run format:check && bun run typecheck && bun run test && bun run catalogo:test && bun run build && bun run catalogo:build; \
 	fi
+
+# Pesos de IA (410 MB) desde la release privada modelos-idi-086-v1: descarga y verifica su SHA-256.
+# Fuera de `check`: son binarios que no se versionan y no tienen que pasar por CI.
+modelos:
+	python3 ia/scripts/descargar_modelos.py --destino var/modelos
 
 certificado-dev:
 	bash infra/scripts/generar-certificado-dev.sh

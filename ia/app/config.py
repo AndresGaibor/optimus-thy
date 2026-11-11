@@ -15,6 +15,10 @@ from pathlib import Path
 MAX_NODULOS_POR_IMAGEN = 3
 """El modelo de datos admite como máximo tres nódulos por imagen (RF-INF-13/14)."""
 
+PESO_YOLO_POR_DEFECTO = "best_yolo.pt"
+PESO_BGAUNET_POR_DEFECTO = "best_bgaunet.keras"
+PESO_SWIN_POR_DEFECTO = "best_swin.pth"
+
 
 class ErrorConfiguracion(ValueError):
     """La configuración recibida no permite procesar imágenes."""
@@ -73,9 +77,9 @@ class ConfiguracionIA:
     """Parámetros de una inferencia. Inmutable: nada se comparte entre solicitudes."""
 
     modelos_dir: Path
-    yolo_pesos: str = "best_yolo.pt"
-    bgaunet_pesos: str = "best_bgaunet.keras"
-    swin_pesos: str = "best_swin.pth"
+    yolo_pesos: str = PESO_YOLO_POR_DEFECTO
+    bgaunet_pesos: str = PESO_BGAUNET_POR_DEFECTO
+    swin_pesos: str = PESO_SWIN_POR_DEFECTO
     dispositivo: str = "auto"
     yolo_tamano: int = 768
     yolo_confianza: float = 0.25
@@ -113,9 +117,9 @@ class ConfiguracionIA:
 
         return cls(
             modelos_dir=Path(modelos_dir),
-            yolo_pesos=_texto(entorno, "IA_YOLO_PESOS", "best_yolo.pt"),
-            bgaunet_pesos=_texto(entorno, "IA_BGAUNET_PESOS", "best_bgaunet.keras"),
-            swin_pesos=_texto(entorno, "IA_SWIN_PESOS", "best_swin.pth"),
+            yolo_pesos=_texto(entorno, "IA_YOLO_PESOS", PESO_YOLO_POR_DEFECTO),
+            bgaunet_pesos=_texto(entorno, "IA_BGAUNET_PESOS", PESO_BGAUNET_POR_DEFECTO),
+            swin_pesos=_texto(entorno, "IA_SWIN_PESOS", PESO_SWIN_POR_DEFECTO),
             dispositivo=_texto(entorno, "IA_DISPOSITIVO", "auto"),
             yolo_tamano=_entero(entorno, "IA_YOLO_TAMANO", 768, minimo=32),
             yolo_confianza=_flotante(entorno, "IA_YOLO_CONFIANZA", 0.25),

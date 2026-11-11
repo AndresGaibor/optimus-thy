@@ -25,6 +25,7 @@ def generar_mascara_mgac(
     por una máscara inventada.
     """
     import cv2
+    from skimage import img_as_float
     from skimage.morphology import closing, disk
     from skimage.segmentation import morphological_geodesic_active_contour
 
@@ -36,7 +37,10 @@ def generar_mascara_mgac(
     if roi.size == 0:
         raise ValueError(f"La región de MGAC está vacía para la caja: {caja}")
 
-    roi_float = roi.astype(np.float32) / 255.0
+    # ``base.py`` usa ``img_as_float``, que devuelve float64. Con float32 el ida
+    # y vuelta (v/255)*255 trunca una unidad en 24 intensidades (33, 37, ..., 244)
+    # y la máscara MGAC se separa de la referencia en ~127 píxeles.
+    roi_float = img_as_float(roi)
     roi_u8 = np.clip(roi_float * 255.0, 0, 255).astype(np.uint8)
 
     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))

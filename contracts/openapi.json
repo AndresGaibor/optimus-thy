@@ -23,6 +23,569 @@
         }
       }
     },
+    "/casos/{caso_id}/consentimientos": {
+      "get": {
+        "tags": [
+          "casos"
+        ],
+        "summary": "Listar Consentimientos",
+        "operationId": "listar_consentimientos_casos__caso_id__consentimientos_get",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "caso_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Caso Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "casos"
+        ],
+        "summary": "Crear Consentimiento",
+        "operationId": "crear_consentimiento_casos__caso_id__consentimientos_post",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "caso_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Caso Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CrearConsentimientoRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/casos/{caso_id}/consentimientos/{consentimiento_id}/revocar": {
+      "post": {
+        "tags": [
+          "casos"
+        ],
+        "summary": "Revocar Consentimiento",
+        "description": "Retiro del consentimiento: efecto inmediato, sin paso de aprobación.",
+        "operationId": "revocar_consentimiento_casos__caso_id__consentimientos__consentimiento_id__revocar_post",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "caso_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Caso Id"
+            }
+          },
+          {
+            "name": "consentimiento_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Consentimiento Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/casos/{caso_id}/ficha": {
+      "get": {
+        "tags": [
+          "casos"
+        ],
+        "summary": "Obtener Ficha",
+        "description": "Ficha del caso y el historial de versiones, de la más reciente a la más antigua.",
+        "operationId": "obtener_ficha_casos__caso_id__ficha_get",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "caso_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Caso Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "casos"
+        ],
+        "summary": "Guardar Ficha",
+        "description": "Upsert de la ficha; cada guardado crea una versión con su snapshot.",
+        "operationId": "guardar_ficha_casos__caso_id__ficha_put",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "caso_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Caso Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FichaClinicaRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/casos/{caso_id}/documentos": {
+      "post": {
+        "tags": [
+          "documentos"
+        ],
+        "summary": "Cargar Documento",
+        "description": "Carga un documento del caso y lo guarda en el almacenamiento privado.",
+        "operationId": "cargar_documento_casos__caso_id__documentos_post",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "caso_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Caso Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_cargar_documento_casos__caso_id__documentos_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "documentos"
+        ],
+        "summary": "Listar Documentos",
+        "description": "Lista los documentos del caso, cada uno con su enlace firmado.",
+        "operationId": "listar_documentos_casos__caso_id__documentos_get",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "caso_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Caso Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/casos/{caso_id}/documentos/{documento_id}": {
+      "get": {
+        "tags": [
+          "documentos"
+        ],
+        "summary": "Obtener Documento",
+        "description": "El documento del caso con su estado de OCR y su enlace firmado.",
+        "operationId": "obtener_documento_casos__caso_id__documentos__documento_id__get",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "caso_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Caso Id"
+            }
+          },
+          {
+            "name": "documento_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Documento Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/casos/{caso_id}/documentos/{documento_id}/enlace": {
+      "post": {
+        "tags": [
+          "documentos"
+        ],
+        "summary": "Crear Enlace Documento",
+        "description": "Emite un enlace firmado de corta vida y registra el acceso en la bitácora.",
+        "operationId": "crear_enlace_documento_casos__caso_id__documentos__documento_id__enlace_post",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "caso_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Caso Id"
+            }
+          },
+          {
+            "name": "documento_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Documento Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/casos/{caso_id}/imagenes": {
+      "post": {
+        "tags": [
+          "imagenes"
+        ],
+        "summary": "Cargar Imagen",
+        "description": "Carga una ecografía del caso y guarda una copia sin metadatos.",
+        "operationId": "cargar_imagen_casos__caso_id__imagenes_post",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "caso_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Caso Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_cargar_imagen_casos__caso_id__imagenes_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "imagenes"
+        ],
+        "summary": "Listar Imagenes",
+        "description": "Lista las ecografías del caso, cada una con su enlace firmado.",
+        "operationId": "listar_imagenes_casos__caso_id__imagenes_get",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "caso_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Caso Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/pacientes": {
       "post": {
         "tags": [
@@ -899,6 +1462,75 @@
   },
   "components": {
     "schemas": {
+      "Body_cargar_documento_casos__caso_id__documentos_post": {
+        "properties": {
+          "archivo": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "Archivo",
+            "description": "Documento en PDF, JPEG o PNG"
+          }
+        },
+        "type": "object",
+        "required": [
+          "archivo"
+        ],
+        "title": "Body_cargar_documento_casos__caso_id__documentos_post"
+      },
+      "Body_cargar_imagen_casos__caso_id__imagenes_post": {
+        "properties": {
+          "archivo": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "Archivo",
+            "description": "Ecografía en PNG o JPEG"
+          }
+        },
+        "type": "object",
+        "required": [
+          "archivo"
+        ],
+        "title": "Body_cargar_imagen_casos__caso_id__imagenes_post"
+      },
+      "CrearConsentimientoRequest": {
+        "properties": {
+          "base_legal": {
+            "type": "string",
+            "enum": [
+              "consentimiento",
+              "atencion_de_salud",
+              "investigacion_con_anonimizacion"
+            ],
+            "title": "Base Legal"
+          },
+          "version_texto": {
+            "type": "string",
+            "maxLength": 32,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9._-]+$",
+            "title": "Version Texto"
+          },
+          "otorgado_en": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Otorgado En"
+          }
+        },
+        "type": "object",
+        "required": [
+          "base_legal",
+          "version_texto"
+        ],
+        "title": "CrearConsentimientoRequest",
+        "description": "Finalidad y versión del texto firmado; nunca contenido clínico."
+      },
       "CrearPacienteRequest": {
         "properties": {
           "nombres": {
@@ -1005,6 +1637,239 @@
           "password"
         ],
         "title": "CrearUsuarioRequest"
+      },
+      "FichaClinicaRequest": {
+        "properties": {
+          "tsh": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tsh"
+          },
+          "tsh_unidad": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 16
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tsh Unidad"
+          },
+          "tsh_fecha": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tsh Fecha"
+          },
+          "t3": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "T3"
+          },
+          "t3_unidad": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 16
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "T3 Unidad"
+          },
+          "t3_fecha": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "T3 Fecha"
+          },
+          "t4": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "T4"
+          },
+          "t4_unidad": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 16
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "T4 Unidad"
+          },
+          "t4_fecha": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "T4 Fecha"
+          },
+          "tamano_nodulo_mm": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tamano Nodulo Mm"
+          },
+          "lateralidad": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 32
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lateralidad"
+          },
+          "tirads": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 16
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tirads"
+          },
+          "bethesda": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 16
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bethesda"
+          },
+          "cie10": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 16
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cie10"
+          },
+          "tipo_diagnostico": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tipo Diagnostico"
+          },
+          "tipo_consulta": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tipo Consulta"
+          },
+          "origen_datos": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Origen Datos"
+          },
+          "motivo_cambio": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Motivo Cambio"
+          }
+        },
+        "type": "object",
+        "title": "FichaClinicaRequest",
+        "description": "Secciones de la ficha (RF-CLI-09); todos los campos son opcionales.\n\nSolo se actualizan los campos enviados: así cada sección se puede guardar\npor separado sin borrar las demás. Un ``null`` explícito limpia el campo."
       },
       "HTTPValidationError": {
         "properties": {

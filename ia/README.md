@@ -1,8 +1,28 @@
 # ia
 
 Servicio de IA de OPTIMUS-THY. La cadena YOLO11 → MGAC → BGAU-Net → Swin
-Transformer vive en `app/pipeline.py` como una función; la API solo expone
-`/health` mientras HT-062 carga los modelos una sola vez.
+Transformer vive en `app/pipeline.py` como una función y `app/main.py` la expone
+por HTTP con los modelos cargados una sola vez (HT-062).
+
+## Servicio HTTP
+
+- `GET /health`: `status` (`ok` si los tres modelos están cargados, `degradado`
+  si falta alguno), `servicio`, `version_contrato`, `huella_modelos` y, por
+  modelo (`detector`, `segmentador`, `clasificador`), `cargado`, `archivo` y
+  `sha256`. Siempre responde 200 para que el compose pueda esperar al servicio;
+  el estado real está en el cuerpo.
+- `POST /inferir`: imagen por `multipart/form-data` en el campo `imagen` (JPEG,
+  PNG, BMP, TIFF o WebP, hasta 20 MB). Devuelve el contrato versionado más
+  `huella_modelos` y `umbrales`, los que se usaron en esa inferencia. Si falta
+  un modelo responde 503 con `code="modelo_no_disponible"` y la lista de
+  faltantes; una imagen inválida responde 422 con un mensaje en español. Nunca
+  inventa un resultado.
+
+Los pesos no se versionan: llegan montados en `IA_MODELOS_DIR`. Sin ellos el
+servicio arranca igual y `/health` queda en `degradado`. `torch`,
+`ultralytics`, `timm` y `tensorflow` son importaciones opcionales de
+`app/adaptadores.py`: si no están instalados, el modelo correspondiente figura
+como no cargado con el motivo.
 
 ## Cadena de inferencia (HT-061)
 
@@ -29,11 +49,11 @@ datos = resultado.a_diccionario()  # contrato versionado, listo para JSON
 - Si la máscara de BGAU-Net queda con menos píxeles que el mínimo, se usa la de
   MGAC y `origen_mascara` lo indica.
 
-### Contrato de salida (RIA-06, versión 1.0)
+### Contrato de salida (RIA-06, versión 1.1)
 
 ```json
 {
-  "version_contrato": "1.0",
+  "version_contrato": "1.1",
   "ancho": 800,
   "alto": 600,
   "sin_nodulo": false,
@@ -47,11 +67,21 @@ datos = resultado.a_diccionario()  # contrato versionado, listo para JSON
       "probabilidad_benigno": 0.87,
       "probabilidad_maligno": 0.13,
       "region_analizada": { "xmin": 106, "ymin": 76, "xmax": 274, "ymax": 244 },
-      "pixeles_mascara": 5321
+      "pixeles_mascara": 5321,
+      "mascara_png": "iVBORw0KGgo…",
+      "mgac_png": "iVBORw0KGgo…",
+      "xml": "PD94bWwgdmVyc2lvbj0iMS4wIiA/…",
+      "superposicion_png": "iVBORw0KGgo…"
     }
   ]
 }
 ```
+
+Los cuatro artefactos del nódulo son opcionales y viajan en base64: la máscara
+final, la de MGAC, la superposición (máscara teñida y caja) y el XML Pascal-VOC
+del nódulo en UTF-8. Un nódulo sin artefactos no incluye esas claves, así que un
+contrato 1.0 sigue siendo legible.
+
 
 ### Variables de entorno
 

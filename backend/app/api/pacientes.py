@@ -12,7 +12,7 @@ import secrets
 import uuid
 from collections.abc import Callable
 from datetime import date, datetime
-from typing import Annotated, cast
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query, Request, status
 from fastapi.responses import JSONResponse
@@ -134,7 +134,7 @@ def _paciente_out(db: Session, paciente: Paciente) -> PacienteOut:
     return PacienteOut(
         id=str(paciente.id),
         codigo=paciente.seudonimo,
-        creado_en=cast(datetime, paciente.creado_en),
+        creado_en=paciente.creado_en,
         total_casos=_total_casos(db, paciente.id),
     )
 
@@ -145,7 +145,7 @@ def _caso_out(caso: Caso, paciente: Paciente) -> CasoOut:
         codigo=caso.codigo_caso,
         paciente_id=str(paciente.id),
         paciente_codigo=paciente.seudonimo,
-        creado_en=cast(datetime, caso.creado_en),
+        creado_en=caso.creado_en,
     )
 
 

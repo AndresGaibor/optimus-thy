@@ -10,24 +10,33 @@ import {
   TableRow,
   type BadgeTone,
 } from '../../design-system';
-import type { DocumentoCasoDemo } from '../fixtures/documentos-extra';
+import type { DocumentoCasoDemo, OcrEstado } from '../fixtures/documentos-extra';
 
-function EstadoOcr({ estado }: { estado: DocumentoCasoDemo['estadoOcr'] }) {
-  const config: Record<string, { tone: BadgeTone; label: string }> = {
-    Listo: { tone: 'success', label: 'OCR procesado' },
-    Procesado: { tone: 'success', label: 'OCR procesado' },
-    'Sin procesar': { tone: 'neutral', label: 'OCR pendiente' },
-    Pendiente: { tone: 'neutral', label: 'OCR pendiente' },
-    'En cola': { tone: 'info', label: 'OCR en cola' },
-    Procesando: { tone: 'info', label: 'OCR procesando' },
-    'En ejecución': { tone: 'info', label: 'OCR en ejecución' },
-    Error: { tone: 'danger', label: 'OCR error' },
-  };
-  const item = config[estado] ?? {
-    tone: 'neutral' as BadgeTone,
-    label: `OCR ${estado.toLowerCase()}`,
-  };
-  return <Badge tone={item.tone}>{item.label}</Badge>;
+const ESTADOS_OCR: Record<OcrEstado, { tone: BadgeTone; label: string }> = {
+  'En cola': { tone: 'warning', label: 'En cola' },
+  Procesando: { tone: 'info', label: 'Procesando' },
+  Listo: { tone: 'success', label: 'Listo' },
+  Error: { tone: 'danger', label: 'Error' },
+};
+
+function EstadoOcr({
+  estado,
+  motivo,
+}: {
+  estado: DocumentoCasoDemo['estadoOcr'];
+  motivo?: string;
+}) {
+  if (estado === 'Sin procesar') return null;
+  const { tone, label } = ESTADOS_OCR[estado];
+
+  return (
+    <div className="space-y-1">
+      <Badge tone={tone}>{label}</Badge>
+      {estado === 'Error' && motivo !== undefined ? (
+        <p className="text-xs text-muted-foreground">{motivo}</p>
+      ) : null}
+    </div>
+  );
 }
 
 export function DocumentTable({
@@ -74,7 +83,10 @@ export function DocumentTable({
               </TableCell>
               <TableCell>{document.tamano}</TableCell>
               <TableCell>
-                <EstadoOcr estado={document.estadoOcr} />
+                <EstadoOcr
+                  estado={document.estadoOcr}
+                  {...(document.motivoError === undefined ? {} : { motivo: document.motivoError })}
+                />
               </TableCell>
               <TableCell>{document.subidoPor}</TableCell>
               <TableCell>{document.fecha}</TableCell>

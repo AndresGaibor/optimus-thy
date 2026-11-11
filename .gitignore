@@ -26,6 +26,10 @@ coverage/
 *.onnx
 *.ckpt
 
+# Pesos montados en local por docker-compose (nunca se versionan)
+var/modelos/
+var/modelos-glm/
+
 # Editor y sistema
 .DS_Store
 .idea/
@@ -42,6 +46,10 @@ infra/nginx/certs/
 playwright-report/
 test-results/
 **/__screenshots__/
+
+# Fichas sintéticas generadas localmente (HT-091 a HT-093); se regeneran, no se commitean
+backend/var/
+var/fixtures-fichas/
 
 # Herramientas y artefactos locales (no forman parte del producto)
 .agents/

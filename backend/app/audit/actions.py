@@ -24,6 +24,14 @@ class AuditAction(StrEnum):
     PATIENT_CREATE = "PATIENT_CREATE"
     CASE_CREATE = "CASE_CREATE"
 
+    # Ficha clínica versionada (HU-040, HU-041)
+    RECORD_CREATE = "RECORD_CREATE"
+    RECORD_UPDATE = "RECORD_UPDATE"
+
+    # Consentimiento informado (HU-034, HU-035)
+    CONSENT_CREATE = "CONSENT_CREATE"
+    CONSENT_REVOKE = "CONSENT_REVOKE"
+
     # Cargas (RF-AUD-03)
     DOCUMENT_UPLOAD = "DOCUMENT_UPLOAD"
     IMAGE_UPLOAD = "IMAGE_UPLOAD"
@@ -69,6 +77,7 @@ class AuditObjectType(StrEnum):
 
     PATIENT = "PATIENT"
     CASE = "CASE"
+    CONSENT = "CONSENT"
     RECORD = "RECORD"
     DOCUMENT = "DOCUMENT"
     IMAGE = "IMAGE"

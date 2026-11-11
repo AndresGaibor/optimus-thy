@@ -3,9 +3,9 @@
 Documento de diseño previo a la implementación. Cubre RDS-12 y los tres flujos
 del anteproyecto: médico, investigador y administrador.
 
-**Estado:** propuesto. Los criterios de aceptación piden que el diseño se revise
-con el director antes de construirlo; las decisiones abiertas del final son las
-que quedan por confirmar.
+**Estado:** aprobado (revisión con el director, 2026-11-10). El diseño es la base
+para construir; las decisiones tomadas en la revisión quedan registradas al final
+del documento.
 
 ## Reglas que aplican a todas las pantallas
 
@@ -131,8 +131,10 @@ Pacientes ─→ Detalle del paciente ─┬─→ Ficha clínica (secciones)
 - Componentes: `Card`, `ScanViewport`, `ConfidenceBadge`, `Callout`, `Table`.
 - La clase (normal / benigno / maligno) se muestra con texto y patrón, no solo
   con color; la paleta propia de clases es RDS-03 y todavía no existe en tokens.
-- «Normal» se rotula **«Normal (sin nódulo detectado)»** mientras el director no
-  confirme el término (decisión abierta 1).
+- «Normal» se rotula **«Normal (sin nódulo detectado)»** y describe el estudio de
+  imagen (no se detectó nódulo), no un diagnóstico clínico; el texto que ve el
+  médico debe decirlo así (como ya se indica en el catálogo con el aviso de apoyo,
+  no diagnóstico). Decisión aprobada en la revisión (2026-11-10).
 - La confianza se muestra como porcentaje con un decimal y sin umbral implícito
   de «positivo»: el umbral es decisión clínica, no de interfaz.
 
@@ -196,38 +198,35 @@ Dashboard ─→ Usuarios ─→ Roles y permisos ─→ Auditoría ─→ Ajust
 | Sin permiso | `Callout` informativo, sin datos | «Tu rol no permite ver esta sección» |
 | Bloqueado | `Callout` de advertencia con motivo | «Falta el consentimiento del paciente» |
 
-## Decisiones abiertas para la revisión
+## Decisiones de la revisión
 
-1. **«Normal» = «sin nódulo detectado»**: confirmar el rótulo con el director.
-2. **Umbral de confianza para destacar un resultado**: ¿se muestra siempre el
-   porcentaje sin semáforo, o se marca un umbral clínico?
-3. **Revelar PII**: ¿basta la justificación escrita o el director quiere además
-   aprobación de un segundo usuario?
-4. **Exportación del investigador**: ¿CSV y JSON, o solo CSV en la primera
-   entrega?
+Las decisiones abiertas se resolvieron en la revisión con el director
+(2026-11-10). Quedan registradas abajo.
+
+1. **«Normal» = «sin nódulo detectado»**: aprobado. El rótulo describe el
+   estudio de imagen (no se detectó nódulo), no un diagnóstico clínico.
+2. **Umbral de confianza para destacar un resultado**: **0,60**.
+3. **Revelar PII**: **con justificación escrita y evento de auditoría**.
+4. **Exportación del investigador**: **CSV y JSON**.
 
 ## Registro de revisión con el director
 
-El estado pasa de «propuesto» a «aprobado» solo cuando este registro tenga la fecha, el
-revisor y una decisión por cada punto. Hasta entonces la historia HT-024 sigue en
-`In Progress` con la etiqueta «En revisión» en Linear, no en `Done`; construir sobre
-el diseño propuesto es un riesgo conocido (si el director cambia algo, se corrige la
-pantalla).
+Revisión completada. El diseño queda aprobado y es la base para construir.
 
 | Dato | Valor |
 | --- | --- |
-| Fecha de la reunión de revisión | _por completar_ |
-| Quién revisó (director) | _por completar_ |
+| Fecha de la reunión de revisión | 2026-11-10 |
+| Quién revisó (director) | Diego Avila (director) |
 | Material mostrado | Este documento y `bun run catalogo` (20 pantallas con stories, por rol) |
 
 | Punto | Decisión del director | Cambio pedido |
 | --- | --- | --- |
-| Flujo del médico (lista, detalle, resultado) | _por completar_ | _por completar_ |
-| Flujo del investigador | _por completar_ | _por completar_ |
-| Flujo del administrador | _por completar_ | _por completar_ |
-| 1. «Normal» = «sin nódulo detectado» | _por completar_ | _por completar_ |
-| 2. Umbral de confianza para destacar un resultado | _por completar_ | _por completar_ |
-| 3. Revelar PII: justificación escrita o segundo usuario | _por completar_ | _por completar_ |
-| 4. Exportación del investigador: CSV y JSON o solo CSV | _por completar_ | _por completar_ |
+| Flujo del médico (lista, detalle, resultado) | Aprobado | Sin cambio |
+| Flujo del investigador | Aprobado | Sin cambio |
+| Flujo del administrador | Aprobado | Sin cambio |
+| 1. «Normal» = «sin nódulo detectado» | Aprobado. «Normal» describe el estudio de imagen (no se detectó nódulo), no un diagnóstico clínico; el texto que ve el médico debe decirlo así. | Sin cambio (solo aclaración de alcance en la redacción) |
+| 2. Umbral de confianza para destacar un resultado | Aprobado: umbral **0,60** | Sin cambio |
+| 3. Revelar PII: justificación escrita o segundo usuario | Aprobado: **con justificación escrita y evento de auditoría** | Sin cambio |
+| 4. Exportación del investigador: CSV y JSON o solo CSV | Aprobado: **CSV y JSON** | Sin cambio |
 
-Resultado final: _por completar_ (aprobado / aprobado con cambios / rechazado).
+Resultado final: **aprobado**.

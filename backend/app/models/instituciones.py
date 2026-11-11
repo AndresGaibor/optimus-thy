@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import uuid
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 import sqlalchemy as sa
@@ -29,10 +30,10 @@ class Institucion(Base):
     nombre: Mapped[str] = mapped_column(sa.String(255), nullable=False)
     codigo: Mapped[str] = mapped_column(sa.String(64), nullable=False, unique=True)
     activa: Mapped[bool] = mapped_column(sa.Boolean, nullable=False, server_default=sa.text("true"))
-    creado_en: Mapped[sa.DateTime] = mapped_column(
+    creado_en: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.func.now()
     )
-    actualizado_en: Mapped[sa.DateTime] = mapped_column(
+    actualizado_en: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True),
         nullable=False,
         server_default=sa.func.now(),

@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import uuid
-from typing import TYPE_CHECKING
+from datetime import datetime
+from typing import TYPE_CHECKING, Any
 
 import sqlalchemy as sa
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
@@ -34,10 +35,15 @@ class Imagen(Base):
     sin_metadatos_exif_dicom: Mapped[bool] = mapped_column(
         sa.Boolean, nullable=False, server_default=sa.text("true")
     )
-    creado_en: Mapped[sa.DateTime] = mapped_column(
+    texto_incrustado_detectado: Mapped[bool | None] = mapped_column(sa.Boolean, nullable=True)
+    necesita_revision_texto: Mapped[bool] = mapped_column(
+        sa.Boolean, nullable=False, server_default=sa.text("false")
+    )
+    texto_incrustado_motivo: Mapped[str | None] = mapped_column(sa.String(255), nullable=True)
+    creado_en: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.func.now()
     )
-    actualizado_en: Mapped[sa.DateTime] = mapped_column(
+    actualizado_en: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True),
         nullable=False,
         server_default=sa.func.now(),
@@ -63,10 +69,10 @@ class ModeloIA(Base):
     hash_pesos: Mapped[str] = mapped_column(sa.String(64), nullable=False)
     parametros: Mapped[str | None] = mapped_column(sa.Text)
     activo: Mapped[bool] = mapped_column(sa.Boolean, nullable=False, server_default=sa.text("true"))
-    creado_en: Mapped[sa.DateTime] = mapped_column(
+    creado_en: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.func.now()
     )
-    actualizado_en: Mapped[sa.DateTime] = mapped_column(
+    actualizado_en: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True),
         nullable=False,
         server_default=sa.func.now(),
@@ -99,10 +105,15 @@ class Inferencia(Base):
     resultado: Mapped[str] = mapped_column(sa.String(32), nullable=False)
     confianza: Mapped[float | None] = mapped_column(sa.Float)
     tiempo_ms: Mapped[int | None] = mapped_column(sa.Integer)
+    ancho: Mapped[int | None] = mapped_column(sa.Integer)
+    alto: Mapped[int | None] = mapped_column(sa.Integer)
+    version_contrato: Mapped[str | None] = mapped_column(sa.String(16))
+    umbrales: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+    huella_modelos: Mapped[str | None] = mapped_column(sa.String(64))
     inmutable: Mapped[bool] = mapped_column(
         sa.Boolean, nullable=False, server_default=sa.text("true")
     )
-    creado_en: Mapped[sa.DateTime] = mapped_column(
+    creado_en: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.func.now()
     )
 
@@ -147,8 +158,17 @@ class Nodulo(Base):
     caja_w: Mapped[float | None] = mapped_column(sa.Float)
     caja_h: Mapped[float | None] = mapped_column(sa.Float)
     confianza: Mapped[float | None] = mapped_column(sa.Float)
+    origen_mascara: Mapped[str | None] = mapped_column(sa.String(32))
+    clase: Mapped[str | None] = mapped_column(sa.String(32))
+    probabilidad_benigno: Mapped[float | None] = mapped_column(sa.Float)
+    probabilidad_maligno: Mapped[float | None] = mapped_column(sa.Float)
+    region_analizada: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+    pixeles_mascara: Mapped[int | None] = mapped_column(sa.Integer)
     mascara_ruta_s3: Mapped[str | None] = mapped_column(sa.String(512))
-    creado_en: Mapped[sa.DateTime] = mapped_column(
+    mgac_ruta_s3: Mapped[str | None] = mapped_column(sa.String(512))
+    xml_ruta_s3: Mapped[str | None] = mapped_column(sa.String(512))
+    superposicion_ruta_s3: Mapped[str | None] = mapped_column(sa.String(512))
+    creado_en: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.func.now()
     )
 
@@ -177,10 +197,10 @@ class DecisionMedica(Base):
     )
     decision: Mapped[str] = mapped_column(sa.String(32), nullable=False)
     observaciones: Mapped[str | None] = mapped_column(sa.Text)
-    creado_en: Mapped[sa.DateTime] = mapped_column(
+    creado_en: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.func.now()
     )
-    actualizado_en: Mapped[sa.DateTime] = mapped_column(
+    actualizado_en: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True),
         nullable=False,
         server_default=sa.func.now(),
