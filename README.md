@@ -32,6 +32,7 @@ Cada servicio expone un chequeo de salud; `docker compose ps` muestra su estado.
 - Catálogo visual: `cd frontend && bun run catalogo`. Las pantallas sintéticas viven en Storybook (puerto 6104); la guía visual está en `DESIGN.md`.
 - Las tareas viven en Linear (proyecto «OPTIMUS-THY · Backlog de producto»): desde este repo solo se consultan con `make tareas` y se comentan con `make comentar`, sin mover estados. Un pull request por historia; ver `CLAUDE.md` y la plantilla de PR en `.github/`.
 - Usuarios y contraseñas: `make usuarios` abre un menú interactivo contra la base real (crea cuentas, restablece contraseñas, activa o desactiva y asigna o quita roles) y `make usuarios ARGS="--listar"` imprime la tabla de usuarios y sale. La contraseña se pide sin eco y nunca se imprime; hasta que exista un endpoint de restablecimiento, el restablecimiento de contraseñas se hace con esta CLI.
+- Sincronización con el repositorio académico: `make sync-plan` clasifica las rutas compartidas, `make sync-aplicar` copia solo las que la política marca como `COPIAR` y `make sync-verificar` es el gate que cierra la sincronización. Procedimiento e interpretación en [docs/operacion/sincronizar-academico.md](docs/operacion/sincronizar-academico.md).
 - Requisitos y backlog: `docs/referencia/04-requisitos/` y `docs/referencia/05-backlog/`.
 
 ## Producción

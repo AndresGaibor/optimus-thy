@@ -21,9 +21,9 @@ Estado medido el 2026-11-12:
 
 - Académico: `164d18b`, 220 commits.
 - Operativo (`main`): `511f728`, 22 commits. La rama de trabajo `sync/academico-2026-11-12` de este repositorio añade un commit sobre esa base (`d61ce86`, con los flujos de historia clínica, OCR documental e inferencia de IA) y encima la sincronización en curso.
-- `make comparar-academico`, ejecutado en el operativo, reporta `snapshot-base=OK` y 273 rutas distintas entre el académico y `main` del operativo; la misma comparación contra `d61ce86`, la rama `sync/academico-2026-11-12` antes de esta sincronización, reporta 174 rutas.
+- `make sync-plan`, ejecutado en el operativo, clasifica 273 rutas distintas entre el académico y `main` del operativo; la misma comparación contra `d61ce86`, la rama `sync/academico-2026-11-12` antes de esta sincronización, reporta 174 rutas.
 
-Toda esa diferencia es trabajo posterior a la bifurcación, no divergencia de contenido heredado, y la cifra cuenta rutas, no archivos: un mismo archivo aparece una sola vez aunque haya cambiado muchas veces. El reparto por prefijo que imprime la comparación es el agregado de ambos lados y hoy, contra `main` del operativo, es: frontend 134, backend 42, docs 27, ia 23, ocr 17, infra 11, raíz 12, scripts 3, `.github` 3, contracts 1; la suma coincide con las 273 rutas. La comparación marca cada ruta con el lado al que pertenece (`SOLO_ACADEMIICO`, `SOLO_OPERATIVO` o `DIFERENTE`), pero el resumen por prefijo no desglosa ese lado: es una cuenta global de rutas, no un reparto del trabajo de cada edición.
+Toda esa diferencia es trabajo posterior a la bifurcación, no divergencia de contenido heredado, y la cifra cuenta rutas, no archivos: un mismo archivo aparece una sola vez aunque haya cambiado muchas veces. El reparto por prefijo de esas rutas es: frontend 134, backend 42, docs 27, ia 23, ocr 17, infra 11, raíz 12, scripts 3, `.github` 3, contracts 1; la suma coincide con las 273 rutas. Cada ruta cae además en uno de los grupos de la política —`COPIAR`, `ADAPTAR`, `INDEPENDIENTE` o `SIN_REGLA`—, y ese grupo, no el prefijo, es lo que decide qué se copia y qué se toca a mano.
 
 ## Qué se comparte y qué no
 
@@ -65,10 +65,12 @@ Si apareciera un tercer consumidor real o un equipo distinto manteniendo la base
 
 La sincronización es un acto deliberado, con un commit de origen, un commit de destino y una comparación registrada. No hay webhooks, submódulos ni copias automáticas entre los dos repositorios.
 
+La clasificación de rutas está versionada en `scripts/sincronizacion.json` —reglas `compartido`, `adaptar` e `independiente`, cada una con su motivo— y se aplica con `scripts/sincronizar.py`, que copia solo lo que la política marca como compartido y nunca decide por su cuenta. Cambiar qué se comparte es cambiar ese archivo, no improvisar al copiar.
+
 1. Las correcciones nacen en el académico y llegan a `main` por PR con CI en verde.
 2. El operativo adopta una base académica mediante un snapshot exacto: `git archive` de un commit, nunca el working tree; commit raíz con historia propia y verificación de que el `tree` resultante es igual al del académico; el identificador queda registrado en `docs/operacion/academico-snapshot.json`.
 3. Los cambios de producción que deban volver al académico regresan como PR acotado por paths, con autorización explícita y revisión; nunca de forma automática.
-4. Antes y después de cada sincronización se ejecuta `make comparar-academico` en el operativo y se registra el par commit-tree comparado.
+4. Antes y después de cada sincronización se ejecuta `make sync-verificar` en el operativo: exige cero rutas pendientes de copiar, comprueba el contrato compartido y, con `--registrar`, deja el par commit-tree comparado en `docs/operacion/academico-sync-ultimo.json`.
 5. Nunca se trasladan `.env`, secretos, credenciales, `node_modules`, artefactos locales, pesos de modelos ni bases de datos.
 
 El snapshot no arrastra el directorio `.git`: se copia el árbol del commit elegido y se crea un commit raíz nuevo en el operativo. Al no haber ancestro común, no existe un merge posible entre las dos ramas principales y la correspondencia se reconstruye comparando árboles, no historiales.
@@ -103,7 +105,7 @@ Cuando una situación no encaja en la tabla, la respuesta por defecto es modific
 
 Ninguna sincronización empieza sin esta comprobación cerrada. Si algún punto falla, no se copia nada y se resuelve primero la causa.
 
-- [ ] `make comparar-academico` reporta `snapshot-base=OK`.
+- [ ] `make sync-plan` no deja rutas `SIN_REGLA` y `make sync-verificar` termina en 0, sin rutas `COPIAR` pendientes.
 - [ ] Si el working tree académico está sucio, la comparación se hace contra un ref explícito (un commit, no el árbol de trabajo).
 - [ ] Cada diferencia está clasificada: registrada, candidata a ADR, candidata a backport o pendiente de decisión humana.
 - [ ] Existe autorización explícita para cualquier copia desde el operativo hacia el académico.
