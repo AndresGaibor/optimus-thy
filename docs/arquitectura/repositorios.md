@@ -21,9 +21,9 @@ Estado medido el 2026-11-12:
 
 - Académico: `164d18b`, 220 commits.
 - Operativo (`main`): `511f728`, 22 commits. La rama de trabajo `sync/academico-2026-11-12` de este repositorio añade un commit sobre esa base (`d61ce86`, con los flujos de historia clínica, OCR documental e inferencia de IA) y encima la sincronización en curso.
-- `make sync-plan`, ejecutado en el operativo, clasifica 273 rutas distintas entre el académico y `main` del operativo; la misma comparación contra `d61ce86`, la rama `sync/academico-2026-11-12` antes de esta sincronización, reporta 174 rutas.
+- `make sync-plan`, ejecutado en el operativo, compara el árbol de esta rama contra el ref académico y clasifica cada diferencia en uno de los cuatro grupos de la política.
 
-Toda esa diferencia es trabajo posterior a la bifurcación, no divergencia de contenido heredado, y la cifra cuenta rutas, no archivos: un mismo archivo aparece una sola vez aunque haya cambiado muchas veces. El reparto por prefijo de esas rutas es: frontend 134, backend 42, docs 27, ia 23, ocr 17, infra 11, raíz 12, scripts 3, `.github` 3, contracts 1; la suma coincide con las 273 rutas. Cada ruta cae además en uno de los grupos de la política —`COPIAR`, `ADAPTAR`, `INDEPENDIENTE` o `SIN_REGLA`—, y ese grupo, no el prefijo, es lo que decide qué se copia y qué se toca a mano.
+Toda esa diferencia es trabajo posterior a la bifurcación, no divergencia de contenido heredado, y se cuenta por rutas, no por archivos: un mismo archivo aparece una sola vez aunque haya cambiado muchas veces. La clasificación no va por carpeta sino por la política de `scripts/sincronizacion.json`, de modo que un mismo prefijo puede repartirse entre grupos distintos. Con el árbol de esta rama y el ref `164d18b`, `make sync-plan` deja `COPIAR 0`, `ADAPTAR 6`, `INDEPENDIENTE 186` y `SIN_REGLA 0`; ese grupo, y no el prefijo, es lo que decide qué se copia y qué se toca a mano.
 
 ## Qué se comparte y qué no
 
@@ -54,7 +54,7 @@ La idea de un repositorio «núcleo» compartido por ambos ha sido descartada. L
 
 1. El monorepo modular ya está decidido (ADR-001, ADR-017) y `frontend/`, `backend/`, `ia/`, `ocr/` y `contracts/` se consumen por ruta dentro del mismo árbol: `docker-compose.yml` construye cada servicio desde su directorio, `make up` levanta el conjunto y el CI ejecuta los gates sobre esas mismas rutas. Extraer el núcleo obligaría a reconstruir dos builds y dos compose para un solo producto.
 2. Git Subtree dejaría una segunda copia física de `ocr/`, `ia/`, `contracts/` y `frontend/` en cada edición, y los gates (`make check`, `ui:check`, catálogo de Storybook) tendrían que cubrir ambas copias para no quedar ciegos a una de ellas.
-3. No hay cadencia de releases de un núcleo: hay dos consumidores y un solo equipo. El coste de mantener un repositorio con tags, versionado semántico y pipeline propio supera el de sincronizar 273 rutas con un runbook ya escrito.
+3. No hay cadencia de releases de un núcleo: hay dos consumidores y un solo equipo. El coste de mantener un repositorio con tags, versionado semántico y pipeline propio supera el de sincronizar 192 rutas clasificadas con un runbook ya escrito.
 4. La tesis exige auto-contención: clonar, instalar y ejecutar sin un tercer repositorio ni servicios privados. El snapshot ya lo garantiza, sin pasos adicionales que el revisor pueda omitir.
 5. Los historiales son independientes a propósito (ADR-012) y subtree traería historia ajena al árbol de la edición, lo que vuelve ambiguo qué commit representa «el» estado del producto.
 6. `cherry-pick` obliga a clasificar a mano cada commit compartido, y con la divergencia actual deja de ser barato.
