@@ -1,0 +1,314 @@
+{
+  "version": 1,
+  "compartido": [
+    {
+      "patron": "backend/app/**",
+      "motivo": "Modelos, servicios y validaciones de dominio: el académico es la fuente"
+    },
+    {
+      "patron": "backend/alembic/**",
+      "motivo": "Migraciones del esquema: el académico es la fuente"
+    },
+    {
+      "patron": "backend/tests/**",
+      "motivo": "Pruebas del backend que cubren el código compartido"
+    },
+    {
+      "patron": "backend/scripts/__init__.py",
+      "motivo": "Marcador del paquete de scripts del backend"
+    },
+    {
+      "patron": "backend/scripts/usuarios.py",
+      "motivo": "CLI de usuarios y contraseñas compartida"
+    },
+    {
+      "patron": "backend/scripts/seed_sintetico.py",
+      "motivo": "Datos sintéticos de demostración compartidos"
+    },
+    {
+      "patron": "backend/scripts/export_openapi.py",
+      "motivo": "Exporta el contrato canónico del API: misma herramienta en ambas ediciones"
+    },
+    {
+      "patron": "backend/alembic.ini",
+      "motivo": "Configuración de Alembic que acompaña a las migraciones compartidas"
+    },
+    {
+      "patron": "backend/pyproject.toml",
+      "motivo": "Contrato de dependencias y configuración de las herramientas del backend"
+    },
+    {
+      "patron": "ocr/**",
+      "motivo": "Motor OCR compartido"
+    },
+    {
+      "patron": "ia/**",
+      "motivo": "Integración con el modelo de IA compartida"
+    },
+    {
+      "patron": "contracts/**",
+      "motivo": "`contracts/openapi.json` es el contrato canónico del API (ADR-003)"
+    },
+    {
+      "patron": "frontend/src/design-system/**/*.ts",
+      "motivo": "Código del sistema de diseño: el académico es la fuente"
+    },
+    {
+      "patron": "frontend/src/design-system/**/*.tsx",
+      "motivo": "Componentes e historias del sistema de diseño compartidos"
+    },
+    {
+      "patron": "frontend/src/components/ErrorBoundary.tsx",
+      "motivo": "Componente reutilizable compartido (`TituloPagina.tsx` diverge y va en adaptar)"
+    },
+    {
+      "patron": "frontend/src/components/ErrorScreen.tsx",
+      "motivo": "Componente reutilizable compartido (`TituloPagina.tsx` diverge y va en adaptar)"
+    },
+    {
+      "patron": "frontend/src/components/LoadingScreen.tsx",
+      "motivo": "Componente reutilizable compartido (`TituloPagina.tsx` diverge y va en adaptar)"
+    },
+    {
+      "patron": "frontend/src/api/**",
+      "motivo": "Cliente de la API generado desde el contrato compartido"
+    },
+    {
+      "patron": "frontend/src/styles/**",
+      "motivo": "Tokens y estilos base compartidos"
+    },
+    {
+      "patron": "frontend/public/favicon*",
+      "motivo": "Marca visual compartida"
+    },
+    {
+      "patron": "frontend/public/apple-touch-icon.png",
+      "motivo": "Marca visual compartida"
+    },
+    {
+      "patron": "**/.gitkeep",
+      "motivo": "Marcador de directorio vacío: mismo contenido en ambas ediciones"
+    }
+  ],
+  "adaptar": [
+    {
+      "patron": "backend/uv.lock",
+      "motivo": "Lock de dependencias que se regenera en cada edición",
+      "nota": "No se copia: `uv lock` en el operativo resuelve contra su propio `pyproject.toml`; copiarlo dejaría el lock desfasado."
+    },
+    {
+      "patron": "frontend/index.html",
+      "motivo": "Documento base con la marca y el entorno de cada edición",
+      "nota": "Hoy coincide; si diverge se ajusta a mano porque cambia el título, los metadatos y los scripts de cada despliegue."
+    },
+    {
+      "patron": "frontend/src/main.tsx",
+      "motivo": "Arranque del frontend con los proveedores de cada edición",
+      "nota": "El operativo monta proveedores y centinelas propios (por ejemplo de sesión real) que el académico no necesita."
+    },
+    {
+      "patron": "frontend/package.json",
+      "motivo": "Dependencias del frontend revisadas a mano en cada edición",
+      "nota": "Hoy coincide; si diverge se revisa porque los scripts de catálogo y de capturas son del operativo."
+    },
+    {
+      "patron": "docs/arquitectura/repositorios.md",
+      "motivo": "Documento que describe la relación entre las dos ediciones",
+      "nota": "El operativo lo adapta a su herramienta de sincronización (`scripts/sincronizar.py`) y a sus ADR propios."
+    },
+    {
+      "patron": "docs/adr/README.md",
+      "motivo": "Índice de ADR con los de cada edición",
+      "nota": "El operativo añade ADR-018 (despliegue por releases) y ADR-019 (respaldos cifrados), que el académico no tiene."
+    },
+    {
+      "patron": "frontend/src/components/TituloPagina.tsx",
+      "motivo": "Componente compartido que hoy diverge a propósito",
+      "nota": "El académico conserva títulos de pantallas que en el operativo son marcadores; el operativo documenta solo las pantallas reales. Se revisa a mano y no se copia en ninguna dirección."
+    },
+    {
+      "patron": "frontend/src/design-system/inicio/Contribuir.mdx",
+      "motivo": "Guía de contribución del sistema de diseño",
+      "nota": "El operativo añade que su tablero de Linear es de solo lectura (`make tareas`, `make comentar`); el estado lo mueve el académico."
+    },
+    {
+      "patron": "frontend/src/flows/**",
+      "motivo": "Flujos de producto que cada edición compone con sus pantallas",
+      "nota": "Hoy solo contiene `AppFlows.stories.tsx`, que difiere porque los flujos del catálogo cambian con las pantallas de cada edición."
+    }
+  ],
+  "independiente": [
+    {
+      "patron": "*.md",
+      "motivo": "Documento raíz de esta edición (README, AGENTS, CLAUDE, DESIGN, PRODUCT, informe)"
+    },
+    {
+      "patron": "Makefile",
+      "motivo": "Atajos propios: el operativo añade despliegue y sincronización"
+    },
+    {
+      "patron": ".env.example",
+      "motivo": "Variables de entorno: siempre independientes"
+    },
+    {
+      "patron": "frontend/.env.example",
+      "motivo": "Variables de entorno del frontend: siempre independientes"
+    },
+    {
+      "patron": ".gitignore",
+      "motivo": "Configuración del repositorio: cada edición la mantiene"
+    },
+    {
+      "patron": "frontend/.gitignore",
+      "motivo": "Configuración del repositorio: cada edición la mantiene"
+    },
+    {
+      "patron": ".gitleaks.toml",
+      "motivo": "Configuración del escaneo de secretos de este repositorio"
+    },
+    {
+      "patron": ".editorconfig",
+      "motivo": "Configuración de herramientas de este repositorio"
+    },
+    {
+      "patron": ".impeccable/**",
+      "motivo": "Herramientas locales de este repositorio"
+    },
+    {
+      "patron": "**/.dockerignore",
+      "motivo": "Configuración del contexto de build de cada edición"
+    },
+    {
+      "patron": ".github/**",
+      "motivo": "CI y despliegue propios: el operativo tiene sus gates y releases"
+    },
+    {
+      "patron": "docker-compose*.yml",
+      "motivo": "Configuración de despliegue independiente (ADR-012)"
+    },
+    {
+      "patron": "compose.server.example.yaml",
+      "motivo": "Composición de servidor propia del operativo"
+    },
+    {
+      "patron": "deploy.sh",
+      "motivo": "Despliegue por releases propio del operativo (ADR-018)"
+    },
+    {
+      "patron": "infra/**",
+      "motivo": "Infraestructura y respaldos de esta edición (ADR-019)"
+    },
+    {
+      "patron": "tests/**",
+      "motivo": "Pruebas de punta a punta contra el despliegue real del operativo"
+    },
+    {
+      "patron": "scripts/**",
+      "motivo": "Herramientas de este repositorio: tablero de Linear, comentarios y sincronización"
+    },
+    {
+      "patron": "backend/Dockerfile",
+      "motivo": "Imagen de cada edición: el operativo despliega por releases"
+    },
+    {
+      "patron": "backend/README.md",
+      "motivo": "Documentación del backend de cada edición"
+    },
+    {
+      "patron": "backend/scripts/generar_fixtures_fichas.py",
+      "motivo": "Fixtures de tesis: datos de la edición académica, nunca se copian al operativo"
+    },
+    {
+      "patron": "docs/**",
+      "motivo": "Documentación de cada edición: ADR, pruebas, diseño, storybook, referencia y manuales operativos"
+    },
+    {
+      "patron": "frontend/README.md",
+      "motivo": "Cada edición documenta su propio frontend"
+    },
+    {
+      "patron": "frontend/vite.config.ts",
+      "motivo": "Configuración de build y proxy de cada edición"
+    },
+    {
+      "patron": "frontend/vitest.config.ts",
+      "motivo": "Configuración de pruebas de cada edición"
+    },
+    {
+      "patron": "frontend/nginx.conf",
+      "motivo": "Configuración del servidor del frontend en cada despliegue"
+    },
+    {
+      "patron": "frontend/Dockerfile",
+      "motivo": "Imagen del frontend de cada edición"
+    },
+    {
+      "patron": "frontend/bun.lock",
+      "motivo": "Lock de dependencias propio de cada edición: se regenera, no se copia"
+    },
+    {
+      "patron": "frontend/tsconfig*.json",
+      "motivo": "Configuración de TypeScript de cada edición"
+    },
+    {
+      "patron": "frontend/eslint.config.js",
+      "motivo": "Configuración de lint de cada edición"
+    },
+    {
+      "patron": "frontend/.prettier*",
+      "motivo": "Configuración de formato de cada edición"
+    },
+    {
+      "patron": "frontend/scripts/**",
+      "motivo": "Líneas base de tamaños y composición visual medidas en cada edición"
+    },
+    {
+      "patron": "frontend/src/pages/**",
+      "motivo": "Páginas de la edición (acceso, mapa de pantallas)"
+    },
+    {
+      "patron": "frontend/src/session/**",
+      "motivo": "Sesión y roles: cada edición define los suyos"
+    },
+    {
+      "patron": "frontend/src/layout/**",
+      "motivo": "Armazón de la aplicación: navegación y permisos propios de cada edición"
+    },
+    {
+      "patron": "frontend/src/screens/**",
+      "motivo": "Pantallas, fixtures e historias de la edición: no se copian"
+    },
+    {
+      "patron": "frontend/src/AppRoutes.tsx",
+      "motivo": "Tabla de rutas: cada edición monta las suyas"
+    },
+    {
+      "patron": "frontend/src/demo/**",
+      "motivo": "Modo demostración de la edición académica: tesis y evidencias"
+    },
+    {
+      "patron": "frontend/src/test/**",
+      "motivo": "Pruebas del frontend propias de cada edición"
+    },
+    {
+      "patron": "frontend/src/design-system/**",
+      "motivo": "Documentación del sistema de diseño: cada edición describe su catálogo"
+    },
+    {
+      "patron": "**/*.stories.tsx",
+      "motivo": "Catálogo de historias de cada edición: no se copia"
+    },
+    {
+      "patron": "frontend/public/images/**",
+      "motivo": "Imágenes de casos de tesis: datos de la edición académica"
+    },
+    {
+      "patron": "frontend/.storybook/**",
+      "motivo": "Configuración del catálogo de cada edición"
+    },
+    {
+      "patron": "frontend/e2e/**",
+      "motivo": "Pruebas de punta a punta del frontend de cada edición"
+    }
+  ]
+}

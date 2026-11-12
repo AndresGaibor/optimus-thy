@@ -1,10 +1,10 @@
-.PHONY: up down check modelos certificado-dev db-test respaldo-prueba comparar-academico tareas usuarios comentar help deploy-check deploy-status
+.PHONY: up down check modelos certificado-dev db-test respaldo-prueba sync-plan sync-aplicar sync-verificar comparar-academico tareas usuarios comentar help deploy-check deploy-status
 
 
 ACADEMICO_DIR ?= /home/ubuntu/code/optimus-thy-academico
 
 help:
-	@printf '%s\n' 'Targets: up down check deploy-check deploy-status certificado-dev db-test respaldo-prueba comparar-academico tareas usuarios comentar'
+	@printf '%s\n' 'Targets: up down check deploy-check deploy-status certificado-dev db-test respaldo-prueba sync-plan sync-aplicar sync-verificar comparar-academico tareas usuarios comentar'
 
 deploy-check:
 	./deploy.sh check
@@ -46,8 +46,20 @@ db-test:
 respaldo-prueba:
 	BACKUP_KEY_FILE=$${BACKUP_KEY_FILE:-$$HOME/.optimus-respaldo.key} infra/scripts/probar-respaldo.sh
 
-comparar-academico:
-	bash scripts/comparar-academico.sh "$(ACADEMICO_DIR)" "$(ACADEMICO_REF)"
+# Sincronización con el repositorio académico (docs/operacion/sincronizar-academico.md):
+# la política de qué se comparte está en scripts/sincronizacion.json.
+# `plan` clasifica, `aplicar` copia solo lo compartido y `verificar` comprueba que no queda nada pendiente.
+# Pasa ARGS="--limite 500", ARGS="--json" o ARGS="--seco" según el subcomando.
+sync-plan:
+	python3 scripts/sincronizar.py plan --academico "$(ACADEMICO_DIR)" --ref "$(ACADEMICO_REF)" $(ARGS)
+
+sync-aplicar:
+	python3 scripts/sincronizar.py aplicar --academico "$(ACADEMICO_DIR)" --ref "$(ACADEMICO_REF)" $(ARGS)
+
+sync-verificar:
+	python3 scripts/sincronizar.py verificar --academico "$(ACADEMICO_DIR)" --ref "$(ACADEMICO_REF)" $(ARGS)
+
+comparar-academico: sync-plan
 
 # Tablero de Linear en solo lectura: equipo TESIS, proyecto «OPTIMUS-THY · Backlog de producto».
 # Filtra con ARGS="--estado progress|revision|done|todo" o ARGS="--persona daniel".
