@@ -103,11 +103,24 @@ fi
 
 NORMALIZED="$(printf '%s\n' "$DIFF_OUT" | python3 -c '
 import re, sys
-acad = sys.argv[1].rstrip("/") + "/"
-oper = sys.argv[2].rstrip("/") + "/"
+acad = sys.argv[1].rstrip("/")
+oper = sys.argv[2].rstrip("/")
 
-def strip_prefix(path):
-    path = path.replace(acad, "").replace(oper, "")
+def lado(directorio):
+    """Devuelve la etiqueta del lado al que pertenece el directorio de diff."""
+    if directorio == acad or directorio.startswith(acad + "/"):
+        return "SOLO_ACADEMIICO"
+    if directorio == oper or directorio.startswith(oper + "/"):
+        return "SOLO_OPERATIVO"
+    return "SIN_CLASIFICAR"
+
+def ruta_relativa(path):
+    """Quita el prefijo temporal de cualquiera de los dos lados."""
+    if path == acad or path == oper:
+        return ""
+    for base in (acad, oper):
+        if path.startswith(base + "/"):
+            return path[len(base) + 1:]
     return path.lstrip("./")
 
 seen = set()
@@ -115,40 +128,55 @@ for raw in sys.stdin:
     line = raw.rstrip("\n")
     if not line:
         continue
-    out = None
+    etiqueta = None
+    ruta = None
     m = re.match(r"Files (.+) and (.+) differ$", line)
     if m:
-        out = "M " + strip_prefix(m.group(1).strip())
+        etiqueta = "DIFERENTE"
+        ruta = ruta_relativa(m.group(1).strip())
     else:
         m = re.match(r"Only in (.+): (.+)$", line)
         if m:
-            d = strip_prefix(m.group(1).strip())
-            n = m.group(2).strip()
-            out = "A " + ((d + "/" + n).lstrip("/") if d else n)
-    if out is None:
-        out = strip_prefix(line)
-    if out not in seen:
-        seen.add(out)
-        print(out)
-' "$TMP/academico" "$TMP/operativo" | sort)"
+            etiqueta = lado(m.group(1).strip())
+            base = ruta_relativa(m.group(1).strip())
+            nombre = m.group(2).strip()
+            ruta = (base + "/" + nombre).lstrip("/") if base else nombre
+    if etiqueta is None:
+        etiqueta = "SIN_CLASIFICAR"
+        ruta = ruta_relativa(line)
+    salida = etiqueta + " " + ruta
+    if salida not in seen:
+        seen.add(salida)
+        print(salida)
+' "$TMP/academico" "$TMP/operativo" | python3 -c '
+import sys
+ORDEN = ("SOLO_ACADEMIICO", "SOLO_OPERATIVO", "DIFERENTE", "SIN_CLASIFICAR")
+lineas = [line.rstrip("\n") for line in sys.stdin if line.strip()]
+def clave(line):
+    etiqueta = line.split(None, 1)[0]
+    return (ORDEN.index(etiqueta) if etiqueta in ORDEN else len(ORDEN), line)
+for line in sorted(lineas, key=clave):
+    print(line)
+')"
 
 COUNT="$(printf '%s\n' "$NORMALIZED" | grep -c . || true)"
 echo "DIFERENCIAS: $COUNT (rutas normalizadas desde diff -rq; un directorio nuevo puede contar como una sola línea, no es el número exacto de archivos)"
-printf '%s\n' "$NORMALIZED" | sed -n '1,80p'
-if [ "$COUNT" -gt 80 ]; then
-  echo "... ($((COUNT - 80)) líneas omitidas)"
+printf '%s\n' "$NORMALIZED" | sed -n '1,300p'
+if [ "$COUNT" -gt 300 ]; then
+  echo "... ($((COUNT - 300)) líneas omitidas)"
 fi
 
 echo "resumen-por-prefijo:"
 printf '%s\n' "$NORMALIZED" | python3 -c '
 import collections, sys
+ETIQUETAS = ("SOLO_ACADEMIICO", "SOLO_OPERATIVO", "DIFERENTE", "SIN_CLASIFICAR")
 counts = collections.Counter()
 for raw in sys.stdin:
     line = raw.strip()
     if not line:
         continue
     parts = line.split(None, 1)
-    path = parts[1] if len(parts) == 2 and parts[0] in ("M", "A") else line
+    path = parts[1] if len(parts) == 2 and parts[0] in ETIQUETAS else line
     prefix = path.split("/", 1)[0] + "/" if "/" in path else "(raíz)"
     counts[prefix] += 1
 for k in sorted(counts):

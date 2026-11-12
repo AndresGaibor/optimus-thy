@@ -35,6 +35,10 @@ Interpretación:
 - `snapshot-base=DIFIERE`: el lock no describe la base real; revisar antes de cualquier backport.
 - `IDENTICOS`: el árbol del commit académico coincide con `HEAD` del operativo.
 - `DIFERENCIAS: N`: hay N líneas/rutas reportadas por `diff -rq`; un directorio nuevo puede contar como una sola línea (no es el número exacto de archivos). Revisar el resumen por prefijo y decidir si se registran, se adaptan o se backportan con autorización.
+- `SOLO_ACADEMIICO <ruta>`: la ruta existe en el académico y no en el operativo. Antes de sincronizar hay que clasificarla según la tabla de compartición de `docs/arquitectura/repositorios.md` (compartido, independiente o pendiente de decisión humana) y copiarla solo con revisión.
+- `SOLO_OPERATIVO <ruta>`: la ruta existe en el operativo y no en el académico. Es trabajo propio de producción: se propaga al académico solo como backport acotado y con autorización explícita.
+- `DIFERENTE <ruta>`: la ruta existe en ambos lados con contenido distinto. Hay que revisar el diff de esa ruta y decidir si se propaga al académico, se adapta o se descarta.
+- `SIN_CLASIFICAR <ruta>`: no debería aparecer; si aparece, el formato de salida de `diff` cambió y hay que revisar `scripts/comparar-academico.sh` antes de fiarse del informe.
 
 ## Procedimiento snapshot (solo con autorización)
 
