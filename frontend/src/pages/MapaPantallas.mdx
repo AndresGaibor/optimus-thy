@@ -1,4 +1,5 @@
 import { Meta } from '@storybook/addon-docs/blocks';
+import { enlaceCatalogo } from './enlacesCatalogo';
 
 <Meta title="Aplicación/Mapa de pantallas" tags={['ai-generated']} />
 
@@ -8,19 +9,19 @@ Resumen de rutas, transiciones y flujos de la aplicación. Los enlaces usan ruta
 
 ## Rutas
 
-| Ruta                                        | Pantalla                    | Rol que puede entrar                | HU             | Historia donde se ve                                                                                                      | Endpoints que consume                                                         |
-| ------------------------------------------- | --------------------------- | ----------------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| `/`                                         | RootRedirect (sin pantalla) | Según sesión                        | —              | <a href="?path=/story/aplicación-flujos--medico-del-acceso-a-pacientes">Médico, del acceso a pacientes</a>                | `GET /auth/me`                                                                |
-| `/login`                                    | LoginPage                   | Público (redirige si ya hay sesión) | HU-001         | <a href="?path=/story/aplicación-pública-acceso-hu-001--predeterminada">Acceso (HU-001)</a>                               | `POST /auth/login`, `GET /auth/me`                                            |
-| `/login/recuperar`                          | PasswordRecoveryPage        | Público                             | HU-111         | <a href="?path=/story/aplicación-pública-recuperar-contraseña-hu-111--solicitud">Recuperar contraseña (HU-111)</a>        | Sin endpoints (presentacional)                                                |
-| `/medico`, `/medico/pacientes`              | PacientesPage               | Médico                              | HU-030, HU-031 | <a href="?path=/story/aplicación-médico-pacientes-hu-031--con-pacientes">Pacientes (HU-031)</a>                           | `GET /pacientes`, `POST /pacientes`                                           |
-| `/medico/inferencia`                        | PlaceholderPage (pendiente) | Médico                              | Pendiente      | —                                                                                                                         | —                                                                             |
-| `/investigador`, `/investigador/cohortes`   | PlaceholderPage (pendiente) | Investigador                        | Pendiente      | —                                                                                                                         | —                                                                             |
-| `/investigador/exportaciones`               | PlaceholderPage (pendiente) | Investigador                        | Pendiente      | —                                                                                                                         | —                                                                             |
-| `/administrador`, `/administrador/usuarios` | UsuariosPage                | Administrador                       | HU-010         | <a href="?path=/story/aplicación-administrador-gestión-de-usuarios-hu-010--con-usuarios">Gestión de usuarios (HU-010)</a> | `GET /usuarios`, `GET /instituciones`, `POST /usuarios`, `PUT /usuarios/{id}` |
-| `/administrador/roles`                      | RolesPage                   | Administrador                       | HU-011         | <a href="?path=/story/aplicación-administrador-roles-y-permisos-hu-011--predeterminada">Roles y permisos (HU-011)</a>     | `GET /roles`, `PUT /roles/{id}/permisos`                                      |
-| `/administrador/auditoria`                  | PlaceholderPage (pendiente) | Administrador                       | Pendiente      | —                                                                                                                         | —                                                                             |
-| `*`                                         | NotFoundPage                | Cualquiera                          | —              | <a href="?path=/story/aplicación-flujos--ruta-inexistente">Ruta inexistente</a>                                           | —                                                                             |
+| Ruta                                        | Pantalla                    | Rol que puede entrar                | HU             | Historia donde se ve                                                                                                                        | Endpoints que consume                                                         |
+| ------------------------------------------- | --------------------------- | ----------------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `/`                                         | RootRedirect (sin pantalla) | Según sesión                        | —              | <a href={enlaceCatalogo('?path=/story/aplicación-flujos--medico-del-acceso-a-pacientes')}>Médico, del acceso a pacientes</a>                | `GET /auth/me`                                                                |
+| `/login`                                    | LoginPage                   | Público (redirige si ya hay sesión) | HU-001         | <a href={enlaceCatalogo('?path=/story/aplicación-pública-acceso-hu-001--predeterminada')}>Acceso (HU-001)</a>                               | `POST /auth/login`, `GET /auth/me`                                            |
+| `/login/recuperar`                          | PasswordRecoveryPage        | Público                             | HU-111         | <a href={enlaceCatalogo('?path=/story/aplicación-pública-recuperar-contraseña-hu-111--solicitud')}>Recuperar contraseña (HU-111)</a>        | Sin endpoints (presentacional)                                                |
+| `/medico`, `/medico/pacientes`              | PacientesPage               | Médico                              | HU-030, HU-031 | <a href={enlaceCatalogo('?path=/story/aplicación-médico-pacientes-hu-031--con-pacientes')}>Pacientes (HU-031)</a>                           | `GET /pacientes`, `POST /pacientes`                                           |
+| `/medico/inferencia`                        | PlaceholderPage (pendiente) | Médico                              | Pendiente      | —                                                                                                                                           | —                                                                             |
+| `/investigador`, `/investigador/cohortes`   | PlaceholderPage (pendiente) | Investigador                        | Pendiente      | —                                                                                                                                           | —                                                                             |
+| `/investigador/exportaciones`               | PlaceholderPage (pendiente) | Investigador                        | Pendiente      | —                                                                                                                                           | —                                                                             |
+| `/administrador`, `/administrador/usuarios` | UsuariosPage                | Administrador                       | HU-010         | <a href={enlaceCatalogo('?path=/story/aplicación-administrador-gestión-de-usuarios-hu-010--con-usuarios')}>Gestión de usuarios (HU-010)</a> | `GET /usuarios`, `GET /instituciones`, `POST /usuarios`, `PUT /usuarios/{id}` |
+| `/administrador/roles`                      | RolesPage                   | Administrador                       | HU-011         | <a href={enlaceCatalogo('?path=/story/aplicación-administrador-roles-y-permisos-hu-011--predeterminada')}>Roles y permisos (HU-011)</a>     | `GET /roles`, `PUT /roles/{id}/permisos`                                      |
+| `/administrador/auditoria`                  | PlaceholderPage (pendiente) | Administrador                       | Pendiente      | —                                                                                                                                           | —                                                                             |
+| `*`                                         | NotFoundPage                | Cualquiera                          | —              | <a href={enlaceCatalogo('?path=/story/aplicación-flujos--ruta-inexistente')}>Ruta inexistente</a>                                           | —                                                                             |
 
 ## Transiciones
 
@@ -40,30 +41,48 @@ Resumen de rutas, transiciones y flujos de la aplicación. Los enlaces usan ruta
 
 ## Flujos interactivos
 
-- <a href="?path=/story/aplicación-flujos--medico-del-acceso-a-pacientes">
+- <a href={enlaceCatalogo('?path=/story/aplicación-flujos--medico-del-acceso-a-pacientes')}>
     Médico, del acceso a pacientes (HU-001, HU-031)
   </a>
-- <a href="?path=/story/aplicación-flujos--administrador-usuarios-y-roles">
+- <a href={enlaceCatalogo('?path=/story/aplicación-flujos--administrador-usuarios-y-roles')}>
     Administrador, usuarios y roles (HU-010, HU-011)
   </a>
-- <a href="?path=/story/aplicación-flujos--acceso-denegado-por-rol">Acceso denegado por rol</a>
-- <a href="?path=/story/aplicación-flujos--recuperacion-de-contrasena">
+- <a href={enlaceCatalogo('?path=/story/aplicación-flujos--acceso-denegado-por-rol')}>
+    Acceso denegado por rol
+  </a>
+- <a href={enlaceCatalogo('?path=/story/aplicación-flujos--recuperacion-de-contrasena')}>
     Recuperación de contraseña (HU-111)
   </a>
-- <a href="?path=/story/aplicación-flujos--cambio-de-rol-activo">Cambio de rol activo</a>
-- <a href="?path=/story/aplicación-flujos--ruta-inexistente">Ruta inexistente</a>
+- <a href={enlaceCatalogo('?path=/story/aplicación-flujos--cambio-de-rol-activo')}>
+    Cambio de rol activo
+  </a>
+- <a href={enlaceCatalogo('?path=/story/aplicación-flujos--ruta-inexistente')}>Ruta inexistente</a>
 
 ## Pantallas
 
-- <a href="?path=/story/aplicación-pública-acceso-hu-001--predeterminada">Acceso (HU-001)</a>
-- <a href="?path=/story/aplicación-pública-recuperar-contraseña-hu-111--solicitud">
+- <a href={enlaceCatalogo('?path=/story/aplicación-pública-acceso-hu-001--predeterminada')}>
+    Acceso (HU-001)
+  </a>
+- <a
+    href={enlaceCatalogo('?path=/story/aplicación-pública-recuperar-contraseña-hu-111--solicitud')}
+  >
     Recuperar contraseña (HU-111)
   </a>
-- <a href="?path=/story/aplicación-médico-pacientes-hu-031--con-pacientes">Pacientes (HU-031)</a>
-- <a href="?path=/story/aplicación-administrador-gestión-de-usuarios-hu-010--con-usuarios">
+- <a href={enlaceCatalogo('?path=/story/aplicación-médico-pacientes-hu-031--con-pacientes')}>
+    Pacientes (HU-031)
+  </a>
+- <a
+    href={enlaceCatalogo(
+      '?path=/story/aplicación-administrador-gestión-de-usuarios-hu-010--con-usuarios',
+    )}
+  >
     Gestión de usuarios (HU-010)
   </a>
-- <a href="?path=/story/aplicación-administrador-roles-y-permisos-hu-011--predeterminada">
+- <a
+    href={enlaceCatalogo(
+      '?path=/story/aplicación-administrador-roles-y-permisos-hu-011--predeterminada',
+    )}
+  >
     Roles y permisos (HU-011)
   </a>
 

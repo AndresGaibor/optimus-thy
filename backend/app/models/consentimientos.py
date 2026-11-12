@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import uuid
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 import sqlalchemy as sa
@@ -31,19 +32,22 @@ class Consentimiento(Base):
         index=True,
     )
     base_legal: Mapped[str] = mapped_column(sa.String(64), nullable=False)
-    otorgado_en: Mapped[sa.DateTime] = mapped_column(
+    version_texto: Mapped[str] = mapped_column(
+        sa.String(32), nullable=False, server_default=sa.text("'1.0'")
+    )
+    otorgado_en: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.func.now()
     )
-    revocado_en: Mapped[sa.DateTime | None] = mapped_column(sa.TIMESTAMP(timezone=True))
+    revocado_en: Mapped[datetime | None] = mapped_column(sa.TIMESTAMP(timezone=True))
     otorgado_por_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         sa.ForeignKey("usuarios.id", ondelete="SET NULL"),
         index=True,
     )
-    creado_en: Mapped[sa.DateTime] = mapped_column(
+    creado_en: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.func.now()
     )
-    actualizado_en: Mapped[sa.DateTime] = mapped_column(
+    actualizado_en: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True),
         nullable=False,
         server_default=sa.func.now(),

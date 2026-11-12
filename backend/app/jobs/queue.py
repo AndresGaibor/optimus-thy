@@ -80,11 +80,15 @@ def marcar_completado(db: Session, trabajo: Trabajo, resultado: dict[str, Any]) 
     return trabajo
 
 
-def marcar_error(db: Session, trabajo: Trabajo, codigo: str) -> Trabajo:
-    """Cuenta el intento; reencola con espera creciente o cierra en ``error``."""
+def marcar_error(db: Session, trabajo: Trabajo, codigo: str, definitivo: bool = False) -> Trabajo:
+    """Cuenta el intento; reencola con espera creciente o cierra en ``error``.
+
+    ``definitivo`` cierra en ``error`` sin reencolar: el fallo no se arregla
+    repitiéndolo solo.
+    """
     trabajo.intentos = (trabajo.intentos or 0) + 1
     trabajo.error_detalle = codigo
-    if trabajo.intentos >= (trabajo.max_intentos or 3):
+    if definitivo or trabajo.intentos >= (trabajo.max_intentos or 3):
         trabajo.estado = "error"
         trabajo.disponible_en = datetime.now(UTC)
     else:

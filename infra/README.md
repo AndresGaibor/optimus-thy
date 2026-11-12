@@ -11,8 +11,8 @@ Entorno de desarrollo de un solo comando (`make up`) para laptop sin GPU.
 | `backend`  | `./backend`           | —                      | 8000           | interna          | FastAPI + Alembic (migraciones al arrancar) |
 | `frontend` | `./frontend`          | —                      | 8080           | interna          | Nginx con proxy `/api/ → backend:8000` |
 | `edge`     | `nginx:1.27-alpine`   | `${HTTP_PORT:-8080}` (HTTP) / `${HTTPS_PORT:-18443}` (HTTPS) | 8080 / 8443 | interna | Borde TLS: redirige HTTP→HTTPS y añade cabeceras de seguridad |
-| `ocr`      | `./ocr`               | —                      | 8001           | interna          | FastAPI, sin OCR real todavía |
-| `ia`       | `./ia`                | —                      | 8002           | interna          | FastAPI, sin modelos todavía |
+| `ocr`      | `./ocr`               | —                      | 8001           | interna          | FastAPI con contrato 1.0; Tesseract en la imagen, GLM-OCR con pesos montados en `/modelos` |
+| `ia`       | `./ia`                | —                      | 8002           | interna          | FastAPI con contrato 1.1; pesos montados en `/modelos`, degradado sin ellos |
 
 OCR, IA y la base de datos no exponen puertos al host: solo son accesibles dentro de la red `optimus-thy-net`.
 

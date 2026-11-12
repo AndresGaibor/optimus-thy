@@ -5,6 +5,9 @@ salida: detecciones de YOLO (hasta tres), máscara de BGAU-Net con MGAC como
 respaldo y clasificación de Swin Transformer. Sin rutas fijas, sin variables
 globales y sin archivos intermedios: la caja viaja en memoria en lugar del XML
 que usaba ``base.py``.
+
+Con ``con_artefactos=True`` cada nódulo viaja además con su evidencia (las dos
+máscaras en PNG, su XML Pascal-VOC y la superposición), generada en memoria.
 """
 
 from __future__ import annotations
@@ -13,12 +16,14 @@ from collections.abc import Sequence
 
 import numpy as np
 
+from app.artefactos import png_bytes, superponer, xml_pascal_voc
 from app.config import ConfiguracionIA
 from app.contrato import (
     CLASE_BENIGNO,
     CLASE_MALIGNO,
     ORIGEN_BGAUNET,
     ORIGEN_MGAC,
+    ArtefactosNodulo,
     Caja,
     Nodulo,
     ResultadoInferencia,
@@ -106,11 +111,15 @@ def analizar_imagen(
     *,
     modelos: ModelosIA,
     config: ConfiguracionIA,
+    con_artefactos: bool = False,
+    nombre_imagen: str = "imagen",
 ) -> ResultadoInferencia:
     """Ejecuta YOLO → MGAC → BGAU-Net → Swin sobre una imagen.
 
     No modifica la imagen recibida ni escribe en disco. Cada llamada usa solo
     las dependencias que recibe, así que dos solicitudes no comparten estado.
+    ``nombre_imagen`` es la clave opaca con la que se firman el XML y la
+    superposición de cada nódulo.
     """
     alto, ancho = validar_imagen(imagen)
 
@@ -145,17 +154,43 @@ def analizar_imagen(
 
         benigno = float(probabilidades.benigno)
         maligno = float(probabilidades.maligno)
+        clase = CLASE_BENIGNO if benigno >= maligno else CLASE_MALIGNO
+
+        artefactos = None
+        if con_artefactos:
+            etiqueta = "Benigno" if clase == CLASE_BENIGNO else "Maligno"
+            artefactos = ArtefactosNodulo(
+                mascara_png=png_bytes(mascara),
+                mgac_png=png_bytes(mascara_mgac),
+                xml=xml_pascal_voc(
+                    nombre_imagen=nombre_imagen,
+                    ancho=ancho,
+                    alto=alto,
+                    caja=caja,
+                    confianza=deteccion.confianza,
+                ),
+                superposicion_png=png_bytes(
+                    superponer(
+                        imagen,
+                        mascara,
+                        caja,
+                        f"{etiqueta} | B: {benigno:.3f} | M: {maligno:.3f}",
+                    )
+                ),
+            )
+
         nodulos.append(
             Nodulo(
                 indice=indice,
                 caja=caja,
                 confianza_detector=deteccion.confianza,
                 origen_mascara=origen,
-                clase=CLASE_BENIGNO if benigno >= maligno else CLASE_MALIGNO,
+                clase=clase,
                 probabilidad_benigno=benigno,
                 probabilidad_maligno=maligno,
                 region_analizada=region,
                 pixeles_mascara=pixeles,
+                artefactos=artefactos,
             )
         )
 

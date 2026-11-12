@@ -21,11 +21,11 @@ Evidencia: commits `(HT-xxx)` en `git log`, rutas en `backend/app`, `frontend/sr
 - HU-010: falta filtro por institución (solo opción "Todas") y edición de roles en UI (`reemplazarRoles` en `frontend/src/api/usuarios.ts:156` sin uso).
 - HU-011/012: se asignan roles por `PUT /usuarios/{id}/roles`; no hay matriz de permisos (tablas `permisos`/`roles_permisos` existen vacías).
 - HT-094: hay commit pero `docs/datos/imagenes-anonimizadas.md` está todo "por completar".
-- HT-008 (tablero): sin evidencia en el repo; el tablero vive en Linear, así que se confirma allí.
+- HT-008 (Kanban): el tablero y su historial viven en Linear, proyecto «OPTIMUS-THY · Backlog de producto»; no hay tablero en el repositorio ni en GitHub.
 - HT-009: `contracts/openapi.json` existe, pero CI no lo compara y las respuestas no están tipadas.
 - HT-014: hay `docs/arquitectura/*` pero los ADR reales no existen (solo los de `docs/referencia`, que no son fuente de verdad).
 
-**Pendientes (el resto, ≈215 h):** todo lo clínico (pacientes, casos, fichas, consentimiento, imágenes, documentos, OCR, inferencia, reportes, investigación, derechos, incidentes, retención) tiene modelo ORM pero **ninguna ruta ni pantalla**. `ia/` y `ocr/` son stubs con solo `/health`. Rutas de frontend `pacientes`, `inferencia`, `cohortes`, `exportaciones`, `auditoria` son `PlaceholderPage`. Playwright no está instalado.
+**Pendientes (el resto, ≈215 h):** todo lo clínico (pacientes, casos, fichas, consentimiento, imágenes, documentos, OCR, inferencia, reportes, investigación, derechos, incidentes, retención) tiene modelo ORM pero **ninguna ruta ni pantalla**. `ia/` y `ocr/` ya no son stubs: existen con contrato versionado y pruebas; del tramo falta el resto de lo clínico, rutas de documentos y pantallas. Rutas de frontend `pacientes`, `inferencia`, `cohortes`, `exportaciones`, `auditoria` son `PlaceholderPage`. Playwright no está instalado.
 
 ## 3. Defectos y brechas detectadas (a corregir; D = defecto)
 
@@ -58,11 +58,11 @@ Gravedad: A alta (bloquea o viola requisito M), M media, B baja.
 
 ## 4. Inconsistencias documentales a resolver (Fase 0, paso 0.6)
 
-1. **Estado:** CSV marca 119 "Pendiente"; la pila marca Hecho HT-001/004/005/021/024 (`pila-producto-7255-7270.md:11,14,15,22,23`) y ~22 están en `main`. → Actualizar la columna Estado del CSV y el estado en Linear.
+1. **Estado:** CSV marca 119 "Pendiente"; la pila marca Hecho HT-001/004/005/021/024 (`pila-producto-7255-7270.md:11,14,15,22,23`) y ~22 están en `main`. → Actualizar el estado de cada historia en Linear y la columna Estado del CSV.
 2. **Requisitos M sin historia que los cubra:** RNF-SEG-01 (Argon2: ya cumplido, etiquetar HU-001), RS-IA-03 (no reentrenar con inferencias → HT-063), RF-CLI-10 (ficha no entra al modelo → HU-040/HT-070), RS-ANO-02 (clave de seudónimos separada y por rol → HT-011), RS-ACC-07 (cuentas de servicio distintas para app/migraciones/escritor de auditoría → HT-082), RI-04/RI-05 (contrato versionado con IA y OCR → HT-063/HT-040), RS-RET-03 (datos reales no van a desarrollo, hoy solo en HT-085 "Después" → adelantar guardia mínima a HT-090/HT-002).
 3. **HU-120 (asistencia local)** existe en el catálogo, fue eliminada en `00-decisiones` y R9 la cita con 5 h: decidir y quitarla de todos lados.
 4. **HT-060** eliminada, pero `de-los-requisitos-al-backlog.md:159,584` aún pide "tres modelos cargan en CPU".
-5. **Pesos de IA:** decisiones dicen un solo archivo; catálogo dice tres; en el repo solo está `docs/referencia/06-codigo-ia-existente/best_bgaunet.keras`.
+5. **Pesos de IA:** decisiones dicen un solo archivo; catálogo dice tres. Los tres existen como assets de la release privada `modelos-idi-086-v1`, con manifiesto `ia/modelos.sha256` y `make modelos`; no se versionan.
 6. **Cortes de capacidad:** `de-los-requisitos-al-backlog.md:616` propone recortar historias M (HU-021, HT-023, HT-013, HU-004, HU-005) pese a la regla "lo M no se recorta".
 7. **Dependencias faltantes:** HT-103 (E2E), HT-102 (matriz), HU-110 (UnUQ) y HT-105 dicen "Ninguna" pero necesitan el flujo completo (HU-050, HU-070, HU-080, HU-091). → colocarlas al final de S5.
 8. Otros menores: "cerca de 400 requisitos" vs 246 IDs; "4" vs "2" puntos por confirmar con el director; prioridad MoSCoW vs Alta/Media/Baja; HU-001 no exige 12 caracteres (eso es HU-006); archivar/exportar paciente atribuidos al administrador cuando son de médico; columna "Origen" quitada en decisiones pero presente en el catálogo; evaluadores UnUQ (CA-17 sin administradores vs HU-110 con ellos).
@@ -91,7 +91,7 @@ Marcadas con quién debe decidir. Hasta que se decidan, el plan usa el valor por
 3. **Política de rol admin con datos clínicos (D22):** *defecto:* admin NO ve datos clínicos aunque tenga otros roles; ve solo cuando cambia el rol activo y queda auditado. Alternativa: cuentas separadas.
 4. **CSRF (D10):** token doble envío (*defecto*) vs verificación de `Origin`.
 5. **Visto bueno del director:** "Normal = sin nódulo detectado"; umbral de confianza OCR; revelar PII; formato de exportación (`docs/diseno/pantallas-clave.md:180-188`).
-6. **Reparto de trabajo entre Andrés y Daniel:** ningún documento asigna responsable por issue. *Defecto:* backend/IA/infra vs frontend/diseño/pruebas, respetando los límites de trabajo en curso (2 en proceso, 3 en revisión) sobre los estados de Linear. Confirmar.
+6. **Reparto de trabajo entre Andrés y Daniel:** ningún documento asigna responsable por issue. *Defecto:* backend/IA/infra vs frontend/diseño/pruebas, respetando los límites de trabajo en curso en Linear (2 en proceso, 3 en revisión). Confirmar.
 7. **Evaluadores UnUQ:** lista de 10 antes de S3 (`de-los-requisitos-al-backlog.md:686`); 3-5 fichas reales (con aprobación ética/convenio, RS-LEG-09) antes de S4. Sin fichas reales, OCR se mide con el conjunto sintético (HT-093) y se declara como tal (RS-LEG-11).
 8. **Capacidad:** 302 h disponibles (S3 96 + S4 96 + S5 110) frente a ≈215 h pendientes de backlog + ≈25 h de correcciones de §3 y Fase 0 → ≈240 h, holgura ≈60 h (≈20 %). Incluye "Después" (64 h) solo si la holgura se mantiene; el plan trata "Después" como Fase 4.
 
@@ -110,7 +110,7 @@ Regla común de terminado (RP-03, `docs/pruebas/matriz-de-pruebas.md`): PR por h
 | 0.5 | Corregir skips globales (D2) y añadir `alembic check` + deriva OpenAPI a CI (D12, D13) | CI falla si hay skips o deriva | 2 |
 | 0.6 | Sincronizar documentos (§4): Estado del CSV, pila, quitar HU-120/HT-060 sobrantes, asignar requisitos M huérfanos | `docs-lint` limpio; trazabilidad sin M huérfanos | 3 |
 | 0.7 | Operación: rotar clave del admin, desactivar usuario de prueba, `DATABASE_URL` por host estable, decidir despliegue del frontend (§6.2) | Login funcionando en el host oficial | 2 |
-| 0.8 | Completar HT-094 (llenar `docs/datos/imagenes-anonimizadas.md`: origen, permiso, muestra revisada) y confirmar HT-008 (tablero en Linear) | Documento sin "por completar" | 1 |
+| 0.8 | Completar HT-094 (llenar `docs/datos/imagenes-anonimizadas.md`: origen, permiso, muestra revisada) y confirmar HT-008 en Linear (tablero e historial) | Documento sin "por completar" | 1 |
 | 0.9 | Pedir pesos de IA y fijar fecha de corte (§6.1) | Respuesta registrada | 0 |
 
 ### Fase 1 — Tramo S3 (10–23 nov, ≈54 h de backlog + 15 h de fase 0 = 69 de 96 h)

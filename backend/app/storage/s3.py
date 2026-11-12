@@ -32,9 +32,13 @@ __all__ = [
 
 _EXTENSION_RE = re.compile(r"^[a-z0-9]{1,8}$")
 _PREFIX_RE = re.compile(r"^[a-z0-9/_-]{1,200}$")
+_KEY_RE = re.compile(r"^[a-z0-9][a-z0-9/_.-]{0,299}$")
 
 MAX_PRESIGNED_SECONDS = 24 * 60 * 60
 """Tope duro de vigencia de un enlace firmado."""
+
+MAX_OBJECT_BYTES = 20 * 1024 * 1024
+"""Tope de lectura de un objeto (una ecografía ronda los 15 MB)."""
 
 
 class StorageError(Exception):
@@ -148,7 +152,31 @@ class ObjectStorage:
         extension: str = "",
     ) -> StoredObject:
         """Sube el contenido y devuelve los metadatos que se guardan en la base."""
-        key = build_object_key(prefix, extension)
+        return self._put(build_object_key(prefix, extension), content, content_type)
+
+    def put_object_at(self, key: str, content: bytes, content_type: str) -> StoredObject:
+        """Sube con una clave ya decidida (artefactos derivados como el contrato)."""
+        if not _KEY_RE.match(key) or ".." in key:
+            raise StorageError("Clave de almacenamiento no permitida")
+        return self._put(key, content, content_type)
+
+    def get_bytes(self, key: str, maximo_bytes: int = MAX_OBJECT_BYTES) -> bytes:
+        """Lee un objeto del bucket para uso interno de los procesos.
+
+        Nunca se expone al cliente: la descarga del usuario va por enlace firmado.
+        """
+        try:
+            respuesta = self._client.get_object(Bucket=self._bucket, Key=key)
+            cuerpo = respuesta["Body"]
+            # ``StreamingBody.read`` no declara tipo de retorno (boto3 devuelve Any).
+            contenido: bytes = cuerpo.read(maximo_bytes + 1)
+        except Exception as exc:
+            raise StorageError("No se pudo leer el archivo") from exc
+        if len(contenido) > maximo_bytes:
+            raise StorageError("El archivo supera el tamaño máximo admitido")
+        return contenido
+
+    def _put(self, key: str, content: bytes, content_type: str) -> StoredObject:
         digest = hashlib.sha256(content).hexdigest()
         try:
             self._client.put_object(

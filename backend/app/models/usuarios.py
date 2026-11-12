@@ -73,10 +73,10 @@ class Rol(Base):
     )
     nombre: Mapped[str] = mapped_column(sa.String(64), nullable=False, unique=True)
     descripcion: Mapped[str | None] = mapped_column(sa.String(255))
-    creado_en: Mapped[sa.DateTime] = mapped_column(
+    creado_en: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.func.now()
     )
-    actualizado_en: Mapped[sa.DateTime] = mapped_column(
+    actualizado_en: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True),
         nullable=False,
         server_default=sa.func.now(),
@@ -101,10 +101,10 @@ class Permiso(Base):
     )
     codigo: Mapped[str] = mapped_column(sa.String(128), nullable=False, unique=True)
     descripcion: Mapped[str | None] = mapped_column(sa.String(255))
-    creado_en: Mapped[sa.DateTime] = mapped_column(
+    creado_en: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.func.now()
     )
-    actualizado_en: Mapped[sa.DateTime] = mapped_column(
+    actualizado_en: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True),
         nullable=False,
         server_default=sa.func.now(),
@@ -131,7 +131,7 @@ class UsuarioRol(Base):
         primary_key=True,
         index=True,
     )
-    asignado_en: Mapped[sa.DateTime] = mapped_column(
+    asignado_en: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.func.now()
     )
 
@@ -154,7 +154,7 @@ class RolPermiso(Base):
         primary_key=True,
         index=True,
     )
-    asignado_en: Mapped[sa.DateTime] = mapped_column(
+    asignado_en: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.func.now()
     )
 

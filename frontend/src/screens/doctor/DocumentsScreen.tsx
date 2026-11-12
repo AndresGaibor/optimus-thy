@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import {
   Button,
   Callout,
@@ -8,18 +8,31 @@ import {
   SearchInput,
   Select,
 } from '../../design-system';
-import type { DescargaDocumentoDemo, DocumentoCasoDemo } from '../fixtures/documentos-extra';
+import { obtenerEnlaceDocumento } from '../../api/documentos';
+import type { DocumentoCasoDemo } from '../fixtures/documentos-extra';
 import { DemoRoleLayout } from '../shared/DemoRoleLayout';
 import { ScreenFrame } from '../shared/ScreenFrame';
-import { DocumentDownloadDialog } from './DocumentDownloadDialog';
+import { DocumentDownloadDialog, type EstadoDescargaDocumento } from './DocumentDownloadDialog';
 import { DocumentTable } from './DocumentTable';
 import { DocumentUploadDialog } from './DocumentUploadDialog';
+import { useEstadosOcr } from './useEstadosOcr';
+
+const ERROR_ENLACE = 'No se pudo obtener el enlace firmado. Vuelve a intentarlo en unos segundos.';
+
+function abrirEnPestana(enlace: string): void {
+  // Un enlace con `rel="noopener noreferrer"` no bloquea la navegación tras la
+  // consulta asíncrona y la pestaña nueva no puede leer esta ventana.
+  const ancla = document.createElement('a');
+  ancla.href = enlace;
+  ancla.target = '_blank';
+  ancla.rel = 'noopener noreferrer';
+  ancla.click();
+}
 
 export interface DocumentsScreenProps {
   documents: DocumentoCasoDemo[];
   casoId: string;
   pacienteNombre: string;
-  download: DescargaDocumentoDemo;
   onDownload: (id: string) => void;
   onUpload: () => void;
   initialUploadError?: 'tipo' | 'danado';
@@ -30,7 +43,6 @@ export function DocumentsScreen({
   documents,
   casoId,
   pacienteNombre,
-  download,
   onDownload,
   onUpload,
   initialUploadError,
@@ -40,14 +52,56 @@ export function DocumentsScreen({
   const [uploadOpen, setUploadOpen] = useState(false);
   const [notice, setNotice] = useState<'carga' | 'descarga' | null>(initialNotice ?? null);
   const [downFor, setDownFor] = useState<DocumentoCasoDemo | null>(null);
+  const [descarga, setDescarga] = useState<EstadoDescargaDocumento | null>(null);
+  const [descargaRegistrada, setDescargaRegistrada] = useState<string | null>(null);
+  const [enlaceError, setEnlaceError] = useState<string | null>(null);
+  const solicitudDescarga = useRef(0);
+  const solicitudVer = useRef(0);
+  const documentosConOcr = useEstadosOcr(documents, casoId);
+
+  const verDocumento = async (document: DocumentoCasoDemo) => {
+    const solicitud = ++solicitudVer.current;
+    setNotice(null);
+    setEnlaceError(null);
+    const enlace = await obtenerEnlaceDocumento(casoId, document.id).catch(() => null);
+    if (solicitud !== solicitudVer.current) return;
+    if (enlace === null) {
+      setEnlaceError(ERROR_ENLACE);
+      return;
+    }
+    abrirEnPestana(enlace.enlace);
+  };
+
+  const descargarDocumento = async (document: DocumentoCasoDemo) => {
+    const solicitud = ++solicitudDescarga.current;
+    setNotice(null);
+    setEnlaceError(null);
+    setDownFor(document);
+    setDescarga({ estado: 'cargando' });
+    const enlace = await obtenerEnlaceDocumento(casoId, document.id).catch(() => null);
+    if (solicitud !== solicitudDescarga.current) return;
+    if (enlace === null) {
+      setDescarga({ estado: 'error', mensaje: ERROR_ENLACE });
+      return;
+    }
+    setDescarga({ estado: 'listo', enlace: enlace.enlace, caducaEn: enlace.caduca_en });
+    onDownload(document.id);
+  };
+
+  const cerrarDescarga = () => {
+    solicitudDescarga.current += 1;
+    setDownFor(null);
+    setDescarga(null);
+  };
+
   const shown = useMemo(
     () =>
-      documents.filter((document) =>
+      documentosConOcr.filter((document) =>
         `${document.id} ${document.nombre} ${document.tipo}`
           .toLowerCase()
           .includes(query.toLowerCase()),
       ),
-    [documents, query],
+    [documentosConOcr, query],
   );
 
   return (
@@ -75,7 +129,13 @@ export function DocumentsScreen({
           )}
           {notice === 'descarga' && (
             <Callout tone="info" title="Descarga registrada">
-              Evento de descarga registrado para {download.documentoId} por {download.usuario}.
+              El acceso quedó en la bitácora
+              {descargaRegistrada === null ? '' : ` para ${descargaRegistrada}`}.
+            </Callout>
+          )}
+          {enlaceError !== null && (
+            <Callout tone="danger" title="No se pudo obtener el enlace">
+              {enlaceError}
             </Callout>
           )}
         </div>
@@ -97,11 +157,8 @@ export function DocumentsScreen({
             </FilterBar>
             <DocumentTable
               documents={shown}
-              onView={setDownFor}
-              onDownload={(document) => {
-                setDownFor(document);
-                onDownload(document.id);
-              }}
+              onView={(document) => void verDocumento(document)}
+              onDownload={(document) => void descargarDocumento(document)}
             />
           </CardContent>
         </Card>
@@ -116,11 +173,16 @@ export function DocumentsScreen({
         />
         <DocumentDownloadDialog
           document={downFor}
-          download={download}
-          onOpenChange={(open) => !open && setDownFor(null)}
+          descarga={descarga}
+          onOpenChange={(open) => {
+            if (!open) cerrarDescarga();
+          }}
           onConfirm={() => {
+            if (descarga?.estado !== 'listo') return;
+            abrirEnPestana(descarga.enlace);
+            setDescargaRegistrada(downFor?.id ?? null);
             setNotice('descarga');
-            setDownFor(null);
+            cerrarDescarga();
           }}
         />
       </ScreenFrame>

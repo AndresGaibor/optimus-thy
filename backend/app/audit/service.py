@@ -31,6 +31,7 @@ CLAVES_DE_DETALLE: Final[frozenset[str]] = frozenset(
     {
         "model_name",
         "model_version",
+        "version",
         "result_label",
         "confidence",
         "reason_code",
@@ -44,6 +45,7 @@ CLAVES_DE_DETALLE: Final[frozenset[str]] = frozenset(
         "setting_key",
         "error_code",
         "format",
+        "content_type",
     }
 )
 

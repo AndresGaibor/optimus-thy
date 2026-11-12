@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import uuid
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 import sqlalchemy as sa
@@ -32,10 +33,10 @@ class Paciente(Base):
         index=True,
     )
     seudonimo: Mapped[str] = mapped_column(sa.String(128), nullable=False, unique=True)
-    creado_en: Mapped[sa.DateTime] = mapped_column(
+    creado_en: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.func.now()
     )
-    actualizado_en: Mapped[sa.DateTime] = mapped_column(
+    actualizado_en: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True),
         nullable=False,
         server_default=sa.func.now(),
@@ -76,10 +77,10 @@ class IdentidadPaciente(Base):
     documento_cifrado: Mapped[str] = mapped_column(EncryptedBytes(), nullable=False)
     fecha_nacimiento_cifrada: Mapped[str] = mapped_column(EncryptedBytes(), nullable=False)
     clave_version: Mapped[str] = mapped_column(sa.String(32), nullable=False)
-    creado_en: Mapped[sa.DateTime] = mapped_column(
+    creado_en: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.func.now()
     )
-    actualizado_en: Mapped[sa.DateTime] = mapped_column(
+    actualizado_en: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True),
         nullable=False,
         server_default=sa.func.now(),

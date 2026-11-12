@@ -1,5 +1,3 @@
-import type { RoleKey } from '../../design-system/tones';
-
 export type OcrEstado = 'En cola' | 'Procesando' | 'Listo' | 'Error';
 
 export interface DocumentoCasoDemo {
@@ -22,14 +20,6 @@ export interface IntentoOcrDemo {
   fecha: string;
   resultado: 'Éxito' | 'Error' | 'En curso';
   motivo?: string;
-}
-
-export interface DescargaDocumentoDemo {
-  usuario: string;
-  rol: RoleKey;
-  hora: string;
-  documentoId: string;
-  enlaceFirmado: string;
 }
 
 export interface CampoOcrCorregidoDemo {
@@ -114,15 +104,6 @@ export const documentoBajaCalidadDemo: DocumentoCasoDemo = {
   estadoOcr: 'Sin procesar',
   subidoPor: 'Dra. Demo Profesional',
   fecha: '2026-03-18 11:00',
-};
-
-export const descargaDocumentoDemo: DescargaDocumentoDemo = {
-  usuario: 'Dra. Demo Profesional',
-  rol: 'medico',
-  hora: '2026-03-18 10:35',
-  documentoId: 'DEMO-DOC-001',
-  enlaceFirmado:
-    'https://demo.optimus-thy.local/descargas/firmada?doc=DEMO-DOC-001&exp=2026-03-18T10:40:00Z',
 };
 
 export const correccionOcrPersistidaDemo: CampoOcrCorregidoDemo[] = [

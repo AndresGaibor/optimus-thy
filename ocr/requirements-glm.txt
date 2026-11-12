@@ -1,0 +1,25 @@
+# Motor GLM-OCR local (pesos abiertos MIT `zai-org/GLM-OCR`, BF16 ~2,65 GB).
+#
+# Qué instala: el SDK oficial `glmocr` con su extra `selfhosted` (torch,
+# torchvision, transformers, sentencepiece, accelerate, PyMuPDF). El SDK no
+# carga los pesos del modelo: habla con un servidor de inferencia propio, así
+# que además hay que servirlo en el equipo (vLLM, SGLang, Ollama o MLX).
+#
+# Instalación exacta en Linux arm64 sin GPU (la rueda de torch de PyPI ya es
+# CPU-only para arm64):
+#
+#   python3.12 -m venv /opt/optimus/venv-ocr
+#   /opt/optimus/venv-ocr/bin/pip install --upgrade pip
+#   /opt/optimus/venv-ocr/bin/pip install -r requirements-glm.txt
+#   /opt/optimus/venv-ocr/bin/pip install -e .
+#
+# En x86_64 sin GPU, instale torch desde el índice de CPU antes del paso
+# anterior; si no, pip trae las ruedas con CUDA (~2,5 GB de más):
+#
+#   /opt/optimus/venv-ocr/bin/pip install --index-url https://download.pytorch.org/whl/cpu \
+#       torch torchvision
+#
+# vLLM NO sirve para este equipo: exige GPU y no publica ruedas para arm64.
+# Para CPU use Ollama (`pipeline.ocr_api.api_mode: ollama_generate`) o, en
+# macOS con Apple Silicon, mlx-vlm.
+glmocr[selfhosted]>=0.1.5

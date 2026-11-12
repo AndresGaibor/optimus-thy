@@ -1,10 +1,10 @@
-.PHONY: up down check certificado-dev db-test respaldo-prueba comparar-academico tareas comentar help deploy-check deploy-status
+.PHONY: up down check modelos certificado-dev db-test respaldo-prueba sync-plan sync-aplicar sync-verificar comparar-academico tareas usuarios comentar help deploy-check deploy-status
 
 
 ACADEMICO_DIR ?= /home/ubuntu/code/optimus-thy-academico
 
 help:
-	@printf '%s\n' 'Targets: up down check deploy-check deploy-status certificado-dev db-test respaldo-prueba comparar-academico tareas comentar'
+	@printf '%s\n' 'Targets: up down check deploy-check deploy-status certificado-dev db-test respaldo-prueba sync-plan sync-aplicar sync-verificar comparar-academico tareas usuarios comentar'
 
 deploy-check:
 	./deploy.sh check
@@ -27,6 +27,11 @@ check:
 		cd frontend && bun run lint && bun run ui:check && bun run tamanos && bun run format:check && bun run typecheck && bun run test && bun run catalogo:test && bun run build && bun run catalogo:build; \
 	fi
 
+# Pesos de IA (410 MB) desde la release privada modelos-idi-086-v1: descarga y verifica su SHA-256.
+# Fuera de `check`: son binarios que no se versionan y no tienen que pasar por CI.
+modelos:
+	python3 ia/scripts/descargar_modelos.py --destino var/modelos
+
 certificado-dev:
 	bash infra/scripts/generar-certificado-dev.sh
 
@@ -41,13 +46,35 @@ db-test:
 respaldo-prueba:
 	BACKUP_KEY_FILE=$${BACKUP_KEY_FILE:-$$HOME/.optimus-respaldo.key} infra/scripts/probar-respaldo.sh
 
-comparar-academico:
-	bash scripts/comparar-academico.sh "$(ACADEMICO_DIR)" "$(ACADEMICO_REF)"
+# Sincronización con el repositorio académico (docs/operacion/sincronizar-academico.md):
+# la política de qué se comparte está en scripts/sincronizacion.json.
+# `plan` clasifica, `aplicar` copia solo lo compartido y `verificar` comprueba que no queda nada pendiente.
+# Pasa ARGS="--limite 500", ARGS="--json" o ARGS="--seco" según el subcomando.
+sync-plan:
+	python3 scripts/sincronizar.py plan --academico "$(ACADEMICO_DIR)" --ref "$(ACADEMICO_REF)" $(ARGS)
+
+sync-aplicar:
+	python3 scripts/sincronizar.py aplicar --academico "$(ACADEMICO_DIR)" --ref "$(ACADEMICO_REF)" $(ARGS)
+
+sync-verificar:
+	python3 scripts/sincronizar.py verificar --academico "$(ACADEMICO_DIR)" --ref "$(ACADEMICO_REF)" $(ARGS)
+
+comparar-academico: sync-plan
 
 # Tablero de Linear en solo lectura: equipo TESIS, proyecto «OPTIMUS-THY · Backlog de producto».
 # Filtra con ARGS="--estado progress|revision|done|todo" o ARGS="--persona daniel".
 tareas:
 	@bash scripts/tareas.sh $(ARGS)
+
+# Usuarios y contraseñas del sistema: menú interactivo contra la base real (usa ARGS para --listar).
+usuarios:
+	@TTY="-i"; if [ -t 0 ] && [ -t 1 ]; then TTY="-it"; fi; \
+	if docker inspect optimus-thy-backend-1 >/dev/null 2>&1; then \
+		docker cp backend/scripts/usuarios.py optimus-thy-backend-1:/tmp/usuarios.py >/dev/null; \
+		docker exec $$TTY -e PYTHONPATH=/srv -w /srv optimus-thy-backend-1 python /tmp/usuarios.py $(ARGS); \
+	else \
+		cd backend && .venv/bin/python scripts/usuarios.py $(ARGS); \
+	fi
 
 # Único camino de escritura permitido desde este repo: un comentario de progreso.
 # El estado de un issue lo mueve solo el repo académico, su dueño.

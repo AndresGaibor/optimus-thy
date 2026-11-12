@@ -16,6 +16,28 @@ import numpy as np
 from app.config import ConfiguracionIA
 from app.contrato import Caja
 
+CODIGO_MODELO_NO_DISPONIBLE = "modelo_no_disponible"
+MOTIVO_LIBRERIA = "libreria"
+MOTIVO_ARCHIVO = "archivo"
+
+
+class ModeloNoDisponible(RuntimeError):
+    """Falta la librería opcional o el archivo de pesos de un modelo.
+
+    ``codigo`` es estable para el cliente; ``motivo`` distingue una dependencia
+    no instalada de unos pesos ausentes y ``detalle`` explica qué falta.
+    """
+
+    def __init__(self, modelo: str, motivo: str, detalle: str) -> None:
+        self.modelo = modelo
+        self.motivo = motivo
+        self.detalle = detalle
+        super().__init__(detalle)
+
+    @property
+    def codigo(self) -> str:
+        return CODIGO_MODELO_NO_DISPONIBLE
+
 
 @dataclass(frozen=True, slots=True)
 class Deteccion:

@@ -8,7 +8,7 @@ queda en verde.
 ## Cómo se usa
 
 - **ID**: `ERR-###`, correlativo y estable.
-- **Requisito e historia**: a qué requisito del catálogo y a qué tarjeta afecta.
+- **Requisito e historia**: a qué requisito del catálogo y a qué issue afecta.
 - **Severidad**: `Crítica` (expone datos o impide operar), `Alta` (rompe un
   criterio de aceptación), `Media` (fallo parcial con alternativa), `Baja`
   (detalle de forma o documentación).

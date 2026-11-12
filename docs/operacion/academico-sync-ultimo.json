@@ -1,0 +1,13 @@
+{
+  "commit_academico": "164d18bb30b7ae10a73ee6c2bb6e82814ab7c2d1",
+  "tree_academico": "3be0b1eb4916792cc4a1945585d3f93467384335",
+  "commit_operativo": "704c61be4842dc62cae441b41fd794b4888448bf",
+  "fecha": "2026-11-12T18:11:09Z",
+  "grupos": {
+    "copiar": 0,
+    "adaptar": 6,
+    "independiente": 188,
+    "sin_regla": 0
+  },
+  "version_reglas": 1
+}
