@@ -1,10 +1,10 @@
-.PHONY: up down check modelos certificado-dev db-test respaldo-prueba comparar-academico tareas comentar help deploy-check deploy-status
+.PHONY: up down check modelos certificado-dev db-test respaldo-prueba comparar-academico tareas usuarios comentar help deploy-check deploy-status
 
 
 ACADEMICO_DIR ?= /home/ubuntu/code/optimus-thy-academico
 
 help:
-	@printf '%s\n' 'Targets: up down check deploy-check deploy-status certificado-dev db-test respaldo-prueba comparar-academico tareas comentar'
+	@printf '%s\n' 'Targets: up down check deploy-check deploy-status certificado-dev db-test respaldo-prueba comparar-academico tareas usuarios comentar'
 
 deploy-check:
 	./deploy.sh check
@@ -53,6 +53,16 @@ comparar-academico:
 # Filtra con ARGS="--estado progress|revision|done|todo" o ARGS="--persona daniel".
 tareas:
 	@bash scripts/tareas.sh $(ARGS)
+
+# Usuarios y contraseñas del sistema: menú interactivo contra la base real (usa ARGS para --listar).
+usuarios:
+	@TTY="-i"; if [ -t 0 ] && [ -t 1 ]; then TTY="-it"; fi; \
+	if docker inspect optimus-thy-backend-1 >/dev/null 2>&1; then \
+		docker cp backend/scripts/usuarios.py optimus-thy-backend-1:/tmp/usuarios.py >/dev/null; \
+		docker exec $$TTY -e PYTHONPATH=/srv -w /srv optimus-thy-backend-1 python /tmp/usuarios.py $(ARGS); \
+	else \
+		cd backend && .venv/bin/python scripts/usuarios.py $(ARGS); \
+	fi
 
 # Único camino de escritura permitido desde este repo: un comentario de progreso.
 # El estado de un issue lo mueve solo el repo académico, su dueño.
