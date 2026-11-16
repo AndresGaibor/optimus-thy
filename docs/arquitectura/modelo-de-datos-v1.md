@@ -47,7 +47,7 @@ erDiagram
 | imagenes | Imágenes sin metadatos EXIF/DICOM | RF-IMG-03 |
 | modelos_ia | Modelos IA versionados con ruta de pesos | RF-INF-05/06/07 |
 | inferencias | Resultado con contrato, umbrales y huella de pesos | RF-INF-05/06/07, RIA-05 |
-| nodulos | Nódulo con caja, confianza y artefactos | RF-INF-13/14, RIA-09 |
+| nodulos | Nódulo con caja, confianza, clase, probabilidades, región y artefactos | RF-INF-13/14, RIA-09 |
 | decisiones_medicas | Decisión médica separada | RF-INF-09 |
 | consentimientos | Consentimiento con base legal y vigencia | RF-PAC-06/07 |
 | auditoria | Auditoría solo inserción | RF-AUD-08/09, A13 |

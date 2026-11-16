@@ -247,6 +247,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/casos/{caso_id}/imagenes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Listar Imagenes
+         * @description Lista las ecografías del caso, cada una con su enlace firmado.
+         */
+        get: operations["listar_imagenes_casos__caso_id__imagenes_get"];
+        put?: never;
+        /**
+         * Cargar Imagen
+         * @description Carga una ecografía del caso y guarda una copia sin metadatos.
+         */
+        post: operations["cargar_imagen_casos__caso_id__imagenes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/modelos-ia": {
         parameters: {
             query?: never;
@@ -354,6 +378,14 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** Body_cargar_imagen_casos__caso_id__imagenes_post */
+        Body_cargar_imagen_casos__caso_id__imagenes_post: {
+            /**
+             * Archivo
+             * @description Ecografía en PNG o JPEG
+             */
+            archivo: string;
+        };
         /** Body_cargar_modelo_modelos_ia_post */
         Body_cargar_modelo_modelos_ia_post: {
             /** Archivo */
@@ -987,6 +1019,72 @@ export interface operations {
         responses: {
             /** @description Successful Response */
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listar_imagenes_casos__caso_id__imagenes_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                caso_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cargar_imagen_casos__caso_id__imagenes_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                caso_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_cargar_imagen_casos__caso_id__imagenes_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };

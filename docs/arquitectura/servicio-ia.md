@@ -22,6 +22,15 @@ El servicio lee la carpeta `IA_MODELOS_DIR`; si falta un archivo, ese modelo fig
 
 La carpeta se comparte por volumen: `backend` escribe en `MODELOS_DIR` y `ia` lo monta de solo lectura en `IA_MODELOS_DIR`. No hay rutas fijas en el código.
 
+## Flujo de una ecografía
+
+1. `POST /casos/{caso_id}/imagenes` valida el archivo por contenido, recodifica la imagen sin EXIF/ICC/texto y guarda la copia saneada con el SHA-256 de esa copia.
+2. `POST /trabajos` con `{"tipo": "inferencia", "payload": {"imagen_id": "<uuid>"}}` encola el trabajo.
+3. El worker lee la imagen del almacenamiento, llama a `POST /inferir` del servicio de IA y decodifica el contrato 1.1.
+4. En una sola transacción guarda la inferencia, sus nódulos (clase, probabilidades, región, píxeles) y los artefactos: máscara, MGAC, XML, superposición y el contrato crudo.
+
+El operativo no detecta texto incrustado en la imagen: esa comprobación requiere OCR y el operativo no lo incorpora (ADR-020). El saneo cubre los metadatos del archivo.
+
 ## Arranque con pesos ya presentes
 
 ```bash
@@ -50,6 +59,7 @@ IA_INSTALAR_MODELOS=true
 - Python 3.12, Linux `aarch64`, sin GPU.
 - Carga de los tres modelos: 25,8 – 34,6 s.
 - Inferencia completa de `0000.jpg` (314 × 402): 11,8 – 13,2 s en CPU.
+- Corrida real del 16-11 en este servidor: `/health` `ok`, huella `a74d0422…`, inferencia en 11,8 s. El detector devolvió dos cajas; la de mayor confianza coincide con el XML de referencia (`78,96–218,239`, benigno 1.0) y la segunda queda justo en el umbral de 0,25, que es el valor configurado.
 - Para no saturar memoria: `OMP_NUM_THREADS=2 TF_NUM_INTRAOP_THREADS=2 TF_NUM_INTEROP_THREADS=2 MKL_NUM_THREADS=2`.
 
 ## Verificación

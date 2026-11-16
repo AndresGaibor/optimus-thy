@@ -775,6 +775,106 @@
         }
       }
     },
+    "/casos/{caso_id}/imagenes": {
+      "post": {
+        "tags": [
+          "imagenes"
+        ],
+        "summary": "Cargar Imagen",
+        "description": "Carga una ecografía del caso y guarda una copia sin metadatos.",
+        "operationId": "cargar_imagen_casos__caso_id__imagenes_post",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "caso_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Caso Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_cargar_imagen_casos__caso_id__imagenes_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "imagenes"
+        ],
+        "summary": "Listar Imagenes",
+        "description": "Lista las ecografías del caso, cada una con su enlace firmado.",
+        "operationId": "listar_imagenes_casos__caso_id__imagenes_get",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "caso_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Caso Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/modelos-ia": {
       "get": {
         "tags": [
@@ -1021,6 +1121,21 @@
   },
   "components": {
     "schemas": {
+      "Body_cargar_imagen_casos__caso_id__imagenes_post": {
+        "properties": {
+          "archivo": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "Archivo",
+            "description": "Ecografía en PNG o JPEG"
+          }
+        },
+        "type": "object",
+        "required": [
+          "archivo"
+        ],
+        "title": "Body_cargar_imagen_casos__caso_id__imagenes_post"
+      },
       "Body_cargar_modelo_modelos_ia_post": {
         "properties": {
           "archivo": {
