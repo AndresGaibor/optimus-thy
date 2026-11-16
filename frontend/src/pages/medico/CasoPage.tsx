@@ -17,7 +17,7 @@ import { listarImagenes, subirImagen, type ImagenCaso } from '../../api/imagenes
 import { listarResultados, type Inferencia } from '../../api/resultados';
 import { consultarTrabajo, encolarInferencia } from '../../api/trabajos';
 import { GaleriaImagenes } from './GaleriaImagenes';
-import { ResultadoNodulo } from './ResultadoNodulo';
+import { ResultadoInferencia } from './ResultadoInferencia';
 
 const INTERVALO_MS = 3000;
 
@@ -170,16 +170,7 @@ export function CasoPage() {
           />
         ) : (
           resultados.map((inferencia) => (
-            <div key={inferencia.id} className="flex flex-col gap-4">
-              {inferencia.nodulos.map((nodulo) => (
-                <ResultadoNodulo
-                  key={`${inferencia.id}-${nodulo.indice}`}
-                  nodulo={nodulo}
-                  modelo={inferencia.modelo}
-                  creadoEn={inferencia.creado_en}
-                />
-              ))}
-            </div>
+            <ResultadoInferencia key={inferencia.id} inferencia={inferencia} />
           ))
         )}
       </section>

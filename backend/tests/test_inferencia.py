@@ -107,11 +107,13 @@ def _ejecutar(
     doble: ClienteS3Falso,
     monkeypatch: pytest.MonkeyPatch,
     status: int = 200,
+    contrato: dict[str, Any] | None = None,
 ) -> Trabajo:
     doble.put_object(
         Bucket="pruebas", Key=imagen.ruta_s3, Body=b"image-bytes", ContentType="image/png"
     )
-    contrato = CONTRATO if status == 200 else {"detail": "service unavailable"}
+    cuerpo = contrato if contrato is not None else CONTRATO
+    contrato = cuerpo if status == 200 else {"detail": "service unavailable"}
     transporte = httpx.MockTransport(lambda _: httpx.Response(status, json=contrato))
     cliente = ClienteIA("http://ia:8002", transporte=transporte)
     monkeypatch.setattr(manejadores, "get_cliente_ia", lambda: cliente)
@@ -165,3 +167,24 @@ def test_fallo_del_servicio_ia_deja_trabajo_en_error_sin_resultado(
     assert db.query(Inferencia).count() == 0
     assert db.query(Nodulo).count() == 0
     assert not any(clave.startswith("inferencias/") for clave in almacen.objetos)
+
+
+def test_inferencia_sin_nodulos_persiste_resultado_normal(
+    mundo: dict[str, Any],
+    almacen: ClienteS3Falso,
+    sesiones: None,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    db: Session = mundo["db"]
+    sin_nodulos = {**CONTRATO, "nodulos": [], "sin_nodulo": True}
+    trabajo = _ejecutar(db, mundo["imagen"], almacen, monkeypatch, contrato=sin_nodulos)
+
+    assert trabajo.estado == "completado"
+    assert trabajo.resultado is not None
+    inferencia = db.get(Inferencia, uuid.UUID(trabajo.resultado["inferencia_id"]))
+    assert inferencia is not None
+    assert inferencia.resultado == "sin_nodulo"
+    assert inferencia.confianza is None
+    assert db.query(Nodulo).count() == 0
+    ruta = trabajo.resultado["contrato_ruta_s3"]
+    assert json.loads(almacen.objetos[ruta]["Body"]) == sin_nodulos
