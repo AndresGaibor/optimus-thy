@@ -6,7 +6,7 @@ import uuid
 from typing import TYPE_CHECKING
 
 import sqlalchemy as sa
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
@@ -62,6 +62,7 @@ class ModeloIA(Base):
     version: Mapped[str] = mapped_column(sa.String(64), nullable=False)
     hash_pesos: Mapped[str] = mapped_column(sa.String(64), nullable=False)
     parametros: Mapped[str | None] = mapped_column(sa.Text)
+    ruta_pesos: Mapped[str | None] = mapped_column(sa.String(512))
     activo: Mapped[bool] = mapped_column(sa.Boolean, nullable=False, server_default=sa.text("true"))
     creado_en: Mapped[sa.DateTime] = mapped_column(
         sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.func.now()
@@ -99,6 +100,14 @@ class Inferencia(Base):
     resultado: Mapped[str] = mapped_column(sa.String(32), nullable=False)
     confianza: Mapped[float | None] = mapped_column(sa.Float)
     tiempo_ms: Mapped[int | None] = mapped_column(sa.Integer)
+    ancho: Mapped[int | None] = mapped_column(sa.Integer)
+    alto: Mapped[int | None] = mapped_column(sa.Integer)
+    version_contrato: Mapped[str | None] = mapped_column(sa.String(16))
+    umbrales: Mapped[dict[str, float] | None] = mapped_column(JSONB)
+    huella_modelos: Mapped[str | None] = mapped_column(sa.String(64))
+    inmutable: Mapped[bool] = mapped_column(
+        sa.Boolean, nullable=False, server_default=sa.text("true")
+    )
     creado_en: Mapped[sa.DateTime] = mapped_column(
         sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.func.now()
     )
@@ -144,6 +153,11 @@ class Nodulo(Base):
     caja_w: Mapped[float | None] = mapped_column(sa.Float)
     caja_h: Mapped[float | None] = mapped_column(sa.Float)
     confianza: Mapped[float | None] = mapped_column(sa.Float)
+    origen_mascara: Mapped[str | None] = mapped_column(sa.String(32))
+    mascara_ruta_s3: Mapped[str | None] = mapped_column(sa.String(512))
+    mgac_ruta_s3: Mapped[str | None] = mapped_column(sa.String(512))
+    xml_ruta_s3: Mapped[str | None] = mapped_column(sa.String(512))
+    superposicion_ruta_s3: Mapped[str | None] = mapped_column(sa.String(512))
     creado_en: Mapped[sa.DateTime] = mapped_column(
         sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.func.now()
     )

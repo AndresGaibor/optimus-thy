@@ -73,6 +73,8 @@ class Settings(BaseSettings):
         alias="PII_ENCRYPTION_KEY",
         description="Clave de cifrado de datos personales; nunca se guarda en el repositorio.",
     )
+    modelos_dir: str = Field(default="/modelos", alias="MODELOS_DIR")
+    ia_url: str = Field(default="http://ia:8002", alias="IA_URL")
 
     def model_post_init(self, __context: object) -> None:
         if "session_cookie_secure" not in self.model_fields_set:
