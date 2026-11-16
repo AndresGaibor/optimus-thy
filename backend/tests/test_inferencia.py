@@ -16,6 +16,7 @@ from app.ia.cliente import ClienteIA
 from app.jobs import manejadores
 from app.jobs.queue import encolar
 from app.jobs.worker import MANEJADORES, procesar_una
+from app.models.consentimientos import Consentimiento
 from app.models.fichas import Caso
 from app.models.imagenes import Imagen, Inferencia, Nodulo
 from app.models.instituciones import Institucion
@@ -78,6 +79,10 @@ def mundo(db_session: Session) -> dict[str, Any]:
     db_session.commit()
     caso = Caso(institucion_id=institucion.id, paciente_id=paciente.id, codigo_caso="CASO-0001")
     db_session.add(caso)
+    db_session.commit()
+    db_session.add(
+        Consentimiento(caso_id=caso.id, base_legal="atencion_de_salud", version_texto="v1")
+    )
     db_session.commit()
     imagen = Imagen(caso_id=caso.id, ruta_s3="casos/abc/imagenes/eco.png", hash_sha256="b" * 64)
     db_session.add(imagen)

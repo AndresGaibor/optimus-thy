@@ -29,6 +29,10 @@ class AuditAction(StrEnum):
     DOCUMENT_UPLOAD = "DOCUMENT_UPLOAD"
     IMAGE_UPLOAD = "IMAGE_UPLOAD"
 
+    # Consentimiento (HU-034)
+    CONSENT_CREATE = "CONSENT_CREATE"
+    CONSENT_REVOKE = "CONSENT_REVOKE"
+
     # Procesamiento (RF-AUD-04)
     INFERENCE_REQUEST = "INFERENCE_REQUEST"
 
@@ -72,6 +76,7 @@ class AuditObjectType(StrEnum):
     DOCUMENT = "DOCUMENT"
     IMAGE = "IMAGE"
     INFERENCE = "INFERENCE"
+    CONSENT = "CONSENT"
     USER = "USER"
     ROLE = "ROLE"
     SYSTEM = "SYSTEM"
