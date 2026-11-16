@@ -8,6 +8,7 @@ import { RolesPage } from './pages/admin/RolesPage';
 import { UsuariosPage } from './pages/admin/UsuariosPage';
 import { ModelosPage } from './pages/admin/ModelosPage';
 import { PacientesPage } from './pages/medico/PacientesPage';
+import { CasoPage } from './pages/medico/CasoPage';
 import { RootRedirect, RoleRoute } from './session/RoleRoute';
 
 export function AppRoutes() {
@@ -27,6 +28,7 @@ export function AppRoutes() {
       >
         <Route index element={<PacientesPage />} />
         <Route path="pacientes" element={<PacientesPage />} />
+        <Route path="casos/:casoId" element={<CasoPage />} />
         <Route path="inferencia" element={<PlaceholderPage titulo="Inferencia" />} />
       </Route>
 

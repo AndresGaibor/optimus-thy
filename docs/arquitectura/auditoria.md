@@ -9,7 +9,7 @@ objeto, y nadie puede corregir ese rastro después.
 | Grupo | Acciones |
 | --- | --- |
 | Sesión | `SESSION_START`, `SESSION_END`, `LOGIN_FAILED` |
-| Consultas | `PATIENT_READ`, `RECORD_READ`, `DOCUMENT_READ`, `IMAGE_READ` |
+| Consultas | `PATIENT_READ`, `RECORD_READ`, `DOCUMENT_READ`, `IMAGE_READ`, `INFERENCE_READ` |
 | Cargas | `DOCUMENT_UPLOAD`, `IMAGE_UPLOAD` |
 | Procesamiento | `INFERENCE_REQUEST` |
 | Exportaciones | `EXPORT` |
