@@ -14,6 +14,14 @@ Sistema web de gestión de datos clínicos con IA para cáncer de tiroides (tesi
 | `contracts/` | `openapi.json`, contrato de la API (lo exporta el backend) |
 | `docs/` | Requisitos, ADR, decisiones. `docs/referencia/` = paquete de consulta |
 
+## Producción y repo académico
+
+- Este repo (`optimus-thy-operativo`) es producción: el software que se despliega en `tiroides2.andresgaibor.com`.
+- El repo académico (`AndresGaibor/optimus`, copia local `../optimus-thy-academico`) conserva tesis, requisitos, backlog y evidencia, y recibe de forma progresiva las implementaciones que se construyen aquí.
+- La divergencia es esperada y permanente: esquema y migraciones de base de datos, módulos, configuración y dependencias evolucionan a distinto ritmo en cada repo. Ver `docs/adr/ADR-012-repo-produccion.md`.
+- Ningún cambio se copia entre repos en bloque: se entrega como PR adaptado a la base de datos y los módulos del repo destino, con revisión.
+- Planificación: OpenSpec manda (`openspec/`, skills `openspec-*`); no se abre un plan paralelo de Superpowers para el mismo cambio. Superpowers aporta el proceso (brainstorming, revisión, verificación), no un segundo plan.
+
 ## Comandos
 
 - `make up` / `make down`: entorno completo con Docker Compose, sin GPU.
