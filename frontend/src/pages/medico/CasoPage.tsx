@@ -13,10 +13,12 @@ import {
   SupportNotice,
 } from '../../design-system';
 import { obtenerCaso, type CasoDetalle } from '../../api/casos';
+import { listarConsentimientos, type Consentimiento } from '../../api/consentimientos';
 import { listarImagenes, subirImagen, type ImagenCaso } from '../../api/imagenes';
 import { listarResultados, type Inferencia } from '../../api/resultados';
 import { consultarTrabajo, encolarInferencia } from '../../api/trabajos';
 import { GaleriaImagenes } from './GaleriaImagenes';
+import { ConsentimientosCaso } from './ConsentimientosCaso';
 import { ResultadoInferencia } from './ResultadoInferencia';
 
 const INTERVALO_MS = 3000;
@@ -26,6 +28,7 @@ export function CasoPage() {
   const [caso, setCaso] = useState<CasoDetalle | null>(null);
   const [imagenes, setImagenes] = useState<ImagenCaso[]>([]);
   const [resultados, setResultados] = useState<Inferencia[]>([]);
+  const [consentimientos, setConsentimientos] = useState<Consentimiento[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
@@ -46,14 +49,16 @@ export function CasoPage() {
     setCargando(true);
     setError(null);
     try {
-      const [datosCaso, datosImagenes, datosResultados] = await Promise.all([
+      const [datosCaso, datosImagenes, datosResultados, datosConsentimientos] = await Promise.all([
         obtenerCaso(casoId),
         listarImagenes(casoId),
         listarResultados(casoId),
+        listarConsentimientos(casoId),
       ]);
       setCaso(datosCaso);
       setImagenes(datosImagenes);
       setResultados(datosResultados);
+      setConsentimientos(datosConsentimientos);
     } catch {
       setError('No se pudo cargar el caso. Inténtalo de nuevo.');
     } finally {
@@ -133,6 +138,11 @@ export function CasoPage() {
         actions={<Button onClick={() => setSubidaAbierta(true)}>Subir ecografía</Button>}
       />
       <SupportNotice context="inferencia" />
+      <ConsentimientosCaso
+        casoId={casoId}
+        consentimientos={consentimientos}
+        onCambio={() => void cargar()}
+      />
       {error ? (
         <Callout tone="danger" title="Error" role="alert">
           {error}
@@ -156,6 +166,10 @@ export function CasoPage() {
           <GaleriaImagenes
             imagenes={imagenes}
             analizando={analizando}
+            puedeAnalizar={consentimientos.some(
+              (consentimiento) =>
+                consentimiento.vigente && consentimiento.base_legal === 'atencion_de_salud',
+            )}
             onAnalizar={(imagen) => void analizar(imagen)}
           />
         )}
