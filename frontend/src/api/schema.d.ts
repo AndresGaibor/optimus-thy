@@ -340,9 +340,9 @@ export interface components {
         CrearTrabajoRequest: {
             /**
              * Tipo
-             * @enum {string}
+             * @constant
              */
-            tipo: "ocr" | "inferencia";
+            tipo: "inferencia";
             /** Payload */
             payload: {
                 [key: string]: unknown;

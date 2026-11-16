@@ -1,7 +1,6 @@
 # Modelo de datos v1
 
 ## Diagrama
-![Diagrama entidad-relación del modelo de datos v1: vista conceptual](modelo-de-datos-v1.png)
 
 ```mermaid
 erDiagram
@@ -20,8 +19,6 @@ erDiagram
     casos ||--o{ documentos : adjunta
     casos ||--o{ imagenes : contiene
     casos ||--o{ consentimientos : requiere
-    documentos ||--o{ extracciones_ocr : procesa
-    extracciones_ocr ||--o{ campos_ocr : extrae
     imagenes ||--o{ inferencias : analiza
     modelos_ia ||--o{ inferencias : ejecuta
     inferencias ||--o{ nodulos : detecta
@@ -44,15 +41,13 @@ erDiagram
 | pacientes | Paciente seudonimizado (sin datos personales) | RF-PAC-02, A10 |
 | identidades_paciente | Identidad cifrada aparte | RF-PAC-02, A10 |
 | casos | Caso clínico | RF-PAC-01 |
-| fichas_clinicas | Ficha con valores tipados y origen_datos | RF-CLI-05/06 |
+| fichas_clinicas | Ficha con valores clínicos tipados | RF-CLI-05/06 |
 | fichas_versiones | Historial con snapshot | RF-CLI-05 |
 | documentos | Documentos con hash y versión (S3) | RF-DOC-03/04, A9 |
-| extracciones_ocr | Extracción OCR con estado | RF-DOC-05/06/08 |
-| campos_ocr | Campos OCR con confianza | RF-DOC-05/06/08 |
 | imagenes | Imágenes sin metadatos EXIF/DICOM | RF-IMG-03 |
 | modelos_ia | Modelos IA versionados | RF-INF-05/06/07 |
-| inferencias | Inferencia inmutable | RF-INF-05/06/07, RIA-05/06 |
-| nodulos | Hasta 3 nódulos por imagen | RF-INF-13/14 |
+| inferencias | Resultado de inferencia con modelo versionado | RF-INF-05/06/07, RIA-05 |
+| nodulos | Nódulo detectado con caja y confianza | RF-INF-13/14 |
 | decisiones_medicas | Decisión médica separada | RF-INF-09 |
 | consentimientos | Consentimiento con base legal y vigencia | RF-PAC-06/07 |
 | auditoria | Auditoría solo inserción | RF-AUD-08/09, A13 |
@@ -63,8 +58,9 @@ erDiagram
 - Auditoría insert-only: sin `actualizado_en`; PK `BigInteger` con `Identity`; nunca datos clínicos.
 - Enums por CHECK: `String` + `CheckConstraint`, no `ENUM` nativo.
 - PK UUID con `gen_random_uuid()`.
-- Ficha: columnas tipadas para valores clínicos + `origen_datos` JSONB (campo → digitado/ocr_confirmado) + `fichas_versiones` con `snapshot` JSONB para historial.
+- Ficha: columnas tipadas para valores clínicos + `fichas_versiones` con `snapshot` JSONB para historial.
 - Documentos nunca sobrescritos: unique (caso_id, nombre_original, version).
 - Nódulos: `indice` 1..3 con unique (inferencia_id, indice).
-- Inferencia inmutable: sin `actualizado_en`; resultado en benigno/maligno/sin_nodulo.
+- Inferencia sin `actualizado_en`: resultado en benigno/maligno/sin_nodulo; el nódulo guarda caja y confianza del detector, sin máscara.
+- Sin OCR en producción: no existen `extracciones_ocr` ni `campos_ocr` (ADR-020).
 - Sin nódulos no se clasifica (RF-INF-13/14): manejado en lógica; el esquema permite cero nódulos.

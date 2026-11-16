@@ -36,14 +36,6 @@ services:
           cpus: "0.50"
           memory: 256m
 
-  ocr:
-    image: ${IMAGE_PREFIX:?IMAGE_PREFIX requerido}-ocr:${RELEASE:?RELEASE requerido}
-    deploy:
-      resources:
-        limits:
-          cpus: "1.00"
-          memory: 1g
-
   ia:
     image: ${IMAGE_PREFIX:?IMAGE_PREFIX requerido}-ia:${RELEASE:?RELEASE requerido}
     deploy:

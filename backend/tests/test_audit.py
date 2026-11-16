@@ -59,7 +59,6 @@ def test_registra_las_acciones_del_anteproyecto(sesion: Session, usuario: Usuari
         (AuditAction.IMAGE_READ, AuditModule.FILES),
         (AuditAction.DOCUMENT_UPLOAD, AuditModule.FILES),
         (AuditAction.IMAGE_UPLOAD, AuditModule.FILES),
-        (AuditAction.OCR_REQUEST, AuditModule.OCR),
         (AuditAction.INFERENCE_REQUEST, AuditModule.INFERENCE),
         (AuditAction.EXPORT, AuditModule.EXPORT),
         (AuditAction.USER_CREATE, AuditModule.ADMIN),

@@ -940,10 +940,7 @@
         "properties": {
           "tipo": {
             "type": "string",
-            "enum": [
-              "ocr",
-              "inferencia"
-            ],
+            "const": "inferencia",
             "title": "Tipo"
           },
           "payload": {

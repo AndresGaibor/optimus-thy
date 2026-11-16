@@ -19,7 +19,7 @@ router = APIRouter(tags=["trabajos"])
 
 
 class CrearTrabajoRequest(BaseModel):
-    tipo: Literal["ocr", "inferencia"]
+    tipo: Literal["inferencia"]
     payload: dict[str, Any]
 
 

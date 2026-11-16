@@ -23,7 +23,7 @@ from app.models.trabajos import Trabajo
 logger = logging.getLogger("optimus_thy.jobs")
 
 #: Tipos que el sistema sabe procesar; el resto se rechaza al encolar.
-TIPOS = ("ocr", "inferencia")
+TIPOS = ("inferencia",)
 
 
 def encolar(

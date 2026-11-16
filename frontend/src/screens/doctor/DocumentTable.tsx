@@ -12,20 +12,18 @@ import {
 } from '../../design-system';
 import type { DocumentoCasoDemo } from '../fixtures/documentos-extra';
 
-function EstadoOcr({ estado }: { estado: DocumentoCasoDemo['estadoOcr'] }) {
+function EstadoDocumento({ estado }: { estado: DocumentoCasoDemo['estado'] }) {
   const config: Record<string, { tone: BadgeTone; label: string }> = {
-    Listo: { tone: 'success', label: 'OCR procesado' },
-    Procesado: { tone: 'success', label: 'OCR procesado' },
-    'Sin procesar': { tone: 'neutral', label: 'OCR pendiente' },
-    Pendiente: { tone: 'neutral', label: 'OCR pendiente' },
-    'En cola': { tone: 'info', label: 'OCR en cola' },
-    Procesando: { tone: 'info', label: 'OCR procesando' },
-    'En ejecución': { tone: 'info', label: 'OCR en ejecución' },
-    Error: { tone: 'danger', label: 'OCR error' },
+    Listo: { tone: 'success', label: 'Listo' },
+    Procesado: { tone: 'success', label: 'Procesado' },
+    Pendiente: { tone: 'neutral', label: 'Pendiente' },
+    'En cola': { tone: 'info', label: 'En cola' },
+    Procesando: { tone: 'info', label: 'Procesando' },
+    Error: { tone: 'danger', label: 'Error' },
   };
   const item = config[estado] ?? {
     tone: 'neutral' as BadgeTone,
-    label: `OCR ${estado.toLowerCase()}`,
+    label: estado,
   };
   return <Badge tone={item.tone}>{item.label}</Badge>;
 }
@@ -56,7 +54,7 @@ export function DocumentTable({
             <TableHead>Documento</TableHead>
             <TableHead>Tipo</TableHead>
             <TableHead>Tamaño</TableHead>
-            <TableHead>Estado OCR</TableHead>
+            <TableHead>Estado</TableHead>
             <TableHead>Subido por</TableHead>
             <TableHead>Fecha</TableHead>
             <TableHead>Acciones</TableHead>
@@ -74,7 +72,7 @@ export function DocumentTable({
               </TableCell>
               <TableCell>{document.tamano}</TableCell>
               <TableCell>
-                <EstadoOcr estado={document.estadoOcr} />
+                <EstadoDocumento estado={document.estado} />
               </TableCell>
               <TableCell>{document.subidoPor}</TableCell>
               <TableCell>{document.fecha}</TableCell>

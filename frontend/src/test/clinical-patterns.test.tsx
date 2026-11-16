@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
-import { AiResultCard, ImageViewer, OcrField, PatientCard, SupportNotice } from '../design-system';
+import { AiResultCard, ImageViewer, PatientCard, SupportNotice } from '../design-system';
 
 describe('Patrones clínicos', () => {
   it('muestra el seudónimo y aclara que la tarjeta no presenta datos identificatorios', () => {
@@ -58,21 +58,6 @@ describe('Patrones clínicos', () => {
     render(<SupportNotice context="inferencia" />);
 
     expect(screen.getByRole('note')).toHaveTextContent('no constituye un diagnóstico');
-  });
-
-  it('muestra la confianza OCR en texto además de la barra', () => {
-    render(
-      <OcrField label="Localización" value="Lóbulo izquierdo" confidence={0.86} source="ocr" />,
-    );
-
-    expect(screen.getByText(/Confianza: 86/)).toBeInTheDocument();
-    expect(
-      screen.getByRole('progressbar', {
-        name: 'Confianza del campo Localización',
-      }),
-    ).toHaveAttribute('aria-valuenow', '86');
-    expect(screen.getByText('Pendiente de confirmación')).toBeInTheDocument();
-    expect(screen.getByText('Origen: OCR')).toBeInTheDocument();
   });
 
   it('ofrece controles de zoom con nombres accesibles y actualiza la ampliación', async () => {

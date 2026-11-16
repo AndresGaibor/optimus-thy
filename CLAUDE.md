@@ -9,7 +9,6 @@ Sistema web de gestión de datos clínicos con IA para cáncer de tiroides (tesi
 | `frontend/` | React + TypeScript + Vite, gestor `bun` |
 | `backend/` | Python 3.12, FastAPI, SQLAlchemy, Alembic, PostgreSQL |
 | `ia/` | Servicio de IA aparte (cadena YOLO, MGAC, BGAU-Net, Swin) |
-| `ocr/` | OCR local: Tesseract (español) + PyMuPDF + reglas por campo |
 | `infra/` | Docker, scripts y configuración de despliegue |
 | `contracts/` | `openapi.json`, contrato de la API (lo exporta el backend) |
 | `docs/` | Requisitos, ADR, decisiones. `docs/referencia/` = paquete de consulta |

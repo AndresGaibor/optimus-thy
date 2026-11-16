@@ -54,14 +54,6 @@ def test_unique_documentos() -> None:
     )
 
 
-def test_check_confianza_campos_ocr() -> None:
-    table = Base.metadata.tables["campos_ocr"]
-    checks = [
-        str(c.sqltext) for c in table.constraints if c.__class__.__name__ == "CheckConstraint"
-    ]
-    assert any("confianza" in c and ">=" in c and "<=" in c for c in checks)
-
-
 def test_tablas_modelo_coinciden_con_metadata() -> None:
     assert set(TABLAS_MODELO) == set(Base.metadata.tables.keys())
     assert len(TABLAS_MODELO) == len(set(TABLAS_MODELO))

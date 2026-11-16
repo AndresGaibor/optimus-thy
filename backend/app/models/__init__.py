@@ -5,7 +5,7 @@ from __future__ import annotations
 from app.db import Base
 from app.models.auditoria import Auditoria
 from app.models.consentimientos import Consentimiento
-from app.models.documentos import CampoOCR, Documento, ExtraccionOCR
+from app.models.documentos import Documento
 from app.models.fichas import Caso, FichaClinica, FichaVersion
 from app.models.imagenes import DecisionMedica, Imagen, Inferencia, ModeloIA, Nodulo
 from app.models.instituciones import Institucion
@@ -17,12 +17,10 @@ from app.models.usuarios import Permiso, Rol, RolPermiso, Usuario, UsuarioRol
 __all__ = [
     "Auditoria",
     "Base",
-    "CampoOCR",
     "Caso",
     "Consentimiento",
     "DecisionMedica",
     "Documento",
-    "ExtraccionOCR",
     "FichaClinica",
     "FichaVersion",
     "IdentidadPaciente",
@@ -54,8 +52,6 @@ TABLAS: list[str] = [
     "fichas_clinicas",
     "fichas_versiones",
     "documentos",
-    "extracciones_ocr",
-    "campos_ocr",
     "imagenes",
     "modelos_ia",
     "inferencias",

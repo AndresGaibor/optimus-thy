@@ -71,7 +71,7 @@ const errorCategories: DemoErrorCategory[] = [
     descripcion: 'Categoría ilustrativa para la tabla.',
   },
   {
-    tipo: 'Campo OCR de ejemplo',
+    tipo: 'Campo de ejemplo',
     cantidad: 9,
     porcentaje: 11.4,
     severidad: 'Media',

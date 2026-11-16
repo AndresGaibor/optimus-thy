@@ -79,8 +79,6 @@ export { Field } from './components/molecules/Field';
 export type { FieldProps } from './components/molecules/Field';
 export { FilterBar } from './components/molecules/FilterBar';
 export type { FilterBarProps } from './components/molecules/FilterBar';
-export { OcrField } from './components/molecules/OcrField';
-export type { OcrFieldProps, OcrSource } from './components/molecules/OcrField';
 export { PageHeader } from './components/molecules/PageHeader';
 export type { PageHeaderProps } from './components/molecules/PageHeader';
 export { PatientCard } from './components/molecules/PatientCard';

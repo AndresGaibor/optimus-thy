@@ -8,14 +8,13 @@ Visión general de las capas del monorepo, el flujo de datos y las fuentes de ve
 
 ## Capas del monorepo
 
-| Directorio   | Rol                                                 | Tecnologías principales                                                                       |
-| ------------ | --------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| `frontend/`  | Interfaz web y catálogo de componentes              | React 18.3, TypeScript 5.7, Vite 6, Tailwind 4, bun 1.4, Storybook 10.6.6                     |
-| `backend/`   | API de aplicación y lógica de negocio               | FastAPI, SQLAlchemy 2, Alembic, Pydantic v2, mypy (strict), ruff, pytest                      |
-| `ia/`        | Servicios de apoyo con inteligencia artificial      | Módulos de apoyo a la revisión clínica; no diagnostican ni sustituyen el criterio profesional |
-| `ocr/`       | Procesamiento de documentos y reconocimiento óptico | Extracción y normalización de texto desde documentos                                          |
-| `infra/`     | Operación y despliegue                              | nginx, systemd, respaldos                                                                     |
-| `contracts/` | Contrato de interfaz entre frontend y backend       | `openapi.json` (OpenAPI 3.1.0)                                                                |
+| Directorio   | Rol                                            | Tecnologías principales                                                                       |
+| ------------ | ---------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `frontend/`  | Interfaz web y catálogo de componentes         | React 18.3, TypeScript 5.7, Vite 6, Tailwind 4, bun 1.4, Storybook 10.6.6                     |
+| `backend/`   | API de aplicación y lógica de negocio          | FastAPI, SQLAlchemy 2, Alembic, Pydantic v2, mypy (strict), ruff, pytest                      |
+| `ia/`        | Servicios de apoyo con inteligencia artificial | Módulos de apoyo a la revisión clínica; no diagnostican ni sustituyen el criterio profesional |
+| `infra/`     | Operación y despliegue                         | nginx, systemd, respaldos                                                                     |
+| `contracts/` | Contrato de interfaz entre frontend y backend  | `openapi.json` (OpenAPI 3.1.0)                                                                |
 
 ## Flujo de datos
 
@@ -28,7 +27,6 @@ frontend  →  /api  →  backend  →  PostgreSQL
 - El **frontend** consume la API bajo el prefijo `/api`.
 - El **backend** expone endpoints FastAPI, valida datos con Pydantic v2 y persiste en **PostgreSQL** mediante SQLAlchemy 2 y migraciones Alembic.
 - El servicio **`ia/`** provee apoyo a la revisión clínica; sus resultados se comunican como observación de apoyo que requiere revisión médica.
-- **`ocr/`** procesa documentos cuando el flujo lo requiere.
 
 ## Contrato y tipos
 

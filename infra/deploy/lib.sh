@@ -99,7 +99,7 @@ default = networks.get('default') or {}
 if default.get('name') != network:
     raise SystemExit(f"network default.name={default.get('name')!r} no coincide con COMPOSE_NETWORK={network!r}")
 services = config.get('services') or {}
-for service in ('backend', 'frontend', 'ocr', 'ia'):
+for service in ('backend', 'frontend', 'ia'):
     image = (services.get(service) or {}).get('image') or ''
     expected = f"{prefix}-{service}:"
     if not image.startswith(expected):
@@ -148,6 +148,6 @@ PY
 image_ids() {
   local release="$1"
   [[ -n "$IMAGE_PREFIX" ]] || die "IMAGE_PREFIX vacío: no se pueden calcular etiquetas de imagen"
-  printf '{"backend":"%s-backend:%s","frontend":"%s-frontend:%s","ocr":"%s-ocr:%s","ia":"%s-ia:%s"}' \
-    "$IMAGE_PREFIX" "$release" "$IMAGE_PREFIX" "$release" "$IMAGE_PREFIX" "$release" "$IMAGE_PREFIX" "$release"
+  printf '{"backend":"%s-backend:%s","frontend":"%s-frontend:%s","ia":"%s-ia:%s"}' \
+    "$IMAGE_PREFIX" "$release" "$IMAGE_PREFIX" "$release" "$IMAGE_PREFIX" "$release"
 }
