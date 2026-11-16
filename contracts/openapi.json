@@ -775,6 +775,128 @@
         }
       }
     },
+    "/modelos-ia": {
+      "get": {
+        "tags": [
+          "modelos-ia"
+        ],
+        "summary": "Listar Modelos",
+        "operationId": "listar_modelos_modelos_ia_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ModeloOut"
+                  },
+                  "type": "array",
+                  "title": "Response Listar Modelos Modelos Ia Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "modelos-ia"
+        ],
+        "summary": "Cargar Modelo",
+        "operationId": "cargar_modelo_modelos_ia_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_cargar_modelo_modelos_ia_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModeloOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
+      }
+    },
+    "/modelos-ia/{id}/activar": {
+      "post": {
+        "tags": [
+          "modelos-ia"
+        ],
+        "summary": "Activar Modelo",
+        "operationId": "activar_modelo_modelos_ia__id__activar_post",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModeloOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/auth/login": {
       "post": {
         "tags": [
@@ -899,6 +1021,30 @@
   },
   "components": {
     "schemas": {
+      "Body_cargar_modelo_modelos_ia_post": {
+        "properties": {
+          "archivo": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "Archivo"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          }
+        },
+        "type": "object",
+        "required": [
+          "archivo",
+          "nombre",
+          "version"
+        ],
+        "title": "Body_cargar_modelo_modelos_ia_post"
+      },
       "CrearPacienteRequest": {
         "properties": {
           "nombres": {
@@ -1048,6 +1194,58 @@
           "password"
         ],
         "title": "LoginRequest"
+      },
+      "ModeloOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "hash_pesos": {
+            "type": "string",
+            "title": "Hash Pesos"
+          },
+          "ruta_pesos": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ruta Pesos"
+          },
+          "activo": {
+            "type": "boolean",
+            "title": "Activo"
+          },
+          "creado_en": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Creado En"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "nombre",
+          "version",
+          "hash_pesos",
+          "ruta_pesos",
+          "activo",
+          "creado_en"
+        ],
+        "title": "ModeloOut"
       },
       "PacienteOut": {
         "properties": {

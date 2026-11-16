@@ -8,9 +8,11 @@ detectores, segmentadores y clasificadores controlados.
 from __future__ import annotations
 
 import json
+import xml.etree.ElementTree as ET
 from collections.abc import Sequence
 from typing import Any
 
+import cv2
 import numpy as np
 import pytest
 
@@ -91,6 +93,10 @@ def imagen_sintetica(lado: int = 120) -> np.ndarray:
     imagen = np.full((lado, lado, 3), 40, dtype=np.uint8)
     imagen[lado // 4 : 3 * lado // 4, lado // 4 : 3 * lado // 4] = 180
     return imagen
+
+
+def decodificar_png(datos: bytes, banderas: int) -> np.ndarray:
+    return cv2.imdecode(np.frombuffer(datos, dtype=np.uint8), banderas)
 
 
 def test_sin_detecciones_devuelve_sin_nodulo() -> None:
@@ -265,3 +271,54 @@ def test_postprocesar_mascara_recorta_a_la_caja() -> None:
     assert np.count_nonzero(procesada[:20, :]) == 0
     assert np.count_nonzero(procesada[:, :20]) == 0
     assert np.count_nonzero(procesada[20:60, 20:60]) == 40 * 40
+
+
+def test_sin_artefactos_el_nodulo_no_los_trae() -> None:
+    modelos_ia, _ = modelos([Deteccion(caja=Caja(30, 30, 90, 90), confianza=0.9)])
+
+    resultado = analizar_imagen(imagen_sintetica(), modelos=modelos_ia, config=configuracion())
+
+    nodulo = resultado.nodulos[0]
+    assert nodulo.artefactos is None
+    assert "mascara_png" not in nodulo.a_diccionario()
+
+
+def test_con_artefactos_adjunta_mascaras_xml_y_superposicion() -> None:
+    imagen = imagen_sintetica()
+    modelos_ia, _ = modelos([Deteccion(caja=Caja(30, 30, 90, 90), confianza=0.9)])
+
+    resultado = analizar_imagen(
+        imagen,
+        modelos=modelos_ia,
+        config=configuracion(),
+        con_artefactos=True,
+        nombre_imagen="eco.png",
+    )
+
+    nodulo = resultado.nodulos[0]
+    artefactos = nodulo.artefactos
+    assert artefactos is not None
+    assert set(nodulo.a_diccionario()) >= {
+        "mascara_png",
+        "mgac_png",
+        "xml",
+        "superposicion_png",
+    }
+
+    raiz = ET.fromstring(artefactos.xml)
+    assert raiz.findtext("filename") == "eco.png"
+    assert raiz.findtext("source/original_image") == "eco.png"
+    assert raiz.findtext("source/confidence") == "0.90000000"
+    assert raiz.findtext("size/width") == "120"
+    assert raiz.findtext("size/height") == "120"
+    assert raiz.findtext("object/bndbox/xmin") == "30"
+
+    for png in (artefactos.mascara_png, artefactos.mgac_png, artefactos.superposicion_png):
+        assert png.startswith(b"\x89PNG\r\n\x1a\n")
+
+    mascara = decodificar_png(artefactos.mascara_png, cv2.IMREAD_GRAYSCALE)
+    assert mascara.shape == imagen.shape[:2]
+    assert np.count_nonzero(mascara) == nodulo.pixeles_mascara
+
+    superposicion = decodificar_png(artefactos.superposicion_png, cv2.IMREAD_COLOR)
+    assert superposicion.shape == imagen.shape

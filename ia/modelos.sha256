@@ -1,0 +1,4 @@
+# SHA-256 de los pesos de IA (release modelos-idi-086-v1); se verifican al descargar y nunca se versionan los binarios.
+c959ea7bd4108fc78ca3cabe1cceb14d1dcfdd2b5618d7fc520c123ff1e9ad7f  best_bgaunet.keras
+15f0ba4e5cf14e76d75c79b150fc8d2f43ec1e43b39699db50ebe9a243c6dd53  best_swin.pth
+971360750d2a3e8518a0443b8fe6d830bc08ee5b6a56bfaafdb2f1101d45ce4e  best_yolo.pt

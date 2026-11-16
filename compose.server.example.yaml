@@ -21,6 +21,11 @@ services:
 
   backend:
     image: ${IMAGE_PREFIX:?IMAGE_PREFIX requerido}-backend:${RELEASE:?RELEASE requerido}
+    environment:
+      MODELOS_DIR: /modelos
+      IA_URL: ${IA_URL:-http://ia:8002}
+    volumes:
+      - ${IA_MODELOS_DIR:-./var/modelos}:/modelos
     ports: !override []
     deploy:
       resources:
@@ -38,6 +43,10 @@ services:
 
   ia:
     image: ${IMAGE_PREFIX:?IMAGE_PREFIX requerido}-ia:${RELEASE:?RELEASE requerido}
+    environment:
+      IA_MODELOS_DIR: /modelos
+    volumes:
+      - ${IA_MODELOS_DIR:-./var/modelos}:/modelos:ro
     deploy:
       resources:
         limits:

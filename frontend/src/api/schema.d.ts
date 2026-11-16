@@ -247,6 +247,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/modelos-ia": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listar Modelos */
+        get: operations["listar_modelos_modelos_ia_get"];
+        put?: never;
+        /** Cargar Modelo */
+        post: operations["cargar_modelo_modelos_ia_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/modelos-ia/{id}/activar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Activar Modelo */
+        post: operations["activar_modelo_modelos_ia__id__activar_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/login": {
         parameters: {
             query?: never;
@@ -319,6 +354,15 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** Body_cargar_modelo_modelos_ia_post */
+        Body_cargar_modelo_modelos_ia_post: {
+            /** Archivo */
+            archivo: string;
+            /** Nombre */
+            nombre: string;
+            /** Version */
+            version: string;
+        };
         /**
          * CrearPacienteRequest
          * @description Solo los datos mínimos para identificar a la persona (RF-PAC-01).
@@ -383,6 +427,29 @@ export interface components {
             correo: string;
             /** Password */
             password: string;
+        };
+        /** ModeloOut */
+        ModeloOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Nombre */
+            nombre: string;
+            /** Version */
+            version: string;
+            /** Hash Pesos */
+            hash_pesos: string;
+            /** Ruta Pesos */
+            ruta_pesos: string | null;
+            /** Activo */
+            activo: boolean;
+            /**
+             * Creado En
+             * Format: date-time
+             */
+            creado_en: string;
         };
         /** PacienteOut */
         PacienteOut: {
@@ -925,6 +992,90 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listar_modelos_modelos_ia_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModeloOut"][];
+                };
+            };
+        };
+    };
+    cargar_modelo_modelos_ia_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_cargar_modelo_modelos_ia_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModeloOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    activar_modelo_modelos_ia__id__activar_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModeloOut"];
                 };
             };
             /** @description Validation Error */
