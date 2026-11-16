@@ -1,7 +1,7 @@
 export type BadgeTone = 'neutral' | 'info' | 'success' | 'warning' | 'attention' | 'danger' | 'ai';
 
 export type RoleKey = 'medico' | 'investigador' | 'administrador';
-export type RecordStatus = 'Completa' | 'En OCR' | 'Revisión' | 'Pendiente';
+export type RecordStatus = 'Completa' | 'Revisión' | 'Pendiente';
 export type InferenceStatus = 'Completado' | 'En cola' | 'En proceso' | 'Error';
 export type UserActivityStatus = 'Activo' | 'Inactivo';
 export type DatasetRequestStatus = 'pendiente' | 'aprobado' | 'rechazado';
@@ -22,7 +22,6 @@ export const ROLE_TONE_CLASSES: Record<RoleKey, string> = {
 
 export const RECORD_STATUS_TONES: Record<RecordStatus, BadgeTone> = {
   Completa: 'success',
-  'En OCR': 'info',
   Revisión: 'warning',
   Pendiente: 'warning',
 };

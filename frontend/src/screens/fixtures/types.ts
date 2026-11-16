@@ -35,7 +35,6 @@ export interface DemoRecord {
   tipo: string;
   estado: RecordStatus;
   paginas: number;
-  ocrConfianza: number;
   /** URL de imagen de prueba solo para el catálogo; la app no la define. */
   src?: string;
 }

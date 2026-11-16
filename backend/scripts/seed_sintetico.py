@@ -178,25 +178,6 @@ def sembrar(
         tipo_consulta = rng.choice(TIPOS_CONSULTA)
         fecha_lab = date(2024, 1, 1) + timedelta(days=rng.randint(0, 700))
 
-        origen_datos = {
-            "tsh": "digitado",
-            "tsh_unidad": "digitado",
-            "tsh_fecha": "digitado",
-            "t3": "digitado",
-            "t3_unidad": "digitado",
-            "t3_fecha": "digitado",
-            "t4": "digitado",
-            "t4_unidad": "digitado",
-            "t4_fecha": "digitado",
-            "tamano_nodulo_mm": "digitado",
-            "lateralidad": "digitado",
-            "tirads": "digitado",
-            "bethesda": "digitado",
-            "cie10": "digitado",
-            "tipo_diagnostico": "digitado",
-            "tipo_consulta": "digitado",
-        }
-
         ficha = FichaClinica(
             caso_id=caso.id,
             tsh=tsh,
@@ -215,7 +196,6 @@ def sembrar(
             cie10=cie10,
             tipo_diagnostico=tipo_diagnostico,
             tipo_consulta=tipo_consulta,
-            origen_datos=origen_datos,
         )
         session.add(ficha)
         session.flush()
@@ -237,7 +217,6 @@ def sembrar(
             "cie10": cie10,
             "tipo_diagnostico": tipo_diagnostico,
             "tipo_consulta": tipo_consulta,
-            "origen_datos": origen_datos,
             "etiqueta_referencia": etiqueta,
         }
         version = FichaVersion(

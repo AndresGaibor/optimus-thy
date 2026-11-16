@@ -99,9 +99,6 @@ class Inferencia(Base):
     resultado: Mapped[str] = mapped_column(sa.String(32), nullable=False)
     confianza: Mapped[float | None] = mapped_column(sa.Float)
     tiempo_ms: Mapped[int | None] = mapped_column(sa.Integer)
-    inmutable: Mapped[bool] = mapped_column(
-        sa.Boolean, nullable=False, server_default=sa.text("true")
-    )
     creado_en: Mapped[sa.DateTime] = mapped_column(
         sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.func.now()
     )
@@ -147,7 +144,6 @@ class Nodulo(Base):
     caja_w: Mapped[float | None] = mapped_column(sa.Float)
     caja_h: Mapped[float | None] = mapped_column(sa.Float)
     confianza: Mapped[float | None] = mapped_column(sa.Float)
-    mascara_ruta_s3: Mapped[str | None] = mapped_column(sa.String(512))
     creado_en: Mapped[sa.DateTime] = mapped_column(
         sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.func.now()
     )

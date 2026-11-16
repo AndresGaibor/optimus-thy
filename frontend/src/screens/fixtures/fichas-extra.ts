@@ -25,7 +25,6 @@ export const fichaCompletaDemo: FichaCompleta = {
     tipo: 'Consulta general',
     estado: 'Completa',
     paginas: 4,
-    ocrConfianza: 96,
   },
   profesional: 'Médico de demostración',
   cerrada: false,

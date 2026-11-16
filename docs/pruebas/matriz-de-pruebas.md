@@ -4,6 +4,8 @@ Una fila por requisito de prioridad **M** del catálogo. Cada fila tiene su caso
 prueba, el resultado, la evidencia y el error asociado. El catálogo completo, con
 el texto íntegro de cada requisito, está en `docs/referencia/04-requisitos/catalogo-de-requisitos.md`.
 
+El OCR no forma parte del operativo (ADR-020): los requisitos RF-DOC-05/06/07/08 y RI-05 se verifican solo en el repo académico y quedan fuera de alcance en esta matriz.
+
 ## Cómo se mantiene
 
 - **Caso de prueba**: identificador `CP-###`, estable. El detalle del caso vive en

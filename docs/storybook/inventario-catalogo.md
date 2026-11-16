@@ -300,7 +300,7 @@ Historias: Contenido Largo, Playground, Predeterminada, Tono Correcto, Tono Info
 Para mostrar un estado conocido de los tipos compartidos en `tones.ts`
 
 Contenido: Docs + 13 historias. Fuente: `./src/design-system/components/molecules/StatusBadge.stories.tsx`.
-Historias: Ficha Completa, Ficha En OCR, Ficha En Revisión, Ficha Pendiente, Inferencia Completada, Inferencia Con Error, Inferencia En Cola, Inferencia En Proceso, Playground, Solicitud Aprobada, Solicitud Pendiente, Solicitud Rechazada, Usuario Activo.
+Historias: Ficha Completa, Ficha En Revisión, Ficha Pendiente, Inferencia Completada, Inferencia Con Error, Inferencia En Cola, Inferencia En Proceso, Playground, Solicitud Aprobada, Solicitud Pendiente, Solicitud Rechazada, Usuario Activo.
 
 ### Sistema de diseño/Moléculas/SupportNotice
 

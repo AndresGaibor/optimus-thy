@@ -22,7 +22,7 @@ separación entre `pacientes` e `identidades_paciente` viene del modelo v1
 (HT-006) y es lo que permite que el resto del sistema trabaje sin datos
 personales.
 
-Las imágenes y documentos no se cifran byte por byte (haría inviable el OCR y la
+Las imágenes y documentos no se cifran byte por byte (haría inviable la
 inferencia); su protección es el bucket privado con enlaces firmados de corta
 duración (HT-007).
 

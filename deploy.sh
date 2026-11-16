@@ -169,10 +169,10 @@ case "$command_name" in
     export RELEASE="$sha"
     export RELEASE_DIR="$RELEASES_DIR/$sha"
     build_output="$(build_release "$sha")"
-    [[ "$(printf '%s\n' "$build_output" | wc -l)" -eq 4 ]] || die "build no devolvió exactamente cuatro imágenes"
+    [[ "$(printf '%s\n' "$build_output" | wc -l)" -eq 3 ]] || die "build no devolvió exactamente tres imágenes"
     image_ids='{}'
     while IFS='=' read -r service image_id; do
-      case "$service" in backend|frontend|ocr|ia) ;; *) continue ;; esac
+      case "$service" in backend|frontend|ia) ;; *) continue ;; esac
       image_ids="$(python3 - "$image_ids" "$service" "$image_id" <<'PY'
 import json, sys
 value = json.loads(sys.argv[1]); value[sys.argv[2]] = sys.argv[3]; print(json.dumps(value, separators=(',', ':')))
@@ -182,11 +182,11 @@ PY
     images="$(python3 - "$IMAGE_PREFIX" "$sha" <<'PY'
 import json, sys
 prefix, sha = sys.argv[1:]
-print(json.dumps({name: f'{prefix}-{name}:{sha}' for name in ('backend', 'frontend', 'ocr', 'ia')}, separators=(',', ':')))
+print(json.dumps({name: f'{prefix}-{name}:{sha}' for name in ('backend', 'frontend', 'ia')}, separators=(',', ':')))
 PY
 )"
-    [[ "$(python3 -c 'import json,sys; print(len(json.load(sys.stdin)))' <<<"$images")" -eq 4 ]] || die "no se registraron todas las etiquetas de imagen"
-    [[ "$(python3 -c 'import json,sys; print(len(json.load(sys.stdin)))' <<<"$image_ids")" -eq 4 ]] || die "no se registraron todos los IDs de imagen"
+    [[ "$(python3 -c 'import json,sys; print(len(json.load(sys.stdin)))' <<<"$images")" -eq 3 ]] || die "no se registraron todas las etiquetas de imagen"
+    [[ "$(python3 -c 'import json,sys; print(len(json.load(sys.stdin)))' <<<"$image_ids")" -eq 3 ]] || die "no se registraron todos los IDs de imagen"
     previous=''
     [[ -f "$DEPLOYMENTS_DIR/current.json" ]] && previous="$(json_get "$DEPLOYMENTS_DIR/current.json" release 2>/dev/null || true)"
     if stack_has_postgres; then
@@ -204,7 +204,7 @@ PY
     (( ${#revisions[@]} == 2 )) || die "no se pudieron registrar revisiones Alembic"
     db_before="${revisions[0]}"; db_after="${revisions[1]}"
     verify_compose_target
-    compose up -d --no-build --wait --wait-timeout 180 backend frontend ocr ia edge
+    compose up -d --no-build --wait --wait-timeout 180 backend frontend ia edge
     check_health "$sha" >/dev/null
     deployed_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
     result='success'

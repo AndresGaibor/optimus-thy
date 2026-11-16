@@ -1,7 +1,5 @@
 import type { RoleKey } from '../../design-system/tones';
 
-export type OcrEstado = 'En cola' | 'Procesando' | 'Listo' | 'Error';
-
 export interface DocumentoCasoDemo {
   id: string;
   casoId: string;
@@ -10,18 +8,9 @@ export interface DocumentoCasoDemo {
   nombre: string;
   tipo: 'PDF' | 'PNG' | 'JPEG';
   tamano: string;
-  estadoOcr: OcrEstado | 'Sin procesar';
-  motivoError?: string;
+  estado: 'Listo' | 'Procesado' | 'Pendiente' | 'En cola' | 'Procesando' | 'Error';
   subidoPor: string;
   fecha: string;
-}
-
-export interface IntentoOcrDemo {
-  id: string;
-  documentoId: string;
-  fecha: string;
-  resultado: 'Éxito' | 'Error' | 'En curso';
-  motivo?: string;
 }
 
 export interface DescargaDocumentoDemo {
@@ -30,14 +19,6 @@ export interface DescargaDocumentoDemo {
   hora: string;
   documentoId: string;
   enlaceFirmado: string;
-}
-
-export interface CampoOcrCorregidoDemo {
-  id: string;
-  etiqueta: string;
-  leido: string;
-  corregido: string;
-  confianza: number;
 }
 
 export const casoDocumentosDemo = {
@@ -55,7 +36,7 @@ export const documentosCasoDemo: DocumentoCasoDemo[] = [
     nombre: 'informe-laboratorio-demo.pdf',
     tipo: 'PDF',
     tamano: '420 KB',
-    estadoOcr: 'Listo',
+    estado: 'Listo',
     subidoPor: 'Dra. Demo Profesional',
     fecha: '2026-03-16 09:20',
   },
@@ -67,8 +48,7 @@ export const documentosCasoDemo: DocumentoCasoDemo[] = [
     nombre: 'ecografia-sintetica.png',
     tipo: 'PNG',
     tamano: '1.2 MB',
-    estadoOcr: 'Error',
-    motivoError: 'No se pudo leer el texto: contraste insuficiente en la página 1.',
+    estado: 'Error',
     subidoPor: 'Dra. Demo Profesional',
     fecha: '2026-03-17 08:05',
   },
@@ -80,41 +60,11 @@ export const documentosCasoDemo: DocumentoCasoDemo[] = [
     nombre: 'referencia-consulta.jpg',
     tipo: 'JPEG',
     tamano: '860 KB',
-    estadoOcr: 'En cola',
+    estado: 'En cola',
     subidoPor: 'Dr. Demo Respaldo',
     fecha: '2026-03-18 10:10',
   },
 ];
-
-export const intentosOcrDemo: IntentoOcrDemo[] = [
-  {
-    id: 'DEMO-OCR-INT-001',
-    documentoId: 'DEMO-DOC-002',
-    fecha: '2026-03-17 08:06',
-    resultado: 'Error',
-    motivo: 'Contraste insuficiente en la página 1.',
-  },
-  {
-    id: 'DEMO-OCR-INT-002',
-    documentoId: 'DEMO-DOC-002',
-    fecha: '2026-03-17 08:12',
-    resultado: 'Error',
-    motivo: 'No se detectó texto legible tras el preprocesamiento.',
-  },
-];
-
-export const documentoBajaCalidadDemo: DocumentoCasoDemo = {
-  id: 'DEMO-DOC-004',
-  casoId: 'DEMO-CASO-001',
-  pacienteId: 'DEMO-PAC-001',
-  pacienteNombre: 'Paciente demo 001',
-  nombre: 'escaneo-baja-calidad.jpg',
-  tipo: 'JPEG',
-  tamano: '540 KB',
-  estadoOcr: 'Sin procesar',
-  subidoPor: 'Dra. Demo Profesional',
-  fecha: '2026-03-18 11:00',
-};
 
 export const descargaDocumentoDemo: DescargaDocumentoDemo = {
   usuario: 'Dra. Demo Profesional',
@@ -124,15 +74,3 @@ export const descargaDocumentoDemo: DescargaDocumentoDemo = {
   enlaceFirmado:
     'https://demo.optimus-thy.local/descargas/firmada?doc=DEMO-DOC-001&exp=2026-03-18T10:40:00Z',
 };
-
-export const correccionOcrPersistidaDemo: CampoOcrCorregidoDemo[] = [
-  { id: 'tsh', etiqueta: 'TSH', leido: '7,20 mUI/L', corregido: '7,2 mUI/L', confianza: 71 },
-  { id: 'tirads', etiqueta: 'TI-RADS', leido: 'TR3', corregido: '3', confianza: 63 },
-  {
-    id: 'nota',
-    etiqueta: 'Nota',
-    leido: 'nodulo hipoecoico',
-    corregido: 'Nódulo hipoecoico',
-    confianza: 84,
-  },
-];

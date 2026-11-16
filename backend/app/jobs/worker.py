@@ -25,7 +25,7 @@ logger = logging.getLogger("optimus_thy.jobs")
 
 Manejadores = dict[str, Callable[[Trabajo], dict[str, Any]]]
 
-#: Manejadores por tipo. Se registran aquí cuando existan OCR (HT-040) e IA (HT-063).
+#: Manejadores por tipo. Se registran aquí cuando exista la inferencia (HT-063).
 MANEJADORES: Manejadores = {}
 
 

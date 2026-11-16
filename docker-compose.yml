@@ -58,7 +58,6 @@ services:
       S3_SECRET_KEY: ${S3_SECRET_KEY:-cambiar-en-local}
       S3_BUCKET: ${S3_BUCKET:-optimus}
       PII_ENCRYPTION_KEY: ${PII_ENCRYPTION_KEY:-cambiar-en-local-no-usar-fuera-de-desarrollo}
-      OCR_URL: ${OCR_URL:-http://ocr:8001}
       IA_URL: ${IA_URL:-http://ia:8002}
     ports:
       - "127.0.0.1:8000:8000"
@@ -85,24 +84,6 @@ services:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/healthz"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  ocr:
-    build:
-      context: ./ocr
-    restart: unless-stopped
-    environment:
-      LOG_LEVEL: ${LOG_LEVEL:-INFO}
-      ENVIRONMENT: ${ENVIRONMENT:-development}
-    expose:
-      - "8001"
-    depends_on:
-      storage:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request, sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8001/health', timeout=2).status == 200 else 1)"]
       interval: 10s
       timeout: 5s
       retries: 5

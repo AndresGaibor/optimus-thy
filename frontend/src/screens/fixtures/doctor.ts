@@ -76,7 +76,6 @@ const records: DemoRecord[] = [
     tipo: 'Consulta general',
     estado: 'Completa',
     paginas: 4,
-    ocrConfianza: 91,
   },
   {
     id: 'DEMO-FC-002',
@@ -86,7 +85,6 @@ const records: DemoRecord[] = [
     tipo: 'Ecografía',
     estado: 'Revisión',
     paginas: 2,
-    ocrConfianza: 84,
   },
   {
     id: 'DEMO-FC-003',
@@ -94,9 +92,8 @@ const records: DemoRecord[] = [
     pacienteNombre: 'Paciente demo 002',
     fecha: '2026-03-10',
     tipo: 'Laboratorio',
-    estado: 'En OCR',
+    estado: 'Pendiente',
     paginas: 3,
-    ocrConfianza: 87,
   },
   {
     id: 'DEMO-FC-004',
@@ -106,7 +103,6 @@ const records: DemoRecord[] = [
     tipo: 'Consulta general',
     estado: 'Pendiente',
     paginas: 1,
-    ocrConfianza: 0,
   },
 ];
 

@@ -61,8 +61,8 @@ for (const carpeta of ['atoms', 'molecules', 'organisms']) {
   });
 }
 
-test('el glob encuentra al menos 44 componentes', () => {
+test('el glob encuentra al menos 43 componentes', () => {
   expect(
     Object.keys(archivos).filter((archivo) => !archivo.endsWith('.stories.tsx')).length,
-  ).toBeGreaterThanOrEqual(44);
+  ).toBeGreaterThanOrEqual(43);
 });

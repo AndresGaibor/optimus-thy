@@ -29,7 +29,6 @@ class AuditAction(StrEnum):
     IMAGE_UPLOAD = "IMAGE_UPLOAD"
 
     # Procesamiento (RF-AUD-04)
-    OCR_REQUEST = "OCR_REQUEST"
     INFERENCE_REQUEST = "INFERENCE_REQUEST"
 
     # Exportaciones (RF-AUD-05)
@@ -57,7 +56,6 @@ class AuditModule(StrEnum):
     PATIENTS = "PATIENTS"
     CLINICAL = "CLINICAL"
     FILES = "FILES"
-    OCR = "OCR"
     INFERENCE = "INFERENCE"
     ADMIN = "ADMIN"
     AUDIT = "AUDIT"

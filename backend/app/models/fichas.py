@@ -102,7 +102,6 @@ class FichaClinica(Base):
     cie10: Mapped[str | None] = mapped_column(sa.String(16))
     tipo_diagnostico: Mapped[str | None] = mapped_column(sa.String(64))
     tipo_consulta: Mapped[str | None] = mapped_column(sa.String(64))
-    origen_datos: Mapped[dict[str, str] | None] = mapped_column(JSONB)
     creado_en: Mapped[sa.DateTime] = mapped_column(
         sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.func.now()
     )
