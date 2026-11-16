@@ -875,6 +875,52 @@
         }
       }
     },
+    "/casos/{caso_id}/inferencias": {
+      "get": {
+        "tags": [
+          "resultados"
+        ],
+        "summary": "Listar Inferencias",
+        "description": "Inferencias del caso, de la más reciente a la más antigua.",
+        "operationId": "listar_inferencias_casos__caso_id__inferencias_get",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "caso_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Caso Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/modelos-ia": {
       "get": {
         "tags": [

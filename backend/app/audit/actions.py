@@ -19,6 +19,7 @@ class AuditAction(StrEnum):
     RECORD_READ = "RECORD_READ"
     DOCUMENT_READ = "DOCUMENT_READ"
     IMAGE_READ = "IMAGE_READ"
+    INFERENCE_READ = "INFERENCE_READ"
 
     # Altas del registro clínico
     PATIENT_CREATE = "PATIENT_CREATE"
