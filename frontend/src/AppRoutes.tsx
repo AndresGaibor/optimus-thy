@@ -6,6 +6,7 @@ import { PlaceholderPage } from './pages/PlaceholderPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { RolesPage } from './pages/admin/RolesPage';
 import { UsuariosPage } from './pages/admin/UsuariosPage';
+import { ModelosPage } from './pages/admin/ModelosPage';
 import { PacientesPage } from './pages/medico/PacientesPage';
 import { RootRedirect, RoleRoute } from './session/RoleRoute';
 
@@ -53,6 +54,7 @@ export function AppRoutes() {
         <Route index element={<UsuariosPage />} />
         <Route path="usuarios" element={<UsuariosPage />} />
         <Route path="roles" element={<RolesPage />} />
+        <Route path="modelos" element={<ModelosPage />} />
         <Route path="auditoria" element={<PlaceholderPage titulo="Auditoría" />} />
       </Route>
       <Route path="*" element={<NotFoundPage />} />

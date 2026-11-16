@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import uuid
-from typing import TYPE_CHECKING
+from datetime import datetime
+from typing import TYPE_CHECKING, Any
 
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import JSONB, UUID
@@ -34,10 +35,10 @@ class Imagen(Base):
     sin_metadatos_exif_dicom: Mapped[bool] = mapped_column(
         sa.Boolean, nullable=False, server_default=sa.text("true")
     )
-    creado_en: Mapped[sa.DateTime] = mapped_column(
+    creado_en: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.func.now()
     )
-    actualizado_en: Mapped[sa.DateTime] = mapped_column(
+    actualizado_en: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True),
         nullable=False,
         server_default=sa.func.now(),
@@ -64,10 +65,10 @@ class ModeloIA(Base):
     parametros: Mapped[str | None] = mapped_column(sa.Text)
     ruta_pesos: Mapped[str | None] = mapped_column(sa.String(512))
     activo: Mapped[bool] = mapped_column(sa.Boolean, nullable=False, server_default=sa.text("true"))
-    creado_en: Mapped[sa.DateTime] = mapped_column(
+    creado_en: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.func.now()
     )
-    actualizado_en: Mapped[sa.DateTime] = mapped_column(
+    actualizado_en: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True),
         nullable=False,
         server_default=sa.func.now(),
@@ -108,7 +109,7 @@ class Inferencia(Base):
     inmutable: Mapped[bool] = mapped_column(
         sa.Boolean, nullable=False, server_default=sa.text("true")
     )
-    creado_en: Mapped[sa.DateTime] = mapped_column(
+    creado_en: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.func.now()
     )
 
@@ -154,11 +155,16 @@ class Nodulo(Base):
     caja_h: Mapped[float | None] = mapped_column(sa.Float)
     confianza: Mapped[float | None] = mapped_column(sa.Float)
     origen_mascara: Mapped[str | None] = mapped_column(sa.String(32))
+    clase: Mapped[str | None] = mapped_column(sa.String(32))
+    probabilidad_benigno: Mapped[float | None] = mapped_column(sa.Float)
+    probabilidad_maligno: Mapped[float | None] = mapped_column(sa.Float)
+    region_analizada: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+    pixeles_mascara: Mapped[int | None] = mapped_column(sa.Integer)
     mascara_ruta_s3: Mapped[str | None] = mapped_column(sa.String(512))
     mgac_ruta_s3: Mapped[str | None] = mapped_column(sa.String(512))
     xml_ruta_s3: Mapped[str | None] = mapped_column(sa.String(512))
     superposicion_ruta_s3: Mapped[str | None] = mapped_column(sa.String(512))
-    creado_en: Mapped[sa.DateTime] = mapped_column(
+    creado_en: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.func.now()
     )
 
@@ -187,10 +193,10 @@ class DecisionMedica(Base):
     )
     decision: Mapped[str] = mapped_column(sa.String(32), nullable=False)
     observaciones: Mapped[str | None] = mapped_column(sa.Text)
-    creado_en: Mapped[sa.DateTime] = mapped_column(
+    creado_en: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.func.now()
     )
-    actualizado_en: Mapped[sa.DateTime] = mapped_column(
+    actualizado_en: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True),
         nullable=False,
         server_default=sa.func.now(),
