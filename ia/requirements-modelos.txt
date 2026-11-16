@@ -72,7 +72,7 @@ tqdm==4.70.1
 truststore==0.10.5
 typing-extensions==4.16.0
 tzdata==2026.6
-ultralytics==8.4.209
+ultralytics==8.4.212
 ultralytics-platform==0.1.108
 ultralytics-thop==2.2.5
 urllib3==2.8.0
