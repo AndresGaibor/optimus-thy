@@ -1,5 +1,6 @@
 import {
   Activity,
+  Building2,
   ClipboardList,
   Download,
   Cpu,
@@ -32,6 +33,7 @@ const NAV_BY_ROLE: Record<Role, SidebarNavItem[]> = {
   ],
   administrador: [
     { to: '/administrador/usuarios', label: 'Usuarios', icon: Users },
+    { to: '/administrador/instituciones', label: 'Instituciones', icon: Building2 },
     { to: '/administrador/roles', label: 'Roles', icon: ShieldCheck },
     { to: '/administrador/modelos', label: 'Modelos de IA', icon: Cpu },
     { to: '/administrador/auditoria', label: 'Auditoría', icon: ClipboardList },

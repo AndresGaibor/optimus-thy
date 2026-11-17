@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import contextlib
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, Request, status
@@ -27,6 +27,8 @@ class InstitucionOut(BaseModel):
     id: str
     nombre: str
     codigo: str
+    activa: bool
+    usuarios_activos: int
 
 
 class InstitucionUsuarioOut(BaseModel):
@@ -96,17 +98,28 @@ def listar_instituciones(
     request: Request,
     db: Annotated[Session, Depends(session_dep)],
     actual: Annotated[SesionActual, Depends(requiere_permiso("usuario.gestionar"))],
+    incluir_inactivas: bool = False,
 ) -> list[InstitucionOut] | JSONResponse:
-    instituciones = (
-        db.query(Institucion)
-        .filter(Institucion.activa.is_(True))
-        .order_by(Institucion.nombre.asc())
+    consulta = db.query(Institucion).order_by(Institucion.nombre.asc())
+    if not incluir_inactivas:
+        consulta = consulta.filter(Institucion.activa.is_(True))
+    instituciones = consulta.all()
+    conteo = dict(
+        db.query(Usuario.institucion_id, func.count(Usuario.id))
+        .filter(Usuario.activo.is_(True))
+        .group_by(Usuario.institucion_id)
         .all()
     )
-    result: list[InstitucionOut] = [
-        InstitucionOut(id=str(i.id), nombre=i.nombre, codigo=i.codigo) for i in instituciones
+    return [
+        InstitucionOut(
+            id=str(institucion.id),
+            nombre=institucion.nombre,
+            codigo=institucion.codigo,
+            activa=bool(institucion.activa),
+            usuarios_activos=int(conteo.get(institucion.id, 0)),
+        )
+        for institucion in instituciones
     ]
-    return result
 
 
 @router.get("/usuarios", response_model=None)
@@ -119,6 +132,8 @@ def listar_usuarios(
     q: str | None = None,
     limite: int = Query(default=25, ge=1),
     desplazamiento: int = Query(default=0, ge=0),
+    orden: Literal["creado", "correo", "nombre", "estado"] = "creado",
+    direccion: Literal["asc", "desc"] = "asc",
 ) -> UsuariosListOut | JSONResponse:
     if limite > 100:
         limite = 100
@@ -143,12 +158,16 @@ def listar_usuarios(
 
     total = query.count()
 
-    usuarios = (
-        query.order_by(Usuario.creado_en.asc(), Usuario.id.asc())
-        .offset(desplazamiento)
-        .limit(limite)
-        .all()
-    )
+    columnas: dict[str, Any] = {
+        "creado": Usuario.creado_en,
+        "correo": func.lower(Usuario.email),
+        "nombre": func.lower(func.coalesce(Usuario.nombre, "")),
+        "estado": Usuario.activo,
+    }
+    columna = columnas[orden]
+    criterio = columna.desc() if direccion == "desc" else columna.asc()
+
+    usuarios = query.order_by(criterio, Usuario.id.asc()).offset(desplazamiento).limit(limite).all()
 
     items_model: list[UsuarioItemOut] = []
     for usuario in usuarios:
@@ -368,6 +387,29 @@ def put_roles_usuario(
                 status.HTTP_422_UNPROCESSABLE_ENTITY,
             )
         roles_objs.append(rol)
+
+    tenia_admin = (
+        db.query(UsuarioRol)
+        .join(Rol, Rol.id == UsuarioRol.rol_id)
+        .filter(UsuarioRol.usuario_id == usuario.id, Rol.nombre == "admin")
+        .first()
+        is not None
+    )
+    if usuario.activo and tenia_admin and "admin" not in body.roles:
+        otros_admins = (
+            db.query(Usuario.id)
+            .join(UsuarioRol, UsuarioRol.usuario_id == Usuario.id)
+            .join(Rol, Rol.id == UsuarioRol.rol_id)
+            .filter(Rol.nombre == "admin", Usuario.activo.is_(True), Usuario.id != usuario.id)
+            .count()
+        )
+        if otros_admins == 0:
+            return _error(
+                request,
+                "conflict",
+                "El sistema requiere al menos un administrador activo",
+                status.HTTP_409_CONFLICT,
+            )
 
     # Reemplazar matriz de roles
     db.query(UsuarioRol).filter(UsuarioRol.usuario_id == usuario.id).delete()

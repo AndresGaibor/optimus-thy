@@ -63,6 +63,8 @@ export { Textarea } from './components/atoms/Textarea';
 export type { TextareaProps } from './components/atoms/Textarea';
 
 // Moléculas
+export { ActionsMenu } from './components/molecules/ActionsMenu';
+export type { ActionsMenuItem, ActionsMenuProps } from './components/molecules/ActionsMenu';
 export { ActivityTypeBadge } from './components/molecules/ActivityTypeBadge';
 export type { ActivityTypeBadgeProps } from './components/molecules/ActivityTypeBadge';
 export { AiResultCard } from './components/molecules/AiResultCard';

@@ -27,21 +27,35 @@ describe('Pagination (HT-021)', () => {
     expect(cambiar).toHaveBeenNthCalledWith(2, 0);
   });
 
-  it('sin resultados muestra una sola página y ambos botones inactivos', () => {
+  it('sin resultados no muestra controles de navegación', () => {
     render(
       <Pagination total={0} limit={25} offset={0} onOffsetChange={() => {}} itemLabel="usuario" />,
     );
-    expect(screen.getByText('Total: 0 usuarios')).toBeInTheDocument();
-    expect(screen.getByText('Página 1 de 1')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Anterior' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Siguiente' })).toBeDisabled();
+    expect(screen.getByText('Sin usuarios')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Anterior' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Siguiente' })).not.toBeInTheDocument();
   });
 
-  it('el singular no lleva «s» y la región se anuncia como navegación', () => {
+  it('con una sola página solo muestra el rango y no los controles', () => {
     render(
       <Pagination total={1} limit={25} offset={0} onOffsetChange={() => {}} itemLabel="usuario" />,
     );
-    expect(screen.getByText('Total: 1 usuario')).toBeInTheDocument();
+    expect(screen.getByText('Mostrando 1 de 1 usuario')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Siguiente' })).not.toBeInTheDocument();
     expect(screen.getByRole('navigation', { name: 'Paginación' })).toBeInTheDocument();
+  });
+
+  it('muestra el rango visible sobre el total filtrado', () => {
+    render(
+      <Pagination
+        total={60}
+        limit={25}
+        offset={25}
+        onOffsetChange={() => {}}
+        itemLabel="usuario"
+      />,
+    );
+    expect(screen.getByText('Mostrando 26–50 de 60 usuarios')).toBeInTheDocument();
+    expect(screen.getByText('Página 2 de 3')).toBeInTheDocument();
   });
 });

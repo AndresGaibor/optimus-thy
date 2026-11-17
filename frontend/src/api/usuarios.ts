@@ -3,6 +3,9 @@ import { client } from './client';
 export interface Institucion {
   id: string;
   nombre: string;
+  codigo?: string;
+  activa?: boolean;
+  usuarios_activos?: number;
 }
 
 export interface UsuarioInstitucion {
@@ -24,12 +27,16 @@ export interface ListaUsuariosRespuesta {
   items: Usuario[];
 }
 
+export type OrdenUsuarios = 'creado' | 'correo' | 'nombre' | 'estado';
+
 export interface ListarUsuariosParams {
   q?: string | null;
   institucionId?: string | null;
   activo?: boolean | null;
   limite?: number;
   desplazamiento?: number;
+  orden?: OrdenUsuarios;
+  direccion?: 'asc' | 'desc';
 }
 
 export interface CrearUsuarioDatos {
@@ -85,6 +92,12 @@ export async function listarUsuarios(
   }
   if (params.desplazamiento !== undefined && params.desplazamiento !== null) {
     query.desplazamiento = params.desplazamiento;
+  }
+  if (params.orden !== undefined) {
+    query.orden = params.orden;
+  }
+  if (params.direccion !== undefined) {
+    query.direccion = params.direccion;
   }
 
   const { data, error, response } = await client.GET('/usuarios', {

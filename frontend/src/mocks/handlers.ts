@@ -72,6 +72,13 @@ export interface InstitucionOut {
   nombre: string;
 }
 
+/** Institución en la vista de administración (incluye estado y usuarios activos). */
+export interface InstitucionAdminOut extends InstitucionOut {
+  codigo: string;
+  activa: boolean;
+  usuarios_activos: number;
+}
+
 export interface UsuarioOutAdmin {
   id: string;
   correo: string;
@@ -140,7 +147,29 @@ export const matrizRolesVacia: MatrizRolesResponse = { roles: [], permisos: [] }
 
 export const institucionDemoOk: InstitucionOut = { id: 'inst-demo-1', nombre: 'Hospital Demo' };
 
-export const institucionesOk: InstitucionOut[] = [institucionDemoOk];
+export const institucionesAdminOk: InstitucionAdminOut[] = [
+  {
+    id: 'inst-demo-1',
+    nombre: 'Hospital Demo',
+    codigo: 'HOSP-DEMO',
+    activa: true,
+    usuarios_activos: 12,
+  },
+  {
+    id: 'inst-demo-2',
+    nombre: 'Clínica Norte',
+    codigo: 'CLIN-NORTE',
+    activa: true,
+    usuarios_activos: 0,
+  },
+  {
+    id: 'inst-demo-3',
+    nombre: 'Laboratorio Sur',
+    codigo: 'LAB-SUR',
+    activa: false,
+    usuarios_activos: 3,
+  },
+];
 
 // Datos sintéticos (sin datos reales).
 export const usuariosOk: UsuarioOutAdmin[] = [
@@ -269,13 +298,21 @@ export function crearHandlersDatos(escenario: EscenarioApi = 'ok') {
         items: usuariosOk,
       });
     }),
-    http.get<never, never, InstitucionOut[] | ErrorResponse>(API.instituciones, async () => {
-      const error = respuestaError(escenario, 'Permiso insuficiente');
-      if (error) return error;
-      await demorar();
-      if (escenario === 'vacio') return HttpResponse.json<InstitucionOut[]>([]);
-      return HttpResponse.json<InstitucionOut[]>(institucionesOk);
-    }),
+    http.get<never, never, InstitucionAdminOut[] | ErrorResponse>(
+      API.instituciones,
+      async ({ request }) => {
+        const error = respuestaError(escenario, 'Permiso insuficiente');
+        if (error) return error;
+        await demorar();
+        if (escenario === 'vacio') return HttpResponse.json<InstitucionAdminOut[]>([]);
+        const incluirInactivas = new URL(request.url).searchParams.get('incluir_inactivas');
+        const lista =
+          incluirInactivas === 'true'
+            ? institucionesAdminOk
+            : institucionesAdminOk.filter((institucion) => institucion.activa);
+        return HttpResponse.json<InstitucionAdminOut[]>(lista);
+      },
+    ),
   ];
 }
 

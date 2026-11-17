@@ -509,6 +509,23 @@
         ],
         "summary": "Listar Instituciones",
         "operationId": "listar_instituciones_instituciones_get",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "incluir_inactivas",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Incluir Inactivas"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -517,13 +534,60 @@
                 "schema": {}
               }
             }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
           }
-        },
+        }
+      },
+      "post": {
+        "tags": [
+          "instituciones"
+        ],
+        "summary": "Crear Institucion",
+        "operationId": "crear_institucion_instituciones_post",
         "security": [
           {
             "SessionCookie": []
           }
-        ]
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CrearInstitucionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/usuarios": {
@@ -607,6 +671,36 @@
               "minimum": 0,
               "default": 0,
               "title": "Desplazamiento"
+            }
+          },
+          {
+            "name": "orden",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "creado",
+                "correo",
+                "nombre",
+                "estado"
+              ],
+              "type": "string",
+              "default": "creado",
+              "title": "Orden"
+            }
+          },
+          {
+            "name": "direccion",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "type": "string",
+              "default": "asc",
+              "title": "Direccion"
             }
           }
         ],
@@ -758,6 +852,61 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RolesRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/instituciones/{id}": {
+      "patch": {
+        "tags": [
+          "instituciones"
+        ],
+        "summary": "Patch Institucion",
+        "operationId": "patch_institucion_instituciones__id__patch",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchInstitucionRequest"
               }
             }
           }
@@ -1724,6 +1873,27 @@
         "title": "CrearConsentimientoRequest",
         "description": "Finalidad y versión del texto firmado; nunca contenido clínico."
       },
+      "CrearInstitucionRequest": {
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Nombre"
+          },
+          "codigo": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$",
+            "title": "Codigo"
+          }
+        },
+        "type": "object",
+        "required": [
+          "nombre",
+          "codigo"
+        ],
+        "title": "CrearInstitucionRequest"
+      },
       "CrearPacienteRequest": {
         "properties": {
           "nombres": {
@@ -1975,6 +2145,48 @@
           "items"
         ],
         "title": "PacientesListOut"
+      },
+      "PatchInstitucionRequest": {
+        "properties": {
+          "nombre": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nombre"
+          },
+          "codigo": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Codigo"
+          },
+          "activa": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Activa"
+          }
+        },
+        "type": "object",
+        "title": "PatchInstitucionRequest"
       },
       "PatchUsuarioRequest": {
         "properties": {
