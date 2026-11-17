@@ -30,7 +30,7 @@ export function EncabezadoOrdenable({
       <Button
         variant="ghost"
         size="sm"
-        className="-ml-2 gap-1"
+        className={activo ? '-ml-2 gap-1 text-foreground' : '-ml-2 gap-1'}
         onClick={() => onOrden(campo)}
         aria-label={`Ordenar por ${etiqueta.toLowerCase()}`}
       >

@@ -378,7 +378,7 @@ describe('usuarios admin', () => {
 
     montarApp();
 
-    const search = await screen.findByLabelText(/buscar por correo o nombre/i);
+    const search = await screen.findByLabelText(/buscar usuario/i);
     await user.type(search, 'maria');
 
     await waitFor(() => {
@@ -440,7 +440,7 @@ describe('usuarios admin', () => {
 
     montarApp();
 
-    await user.type(await screen.findByLabelText('Buscar por correo o nombre'), 'maria');
+    await user.type(await screen.findByLabelText('Buscar usuario'), 'maria');
     await user.selectOptions(screen.getByLabelText('Estado'), 'activo');
     const barra = screen.getByRole('group', { name: 'Filtros de usuarios' });
     await user.click(within(barra).getByRole('button', { name: /limpiar filtros/i }));
@@ -630,7 +630,51 @@ describe('usuarios admin', () => {
     montarApp();
 
     await screen.findByText('multi@hospital.es');
-    expect(screen.getAllByText('Administrador · Médico · Investigador').length).toBeGreaterThan(0);
+    const celdaRoles = screen.getAllByText('Investigador')[0]?.closest('td');
+    expect(celdaRoles).not.toBeNull();
+    expect(celdaRoles?.textContent).toContain('Administrador');
+    expect(celdaRoles?.textContent).toContain('Médico');
+  });
+
+  it('copia el correo completo y lo anuncia', async () => {
+    const user = userEvent.setup();
+    const escribir = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText: escribir },
+      configurable: true,
+    });
+    fetchMock.mockResolvedValueOnce(responderJson(mockSessionAdmin));
+    fetchMock.mockResolvedValueOnce(
+      responderJson({
+        total: 1,
+        items: [
+          {
+            id: 'u1',
+            correo: 'prueba.api.1793854938@example.institucion-larga.test',
+            nombre: 'Prueba',
+            activo: true,
+            institucion: { id: 'i1', nombre: 'Hospital Central' },
+            roles: ['doctor'],
+          },
+        ],
+      }),
+    );
+    fetchMock.mockResolvedValueOnce(responderJson([{ id: 'i1', nombre: 'Hospital Central' }]));
+
+    montarApp();
+
+    await user.click(
+      await screen.findByRole('button', {
+        name: /copiar correo de prueba\.api\.1793854938/i,
+      }),
+    );
+
+    expect(escribir).toHaveBeenCalledWith('prueba.api.1793854938@example.institucion-larga.test');
+    expect(
+      await screen.findByText(
+        /correo prueba\.api\.1793854938@example\.institucion-larga\.test copiado/i,
+      ),
+    ).toBeInTheDocument();
   });
 
   it('la propia cuenta no ofrece desactivarse', async () => {
@@ -715,7 +759,7 @@ describe('usuarios admin', () => {
 
     montarApp();
 
-    await user.type(await screen.findByLabelText('Buscar por correo o nombre'), 'maria');
+    await user.type(await screen.findByLabelText('Buscar usuario'), 'maria');
     await user.selectOptions(
       screen.getByLabelText('Institución', { selector: '#filtro-institucion' }),
       'i2',
@@ -746,7 +790,7 @@ describe('usuarios admin', () => {
     await screen.findByText(/sin usuarios/i);
     const barra = screen.getByRole('group', { name: 'Filtros de usuarios' });
     expect(within(barra).queryByRole('button', { name: /limpiar filtros/i })).toBeNull();
-    await user.type(await screen.findByLabelText('Buscar por correo o nombre'), 'ana');
+    await user.type(await screen.findByLabelText('Buscar usuario'), 'ana');
     expect(
       await within(barra).findByRole('button', { name: /limpiar filtros/i }),
     ).toBeInTheDocument();

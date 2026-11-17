@@ -142,7 +142,7 @@ export function ActionsMenu({ label, items, disabled = false, busy = false }: Ac
           if (evento.key === 'Escape' && abierto) cerrar(true);
         }}
         className={cn(
-          'inline-flex size-9 items-center justify-center rounded-control text-muted-foreground transition-colors',
+          'inline-flex size-10 items-center justify-center rounded-control text-muted-foreground transition-colors',
           'hover:bg-surface-subtle hover:text-foreground',
           'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring',
           'disabled:cursor-not-allowed disabled:opacity-50',

@@ -440,19 +440,21 @@ export function UsuariosPage() {
         actions={<Button onClick={abrirCrear}>Nuevo usuario</Button>}
       />
 
-      <UsuariosFiltros
-        busqueda={busqueda}
-        onBusqueda={cambiarBusqueda}
-        filtroEstado={filtroEstado}
-        onEstado={cambiarFiltroEstado}
-        filtroInstitucion={filtroInstitucion}
-        onInstitucion={cambiarFiltroInstitucion}
-        instituciones={Array.isArray(instituciones) ? instituciones : []}
-        hayFiltrosActivos={hayFiltrosActivos}
-        onLimpiar={limpiarFiltros}
-      />
+      <div className="space-y-4">
+        <UsuariosFiltros
+          busqueda={busqueda}
+          onBusqueda={cambiarBusqueda}
+          filtroEstado={filtroEstado}
+          onEstado={cambiarFiltroEstado}
+          filtroInstitucion={filtroInstitucion}
+          onInstitucion={cambiarFiltroInstitucion}
+          instituciones={Array.isArray(instituciones) ? instituciones : []}
+          hayFiltrosActivos={hayFiltrosActivos}
+          onLimpiar={limpiarFiltros}
+        />
 
-      {contenido}
+        {contenido}
+      </div>
 
       <Dialog
         open={dialogoCrearAbierto}

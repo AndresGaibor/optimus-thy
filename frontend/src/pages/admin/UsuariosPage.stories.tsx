@@ -43,6 +43,18 @@ export const ConAccionesAbiertas: Story = {
   },
 };
 
+export const OrdenadoPorNombre: Story = {
+  parameters: { msw: { handlers: crearHandlers('ok') } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByText('ana.garcia@example.test');
+    const usuario = userEvent.setup();
+    await usuario.click(canvas.getByRole('button', { name: /ordenar por usuario/i }));
+    const cabecera = await canvas.findByRole('columnheader', { name: /usuario/i });
+    await expect(cabecera).toHaveAttribute('aria-sort', 'ascending');
+  },
+};
+
 export const SinUsuarios: Story = {
   parameters: { msw: { handlers: crearHandlers('vacio') } },
   play: async ({ canvasElement }) => {
