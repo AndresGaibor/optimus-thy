@@ -137,5 +137,21 @@ export function crearHandlersFlujo(opciones?: OpcionesFlujo): HttpHandler[] {
     return new HttpResponse(null, { status: 204 });
   });
 
-  return [identidad, login, rolActivo, logout, ...crearHandlersDatos('ok')];
+  // Recuperación pública: responde igual exista o no la cuenta, como la API real.
+  const recuperacion = http.post(/(?:api\/)?auth\/recuperacion$/, () =>
+    HttpResponse.json({ ok: true }, { status: 202 }),
+  );
+  const confirmarRecuperacion = http.post(/(?:api\/)?auth\/recuperacion\/confirmar$/, () =>
+    HttpResponse.json({ ok: true }, { status: 200 }),
+  );
+
+  return [
+    identidad,
+    login,
+    rolActivo,
+    logout,
+    recuperacion,
+    confirmarRecuperacion,
+    ...crearHandlersDatos('ok'),
+  ];
 }

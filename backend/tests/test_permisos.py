@@ -19,8 +19,15 @@ from app.security.permisos import PERMISOS, PERMISOS_POR_ROL
 
 MATRIZ = {rol: frozenset(codigos) for rol, codigos in PERMISOS_POR_ROL.items()}
 CLAVE = "claveSegura-123"
-# Rutas sin sesión a propósito: salud, y las que crean o cierran la sesión.
-PUBLICAS = {"/health", "/auth/login", "/auth/logout"}
+# Rutas sin sesión a propósito: salud, las que crean o cierran la sesión y la
+# recuperación de contraseña, que existe justo para quien no puede entrar.
+PUBLICAS = {
+    "/health",
+    "/auth/login",
+    "/auth/logout",
+    "/auth/recuperacion",
+    "/auth/recuperacion/confirmar",
+}
 # Basta una sesión válida: actúan sobre la propia sesión, no sobre datos.
 SOLO_SESION = {"/auth/me", "/auth/rol-activo"}
 

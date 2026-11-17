@@ -5,6 +5,7 @@ from __future__ import annotations
 from app.db import Base
 from app.models.auditoria import Auditoria
 from app.models.consentimientos import Consentimiento
+from app.models.correo import ConfiguracionCorreo, PlantillaCorreo, TokenRecuperacion
 from app.models.documentos import Documento
 from app.models.fichas import Caso, FichaClinica, FichaVersion
 from app.models.imagenes import DecisionMedica, Imagen, Inferencia, ModeloIA, Nodulo
@@ -18,6 +19,7 @@ __all__ = [
     "Auditoria",
     "Base",
     "Caso",
+    "ConfiguracionCorreo",
     "Consentimiento",
     "DecisionMedica",
     "Documento",
@@ -31,9 +33,11 @@ __all__ = [
     "Nodulo",
     "Paciente",
     "Permiso",
+    "PlantillaCorreo",
     "Rol",
     "RolPermiso",
     "Sesion",
+    "TokenRecuperacion",
     "Trabajo",
     "Usuario",
     "UsuarioRol",
@@ -61,4 +65,7 @@ TABLAS: list[str] = [
     "auditoria",
     "sesiones",
     "trabajos",
+    "configuracion_correo",
+    "plantillas_correo",
+    "tokens_recuperacion",
 ]

@@ -6,6 +6,7 @@ import {
   Cpu,
   FileText,
   LayoutDashboard,
+  Mail,
   ShieldCheck,
   Users,
 } from 'lucide-react';
@@ -36,6 +37,7 @@ const NAV_BY_ROLE: Record<Role, SidebarNavItem[]> = {
     { to: '/administrador/instituciones', label: 'Instituciones', icon: Building2 },
     { to: '/administrador/roles', label: 'Roles', icon: ShieldCheck },
     { to: '/administrador/modelos', label: 'Modelos de IA', icon: Cpu },
+    { to: '/administrador/correo', label: 'Correo', icon: Mail },
     { to: '/administrador/auditoria', label: 'Auditoría', icon: ClipboardList },
   ],
 };

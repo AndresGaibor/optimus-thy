@@ -149,7 +149,7 @@ export const RecuperacionDeContrasena: Story = {
     docs: {
       description: {
         story:
-          'Recorre HU-111 desde la pantalla pública. La recuperación es presentacional: no hay endpoints ni envío real; el formulario permanece en pantalla tras pulsar Enviar enlace.',
+          'Recorre la recuperación desde la pantalla pública: se pide el enlace y la API responde igual exista o no la cuenta, así que la pantalla confirma la solicitud sin revelar nada.',
       },
     },
     router: { initialEntries: ['/login'] },
@@ -172,16 +172,16 @@ export const RecuperacionDeContrasena: Story = {
       ).toBeInTheDocument();
     });
 
-    await step('Completa el correo y confirma que no se envía', async () => {
+    await step('Pide el enlace y ve la confirmación', async () => {
       await userEvent.type(
         canvas.getByLabelText(/correo electrónico/i),
         'persona.demo@example.test',
       );
       await userEvent.click(canvas.getByRole('button', { name: 'Enviar enlace' }));
+      await expect(await canvas.findByText(/solicitud recibida/i)).toBeInTheDocument();
       await expect(
-        canvas.getByRole('heading', { name: 'Recuperar contraseña' }),
+        canvas.getByText(/si el correo pertenece a una cuenta activa/i),
       ).toBeInTheDocument();
-      await expect(canvas.getByLabelText(/correo electrónico/i)).toBeInTheDocument();
     });
   },
 };

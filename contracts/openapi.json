@@ -1780,6 +1780,329 @@
           }
         ]
       }
+    },
+    "/auth/recuperacion": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Solicitar Recuperacion",
+        "description": "Responde siempre lo mismo: nunca revela si el correo está registrado.",
+        "operationId": "solicitar_recuperacion_auth_recuperacion_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecuperacionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/recuperacion/confirmar": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Confirmar Recuperacion",
+        "description": "Cambia la contraseña, quema el token y cierra todas las sesiones.",
+        "operationId": "confirmar_recuperacion_auth_recuperacion_confirmar_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecuperacionConfirmarRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/configuracion-correo": {
+      "get": {
+        "tags": [
+          "correo"
+        ],
+        "summary": "Leer Configuracion",
+        "description": "Devuelve el servidor configurado; nunca la contraseña.",
+        "operationId": "leer_configuracion_configuracion_correo_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfiguracionOut"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "correo"
+        ],
+        "summary": "Guardar Configuracion",
+        "operationId": "guardar_configuracion_configuracion_correo_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfiguracionIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfiguracionOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
+      }
+    },
+    "/configuracion-correo/probar": {
+      "post": {
+        "tags": [
+          "correo"
+        ],
+        "summary": "Probar Configuracion",
+        "description": "Envía un correo de prueba a la cuenta del administrador que lo pide.",
+        "operationId": "probar_configuracion_configuracion_correo_probar_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PruebaOut"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
+      }
+    },
+    "/plantillas-correo/{clave}": {
+      "get": {
+        "tags": [
+          "correo"
+        ],
+        "summary": "Leer Plantilla",
+        "operationId": "leer_plantilla_plantillas_correo__clave__get",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "clave",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Clave"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlantillaOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "correo"
+        ],
+        "summary": "Guardar Plantilla",
+        "operationId": "guardar_plantilla_plantillas_correo__clave__put",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "clave",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Clave"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlantillaIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlantillaOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/plantillas-correo/{clave}/restaurar": {
+      "post": {
+        "tags": [
+          "correo"
+        ],
+        "summary": "Restaurar Plantilla",
+        "description": "Vuelve a la plantilla de fábrica borrando la guardada.",
+        "operationId": "restaurar_plantilla_plantillas_correo__clave__restaurar_post",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "clave",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Clave"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlantillaOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1822,6 +2145,139 @@
           "version"
         ],
         "title": "Body_cargar_modelo_modelos_ia_post"
+      },
+      "ConfiguracionIn": {
+        "properties": {
+          "host": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Host"
+          },
+          "puerto": {
+            "type": "integer",
+            "maximum": 65535.0,
+            "minimum": 1.0,
+            "title": "Puerto"
+          },
+          "seguridad": {
+            "type": "string",
+            "enum": [
+              "starttls",
+              "ssl"
+            ],
+            "title": "Seguridad"
+          },
+          "usuario": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Usuario"
+          },
+          "remitente": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 3,
+            "title": "Remitente"
+          },
+          "remitente_nombre": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remitente Nombre"
+          },
+          "activo": {
+            "type": "boolean",
+            "title": "Activo",
+            "default": true
+          },
+          "password": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 128
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "host",
+          "puerto",
+          "seguridad",
+          "usuario",
+          "remitente"
+        ],
+        "title": "ConfiguracionIn"
+      },
+      "ConfiguracionOut": {
+        "properties": {
+          "host": {
+            "type": "string",
+            "title": "Host"
+          },
+          "puerto": {
+            "type": "integer",
+            "title": "Puerto"
+          },
+          "seguridad": {
+            "type": "string",
+            "enum": [
+              "starttls",
+              "ssl"
+            ],
+            "title": "Seguridad"
+          },
+          "usuario": {
+            "type": "string",
+            "title": "Usuario"
+          },
+          "remitente": {
+            "type": "string",
+            "title": "Remitente"
+          },
+          "remitente_nombre": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remitente Nombre"
+          },
+          "activo": {
+            "type": "boolean",
+            "title": "Activo"
+          },
+          "tiene_password": {
+            "type": "boolean",
+            "title": "Tiene Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "host",
+          "puerto",
+          "seguridad",
+          "usuario",
+          "remitente",
+          "remitente_nombre",
+          "activo",
+          "tiene_password"
+        ],
+        "title": "ConfiguracionOut"
       },
       "CrearConsentimientoRequest": {
         "properties": {
@@ -2246,6 +2702,114 @@
         },
         "type": "object",
         "title": "PatchUsuarioRequest"
+      },
+      "PlantillaIn": {
+        "properties": {
+          "asunto": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Asunto"
+          },
+          "html": {
+            "type": "string",
+            "maxLength": 20000,
+            "minLength": 1,
+            "title": "Html"
+          }
+        },
+        "type": "object",
+        "required": [
+          "asunto",
+          "html"
+        ],
+        "title": "PlantillaIn"
+      },
+      "PlantillaOut": {
+        "properties": {
+          "clave": {
+            "type": "string",
+            "title": "Clave"
+          },
+          "asunto": {
+            "type": "string",
+            "title": "Asunto"
+          },
+          "html": {
+            "type": "string",
+            "title": "Html"
+          },
+          "variables": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Variables"
+          },
+          "de_fabrica": {
+            "type": "boolean",
+            "title": "De Fabrica"
+          }
+        },
+        "type": "object",
+        "required": [
+          "clave",
+          "asunto",
+          "html",
+          "variables",
+          "de_fabrica"
+        ],
+        "title": "PlantillaOut"
+      },
+      "PruebaOut": {
+        "properties": {
+          "destinatario": {
+            "type": "string",
+            "title": "Destinatario"
+          }
+        },
+        "type": "object",
+        "required": [
+          "destinatario"
+        ],
+        "title": "PruebaOut"
+      },
+      "RecuperacionConfirmarRequest": {
+        "properties": {
+          "token": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 20,
+            "title": "Token"
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 12,
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "token",
+          "password"
+        ],
+        "title": "RecuperacionConfirmarRequest"
+      },
+      "RecuperacionRequest": {
+        "properties": {
+          "correo": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 3,
+            "title": "Correo"
+          }
+        },
+        "type": "object",
+        "required": [
+          "correo"
+        ],
+        "title": "RecuperacionRequest"
       },
       "RolActivoRequest": {
         "properties": {

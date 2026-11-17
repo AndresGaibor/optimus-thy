@@ -11,11 +11,14 @@ regexTarget = "match"
 regexes = [
   '''pass1234567890''',
   '''temporal12345''',
+  '''nuevaClave-987''',
+  '''otraClave-987''',
 ]
 paths = [
   '''backend/tests/test_usuarios\.py''',
   '''backend/tests/test_roles\.py''',
   '''backend/tests/test_sesiones_seguridad\.py''',
+  '''backend/tests/test_correo\.py''',
 ]
 condition = "AND"
 [[allowlists]]
