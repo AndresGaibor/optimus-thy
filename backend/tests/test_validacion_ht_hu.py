@@ -321,4 +321,4 @@ def test_ht006_la_migracion_de_base_siembra_roles_e_instituciones(test_engine):
         roles = {r[0] for r in conn.exec_driver_sql("select nombre from roles")}
         insts = {r[0] for r in conn.exec_driver_sql("select codigo from instituciones")}
     assert roles == {"admin", "doctor", "researcher"}
-    assert {"ESPOCH", "SOLCA"} <= insts
+    assert {"espoch", "solca"} <= insts
