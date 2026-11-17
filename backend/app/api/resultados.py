@@ -11,10 +11,10 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import UTC, date, datetime, time, timedelta
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, Request, status
+from fastapi import APIRouter, Depends, Query, Request, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -24,7 +24,7 @@ from app.audit.http import registrar
 from app.auth.deps import SesionActual, requiere_permiso
 from app.db import session_dep
 from app.models.fichas import Caso
-from app.models.imagenes import Inferencia, Nodulo
+from app.models.imagenes import Imagen, Inferencia, Nodulo
 from app.storage.s3 import ObjectStorage, StorageError, get_storage
 
 router = APIRouter(tags=["resultados"])
@@ -81,6 +81,17 @@ class InferenciaOut(BaseModel):
 class InferenciasListOut(BaseModel):
     total: int
     items: list[InferenciaOut]
+
+
+class ResultadoGuardadoOut(InferenciaOut):
+    caso_id: str
+    caso_codigo: str
+    paciente_codigo: str
+
+
+class ResultadosGuardadosOut(BaseModel):
+    total: int
+    items: list[ResultadoGuardadoOut]
 
 
 def _error(request: Request, codigo_http: int, codigo: str, mensaje: str) -> JSONResponse:
@@ -200,3 +211,91 @@ def listar_inferencias(
         detalles={"resource_count": len(items)},
     )
     return InferenciasListOut(total=len(items), items=items)
+
+
+_LIMITE_MAXIMO = 50
+
+
+@router.get("/resultados", response_model=None)
+def listar_resultados_guardados(
+    request: Request,
+    db: Annotated[Session, Depends(session_dep)],
+    actual: Annotated[SesionActual, Depends(requiere_permiso("inferencia.leer"))],
+    storage: Annotated[ObjectStorage, Depends(get_storage)],
+    paciente: Annotated[str | None, Query(max_length=36)] = None,
+    desde: Annotated[date | None, Query()] = None,
+    hasta: Annotated[date | None, Query()] = None,
+    clase: Annotated[str | None, Query(pattern="^(benigno|maligno|sin_nodulo)$")] = None,
+    limite: Annotated[int, Query(ge=1)] = 25,
+    desplazamiento: Annotated[int, Query(ge=0)] = 0,
+) -> ResultadosGuardadosOut | JSONResponse:
+    """Resultados guardados de la institución con filtros combinables (HU-081)."""
+    if desde and hasta and desde > hasta:
+        return _error(
+            request,
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
+            "validation_error",
+            "La fecha inicial no puede ser posterior a la final.",
+        )
+    consulta = (
+        db.query(Inferencia)
+        .join(Imagen, Inferencia.imagen_id == Imagen.id)
+        .join(Caso, Imagen.caso_id == Caso.id)
+        .filter(Caso.institucion_id == actual.usuario.institucion_id)
+    )
+    if paciente:
+        paciente_id = _uuid(paciente)
+        if paciente_id is None:
+            return _error(
+                request,
+                status.HTTP_422_UNPROCESSABLE_CONTENT,
+                "validation_error",
+                "El paciente no es un identificador válido.",
+            )
+        consulta = consulta.filter(Caso.paciente_id == paciente_id)
+    if desde:
+        consulta = consulta.filter(
+            Inferencia.creado_en >= datetime.combine(desde, time.min, tzinfo=UTC)
+        )
+    if hasta:
+        consulta = consulta.filter(
+            Inferencia.creado_en < datetime.combine(hasta + timedelta(days=1), time.min, tzinfo=UTC)
+        )
+    if clase:
+        consulta = consulta.filter(Inferencia.resultado == clase)
+
+    total = consulta.count()
+    filas = (
+        consulta.order_by(Inferencia.creado_en.desc(), Inferencia.id)
+        .offset(desplazamiento)
+        .limit(min(limite, _LIMITE_MAXIMO))
+        .all()
+    )
+    try:
+        items = [
+            ResultadoGuardadoOut(
+                **_vista(fila, storage).model_dump(),
+                caso_id=str(fila.imagen.caso_id),
+                caso_codigo=fila.imagen.caso.codigo_caso,
+                paciente_codigo=fila.imagen.caso.paciente.seudonimo,
+            )
+            for fila in filas
+        ]
+    except StorageError:
+        return _error(
+            request,
+            status.HTTP_502_BAD_GATEWAY,
+            "storage_error",
+            "No se pudieron firmar los enlaces; intenta de nuevo.",
+        )
+    registrar(
+        db,
+        request,
+        AuditAction.INFERENCE_READ,
+        AuditModule.INFERENCE,
+        usuario=actual.usuario,
+        rol=actual.rol_activo.nombre if actual.rol_activo else None,
+        tipo_objeto=AuditObjectType.INFERENCE,
+        detalles={"resource_count": len(items)},
+    )
+    return ResultadosGuardadosOut(total=total, items=items)

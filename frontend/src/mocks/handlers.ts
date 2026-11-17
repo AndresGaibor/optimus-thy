@@ -1,5 +1,7 @@
 import { delay, http, HttpResponse } from 'msw';
 
+import { resultadosOk, resultadosVacios } from './resultados';
+
 /**
  * Handlers MSW con la forma real de contracts/openapi.json / backend.
  * - GET /auth/me       -> LoginResponse { usuario, roles, rol_activo, segundos_para_expirar }
@@ -194,6 +196,7 @@ const API = {
   roles: /\/(?:api\/)?roles(?:\?.*)?$/,
   usuarios: /\/(?:api\/)?usuarios(?:\?.*)?$/,
   instituciones: /\/(?:api\/)?instituciones(?:\?.*)?$/,
+  resultados: /\/(?:api\/)?resultados(?:\?.*)?$/,
 };
 
 // Handlers de datos (sin identidad). Reutilizable por flujos con sesión propia.
@@ -230,6 +233,13 @@ export function crearHandlersDatos(escenario: EscenarioApi = 'ok') {
         return HttpResponse.json<PacientesListResponse>({ total: 45, items: pacientesOk.items });
       }
       return HttpResponse.json<PacientesListResponse>(pacientesOk);
+    }),
+    http.get(API.resultados, async () => {
+      const error = respuestaError(escenario, 'Permiso insuficiente');
+      if (error) return error;
+      await demorar();
+      if (escenario === 'vacio') return HttpResponse.json(resultadosVacios);
+      return HttpResponse.json(resultadosOk);
     }),
     http.get<never, never, MatrizRolesResponse | ErrorResponse>(API.roles, async () => {
       const error = respuestaError(escenario, 'Permiso insuficiente');

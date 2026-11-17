@@ -48,6 +48,40 @@ export async function listarResultados(casoId: string): Promise<Inferencia[]> {
   return (data as unknown as ListaInferencias).items;
 }
 
+export interface ResultadoGuardado extends Inferencia {
+  caso_id: string;
+  caso_codigo: string;
+  paciente_codigo: string;
+}
+
+export interface FiltrosResultados {
+  paciente?: string;
+  desde?: string;
+  hasta?: string;
+  clase?: string;
+  limite?: number;
+  desplazamiento?: number;
+}
+
+/** Resultados de toda la institución con filtros combinables (HU-081). */
+export async function listarResultadosGuardados(
+  filtros: FiltrosResultados = {},
+): Promise<{ total: number; items: ResultadoGuardado[] }> {
+  const query: Record<string, string | number> = {};
+  for (const clave of ['paciente', 'desde', 'hasta', 'clase'] as const) {
+    const valor = filtros[clave];
+    if (valor) query[clave] = valor;
+  }
+  if (typeof filtros.limite === 'number') query.limite = filtros.limite;
+  if (typeof filtros.desplazamiento === 'number') query.desplazamiento = filtros.desplazamiento;
+
+  const { data, error } = await client.GET('/resultados', {
+    params: { query: query as never },
+  });
+  if (error || !data) throw new Error('No se pudieron cargar los resultados.');
+  return data as unknown as { total: number; items: ResultadoGuardado[] };
+}
+
 /** Descarga el PDF de una inferencia con la sesión ya abierta (HU-080). */
 export async function descargarReporte(
   casoId: string,
