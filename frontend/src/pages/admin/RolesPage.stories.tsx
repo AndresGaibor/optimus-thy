@@ -20,8 +20,9 @@ export const Predeterminada: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await canvas.findByRole('table', { name: 'Matriz de permisos por rol' });
-    await expect(canvas.getByRole('columnheader', { name: 'Administrador' })).toBeInTheDocument();
-    await expect(canvas.getByRole('columnheader', { name: 'medico' })).toBeInTheDocument();
+    await expect(canvas.getByRole('columnheader', { name: 'Médico' })).toBeInTheDocument();
+    await expect(canvas.getByRole('columnheader', { name: 'Investigador' })).toBeInTheDocument();
+    await expect(canvas.queryByRole('columnheader', { name: 'Administrador' })).toBeNull();
   },
 };
 

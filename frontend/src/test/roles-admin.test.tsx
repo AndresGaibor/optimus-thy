@@ -16,21 +16,25 @@ const mockSessionAdmin = {
 const matriz = {
   roles: [
     {
-      id: 'r-admin',
-      nombre: 'admin',
-      descripcion: 'Administrador',
-      permisos: ['rol.gestionar', 'usuario.gestionar'],
-    },
-    {
       id: 'r-doctor',
       nombre: 'doctor',
       descripcion: 'Médico',
       permisos: ['paciente.leer'],
+      asignables: ['paciente.leer', 'ficha.leer'],
+    },
+    {
+      id: 'r-researcher',
+      nombre: 'researcher',
+      descripcion: 'Investigador',
+      permisos: ['investigacion.leer'],
+      asignables: ['inferencia.leer', 'investigacion.exportar', 'investigacion.leer'],
     },
   ],
   permisos: [
     { codigo: 'paciente.leer', descripcion: 'Consultar pacientes' },
-    { codigo: 'rol.gestionar', descripcion: 'Editar la matriz de roles' },
+    { codigo: 'ficha.leer', descripcion: 'Consultar la ficha' },
+    { codigo: 'usuario.gestionar', descripcion: 'Gestionar usuarios' },
+    { codigo: 'investigacion.leer', descripcion: 'Consultar cohortes' },
   ],
 };
 
@@ -104,7 +108,7 @@ describe('roles y permisos admin', () => {
     (globalThis as unknown as { fetch: typeof fetch }).fetch = fetchMock as unknown as typeof fetch;
   });
 
-  it('muestra la matriz con roles, permisos y su estado', async () => {
+  it('muestra la matriz con los roles y su estado', async () => {
     fetchMock.mockResolvedValueOnce(responderJson(mockSessionAdmin));
     fetchMock.mockResolvedValueOnce(responderJson(matriz));
 
@@ -113,8 +117,9 @@ describe('roles y permisos admin', () => {
     expect(await screen.findByRole('heading', { name: /roles y permisos/i })).toBeInTheDocument();
     const region = await screen.findByRole('region', { name: /matriz de permisos por rol/i });
     const tabla = within(region).getByRole('table');
-    expect(within(tabla).getByText('Administrador')).toBeInTheDocument();
     expect(within(tabla).getByText('Médico')).toBeInTheDocument();
+    expect(within(tabla).getByText('Investigador')).toBeInTheDocument();
+    expect(within(tabla).queryByText('Administrador')).not.toBeInTheDocument();
     expect(within(tabla).getByText('paciente.leer')).toBeInTheDocument();
 
     const concedido = within(tabla).getByRole('switch', {
@@ -122,21 +127,23 @@ describe('roles y permisos admin', () => {
     });
     expect(concedido).toHaveAttribute('aria-checked', 'true');
     const denegado = within(tabla).getByRole('switch', {
-      name: /permiso paciente\.leer para administrador/i,
+      name: /permiso ficha\.leer para médico/i,
     });
     expect(denegado).toHaveAttribute('aria-checked', 'false');
   });
 
-  it('no permite retirar la gestión de roles al administrador', async () => {
+  it('no ofrece permisos fuera del ámbito del rol', async () => {
     fetchMock.mockResolvedValueOnce(responderJson(mockSessionAdmin));
     fetchMock.mockResolvedValueOnce(responderJson(matriz));
 
     montarApp();
 
-    const bloqueado = await screen.findByRole('switch', {
-      name: /permiso rol\.gestionar para administrador/i,
-    });
-    expect(bloqueado).toBeDisabled();
+    const region = await screen.findByRole('region', { name: /matriz de permisos por rol/i });
+    const tabla = within(region).getByRole('table');
+    expect(
+      within(tabla).queryByRole('switch', { name: /permiso usuario\.gestionar/i }),
+    ).not.toBeInTheDocument();
+    expect(within(tabla).getAllByText(/no aplica a médico/i).length).toBeGreaterThan(0);
   });
 
   it('guardar envía PUT con los permisos del rol modificado', async () => {
@@ -144,14 +151,17 @@ describe('roles y permisos admin', () => {
     fetchMock.mockResolvedValueOnce(responderJson(mockSessionAdmin));
     fetchMock.mockResolvedValueOnce(responderJson(matriz));
     fetchMock.mockResolvedValueOnce(
-      responderJson({ ...matriz.roles[1], permisos: ['paciente.leer', 'rol.gestionar'] }),
+      responderJson({
+        ...matriz.roles[0],
+        permisos: ['paciente.leer', 'ficha.leer'],
+      }),
     );
     fetchMock.mockResolvedValueOnce(responderJson(matriz));
 
     montarApp();
 
     const casilla = await screen.findByRole('switch', {
-      name: /permiso rol\.gestionar para médico/i,
+      name: /permiso ficha\.leer para médico/i,
     });
     await user.click(casilla);
     await user.click(screen.getByRole('button', { name: /guardar cambios/i }));
@@ -161,7 +171,7 @@ describe('roles y permisos admin', () => {
     });
     const llamada = llamadaA(fetchMock, '/roles/r-doctor/permisos', 'PUT');
     expect(await extraerCuerpo(llamada as unknown[])).toEqual({
-      permisos: ['paciente.leer', 'rol.gestionar'],
+      permisos: ['paciente.leer', 'ficha.leer'],
     });
   });
 

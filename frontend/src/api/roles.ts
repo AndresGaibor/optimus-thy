@@ -11,6 +11,7 @@ export interface RolMatriz {
   nombre: string;
   descripcion: string | null;
   permisos: string[];
+  asignables: string[];
 }
 
 export interface MatrizRoles {
