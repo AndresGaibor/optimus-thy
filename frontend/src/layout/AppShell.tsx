@@ -11,7 +11,7 @@ import {
 import { Outlet, useNavigate } from 'react-router-dom';
 import { Dialog } from '../design-system';
 import { Button } from '../design-system/components/atoms/Button';
-import { RoleBadge } from '../design-system/components/molecules/RoleBadge';
+import { ProfileMenu } from '../design-system/components/molecules/ProfileMenu';
 import {
   SidebarLayout,
   type SidebarNavItem,
@@ -52,45 +52,23 @@ export function AppShell() {
       navItems={NAV_BY_ROLE[rolActivo]}
       navLabel="Navegación principal"
       tone={rolActivo as RoleKey}
-      roleLabel={ROLE_LABELS[rolActivo as RoleKey]}
       sessionInfo={
-        <div className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-foreground">{usuario.nombre}</span>
-          <RoleBadge role={rolActivo as RoleKey} />
-          {rolesDisponibles.length > 1 && (
-            <div role="group" aria-label="Cambiar de rol" className="mt-2 flex flex-col gap-1">
-              {rolesDisponibles.map((r) => (
-                <Button
-                  key={r}
-                  variant={r === rolActivo ? 'secondary' : 'outline'}
-                  size="sm"
-                  className="w-full"
-                  aria-pressed={r === rolActivo}
-                  onClick={async () => {
-                    if (r === rolActivo) return;
-                    await cambiarRolActivo(r);
-                    navigate(homePathFor(r));
-                  }}
-                >
-                  {ROLE_LABELS[r as RoleKey]}
-                </Button>
-              ))}
-            </div>
-          )}
-        </div>
-      }
-      sessionActions={
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-full"
-          onClick={async () => {
+        <ProfileMenu
+          nombre={usuario.nombre ?? usuario.correo ?? 'Cuenta'}
+          rolActivo={rolActivo as RoleKey}
+          opciones={rolesDisponibles.map((r) => ({
+            value: r,
+            label: ROLE_LABELS[r as RoleKey],
+          }))}
+          onCambiarRol={async (valor) => {
+            await cambiarRolActivo(valor as Role);
+            navigate(homePathFor(valor as Role));
+          }}
+          onCerrarSesion={async () => {
             await logout();
             navigate('/login');
           }}
-        >
-          Cerrar sesión
-        </Button>
+        />
       }
     >
       <Dialog

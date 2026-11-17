@@ -111,6 +111,8 @@ describe('auth', () => {
     });
     fetchMock.mockResolvedValueOnce({ ok: true, status: 204 });
     montarApp('/medico');
+    const perfil = await screen.findByRole('button', { name: /médico test/i });
+    await user.click(perfil);
     const cerrar = await screen.findByRole('button', { name: /cerrar sesión/i });
     await user.click(cerrar);
     const calls = fetchMock.mock.calls;

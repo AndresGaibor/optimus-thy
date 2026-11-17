@@ -85,6 +85,8 @@ export { PatientCard } from './components/molecules/PatientCard';
 export type { PatientCardProps } from './components/molecules/PatientCard';
 export { RoleBadge } from './components/molecules/RoleBadge';
 export type { RoleBadgeProps } from './components/molecules/RoleBadge';
+export { ProfileMenu } from './components/molecules/ProfileMenu';
+export type { ProfileMenuOption, ProfileMenuProps } from './components/molecules/ProfileMenu';
 export { SearchInput } from './components/molecules/SearchInput';
 export type { SearchInputProps } from './components/molecules/SearchInput';
 export { StatCard } from './components/molecules/StatCard';
