@@ -135,6 +135,7 @@ export function ResultadosPage() {
         <Spinner size="lg" label="Cargando resultados" />
       ) : resultados.length === 0 ? (
         <EmptyState
+          as="h2"
           title="Sin resultados"
           description="Ajusta los filtros o analiza una ecografía para generar resultados."
         />

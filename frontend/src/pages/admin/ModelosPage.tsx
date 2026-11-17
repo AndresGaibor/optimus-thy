@@ -111,6 +111,7 @@ export function ModelosPage() {
         <Spinner size="lg" label="Cargando modelos de IA" />
       ) : modelos.length === 0 ? (
         <EmptyState
+          as="h2"
           title="Sin modelos"
           description="Sube un archivo ZIP con los pesos para empezar."
           action={<Button onClick={() => setSubidaAbierta(true)}>Subir modelos</Button>}
