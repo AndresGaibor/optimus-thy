@@ -109,10 +109,10 @@ Al cerrar un issue se actualizan las filas de los requisitos que cubre: cambiar
 | RF-INF-12 | Mostrar por nódulo la imagen original, la caja del detector, la máscara final, la región analizada y la superposición… | CP-062 | Pendiente | — | — |
 | RF-INF-13 | Una imagen puede tener hasta 3 nódulos; cada uno recibe su caja, su máscara y su clasificación | CP-063 | Pendiente | — | — |
 | RF-INF-14 | Si el detector no encuentra nódulo, el sistema no clasifica la imagen completa como si fuera un nódulo y lo informa | CP-064 | Pendiente | — | — |
-| RF-REP-01 | Generar un reporte PDF por inferencia con datos mínimos del paciente, imagen, resultado, confianza, versión del modelo,… | CP-065 | Pendiente | — | — |
-| RF-REP-02 | El reporte incluye el aviso de apoyo, no de diagnóstico | CP-066 | Pendiente | — | — |
+| RF-REP-01 | Generar un reporte PDF por inferencia con datos mínimos del paciente, imagen, resultado, confianza, versión del modelo,… | CP-065 | Aprobado | `GET /casos/{id}/inferencias/{id}/reporte.pdf`; `backend/tests/test_reportes.py` (PDF con encabezado, aviso, imagen, resultado y nódulos; 404 para caso ajeno, otra inferencia y rol sin permiso) | — |
+| RF-REP-02 | El reporte incluye el aviso de apoyo, no de diagnóstico | CP-066 | Aprobado | `backend/app/reportes/inferencia.py` (aviso y leyenda «normal = sin nódulo»); el texto queda en el PDF y no depende de la interfaz | — |
 | RF-REP-03 | Consultar resultados guardados con filtros por paciente, fecha y clase | CP-067 | Pendiente | — | — |
-| RF-REP-04 | Descargar el reporte con permiso del rol y registro de la descarga | CP-068 | Pendiente | — | — |
+| RF-REP-04 | Descargar el reporte con permiso del rol y registro de la descarga | CP-068 | Aprobado | Permiso `reporte.generar` (solo doctor) y evento `INFERENCE.REPORT_DOWNLOAD` con usuario, reporte y hora; `backend/tests/test_reportes.py` | — |
 | RF-INV-01 | El investigador consulta datasets desidentificados construidos a partir de casos con consentimiento | CP-069 | Pendiente | — | — |
 | RF-INV-02 | Desidentificar antes de ofrecer datos: quitar identificadores directos y generalizar fechas y edades | CP-070 | Pendiente | — | — |
 | RF-INV-03 | El investigador nunca ve datos que identifiquen al paciente | CP-071 | Pendiente | — | — |

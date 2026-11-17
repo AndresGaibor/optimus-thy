@@ -12,6 +12,7 @@ objeto, y nadie puede corregir ese rastro después.
 | Consultas | `PATIENT_READ`, `RECORD_READ`, `DOCUMENT_READ`, `IMAGE_READ`, `INFERENCE_READ` |
 | Cargas | `DOCUMENT_UPLOAD`, `IMAGE_UPLOAD` |
 | Consentimiento | `CONSENT_CREATE`, `CONSENT_REVOKE` |
+| Informes | `REPORT_DOWNLOAD` (descarga del PDF de una inferencia) |
 | Procesamiento | `INFERENCE_REQUEST` |
 | Exportaciones | `EXPORT` |
 | Administración | `USER_CREATE`, `USER_UPDATE`, `USER_ROLE_CHANGE`, `PERMISSION_CHANGE`, `SETTINGS_CHANGE` |

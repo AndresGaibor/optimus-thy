@@ -33,6 +33,9 @@ class AuditAction(StrEnum):
     CONSENT_CREATE = "CONSENT_CREATE"
     CONSENT_REVOKE = "CONSENT_REVOKE"
 
+    # Informes (HU-080, HU-082)
+    REPORT_DOWNLOAD = "REPORT_DOWNLOAD"
+
     # Procesamiento (RF-AUD-04)
     INFERENCE_REQUEST = "INFERENCE_REQUEST"
 

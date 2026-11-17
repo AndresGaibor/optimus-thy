@@ -16,6 +16,7 @@ from app.api.consentimientos import router as consentimientos_router
 from app.api.imagenes import router as imagenes_router
 from app.api.modelos_ia import router as modelos_ia_router
 from app.api.pacientes import router as pacientes_router
+from app.api.reportes import router as reportes_router
 from app.api.resultados import router as resultados_router
 from app.api.roles import router as roles_router
 from app.api.trabajos import router as trabajos_router
@@ -178,6 +179,7 @@ def create_app() -> FastAPI:
     app.include_router(imagenes_router)
     app.include_router(consentimientos_router)
     app.include_router(resultados_router)
+    app.include_router(reportes_router)
     app.include_router(modelos_ia_router)
     app.include_router(auth_router)
 
