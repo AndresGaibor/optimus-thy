@@ -83,7 +83,7 @@ def crear_institucion(
     db: Annotated[Session, Depends(session_dep)],
     actual: Annotated[SesionActual, Depends(requiere_permiso("usuario.gestionar"))],
 ) -> dict[str, Any] | JSONResponse:
-    codigo = body.codigo.strip().upper()
+    codigo = body.codigo.strip().lower()
     if _codigo_duplicado(db, codigo):
         return _error(
             request,
@@ -136,7 +136,7 @@ def patch_institucion(
         )
 
     if body.codigo is not None:
-        codigo = body.codigo.strip().upper()
+        codigo = body.codigo.strip().lower()
         if _codigo_duplicado(db, codigo, excluir=institucion.id):
             return _error(
                 request,

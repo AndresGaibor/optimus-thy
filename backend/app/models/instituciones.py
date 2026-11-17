@@ -27,7 +27,7 @@ class Institucion(Base):
         server_default=sa.text("gen_random_uuid()"),
     )
     nombre: Mapped[str] = mapped_column(sa.String(255), nullable=False)
-    codigo: Mapped[str] = mapped_column(sa.String(64), nullable=False, unique=True)
+    codigo: Mapped[str] = mapped_column(sa.String(64), nullable=False)
     activa: Mapped[bool] = mapped_column(sa.Boolean, nullable=False, server_default=sa.text("true"))
     creado_en: Mapped[sa.DateTime] = mapped_column(
         sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.func.now()
@@ -43,3 +43,11 @@ class Institucion(Base):
     pacientes: Mapped[list[Paciente]] = relationship(back_populates="institucion")
     casos: Mapped[list[Caso]] = relationship(back_populates="institucion")
     auditoria: Mapped[list[Auditoria]] = relationship(back_populates="institucion")
+
+
+# El código es único sin distinguir mayúsculas: `espoch` y `ESPOCH` son el mismo.
+sa.Index(
+    "uq_instituciones_codigo_lower",
+    sa.func.lower(Institucion.codigo),
+    unique=True,
+)

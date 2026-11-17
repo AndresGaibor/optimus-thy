@@ -59,7 +59,7 @@ def test_crea_institucion_y_normaliza_el_codigo(admin_client):
 
     assert respuesta.status_code == 201
     cuerpo = respuesta.json()
-    assert cuerpo["codigo"] == "SOLCA_Q"
+    assert cuerpo["codigo"] == "solca_q"
     assert cuerpo["activa"] is True
     assert cuerpo["usuarios_activos"] == 0
 
@@ -70,6 +70,11 @@ def test_codigo_duplicado_devuelve_409(admin_client):
 
     assert respuesta.status_code == 409
     assert respuesta.json()["error"]["code"] == "conflict"
+
+    otra_caja = client.post("/instituciones", json={"nombre": "Otra", "codigo": "HOSP_CENTRAL"})
+
+    assert otra_caja.status_code == 409
+    assert otra_caja.json()["error"]["code"] == "conflict"
 
 
 def test_no_desactiva_una_institucion_con_usuarios_activos(admin_client):
