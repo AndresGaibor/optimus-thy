@@ -66,8 +66,37 @@ PERMISOS_POR_ROL: Final[dict[str, tuple[str, ...]]] = {
     ),
 }
 
-PERMISO_IRRENUNCIABLE_ADMIN: Final[str] = "rol.gestionar"
-"""El rol administrador conserva este permiso para no bloquear la propia matriz."""
+PERMISOS_ASIGNABLES_POR_ROL: Final[dict[str, tuple[str, ...]]] = {
+    "admin": (
+        "ajustes.gestionar",
+        "auditoria.leer",
+        "rol.gestionar",
+        "usuario.gestionar",
+    ),
+    "doctor": (
+        "documento.cargar",
+        "documento.leer",
+        "ficha.escribir",
+        "ficha.leer",
+        "imagen.cargar",
+        "imagen.leer",
+        "inferencia.ejecutar",
+        "inferencia.leer",
+        "paciente.escribir",
+        "paciente.leer",
+        "reporte.generar",
+    ),
+    "researcher": (
+        "inferencia.leer",
+        "investigacion.exportar",
+        "investigacion.leer",
+    ),
+}
+"""Dominio de cada rol: el rol solo puede tener permisos de este ámbito.
+
+La matriz editable ofrece únicamente estos códigos, y ``PUT /roles/{id}/permisos``
+rechaza cualquiera que quede fuera.
+"""
 
 
 def asegurar_catalogo(db: Session) -> None:

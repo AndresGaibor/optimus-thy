@@ -13,8 +13,8 @@ from app.models.instituciones import Institucion
 from app.models.usuarios import Permiso, Rol, RolPermiso, Usuario, UsuarioRol
 from app.security.passwords import hash_password
 from app.security.permisos import (
-    PERMISO_IRRENUNCIABLE_ADMIN,
     PERMISOS,
+    PERMISOS_ASIGNABLES_POR_ROL,
     PERMISOS_POR_ROL,
     ROLES_BASE,
     asegurar_catalogo,
@@ -57,6 +57,13 @@ def test_el_medico_no_administra_roles_ni_usuarios() -> None:
     assert not (set(PERMISOS_POR_ROL["doctor"]) & prohibidos)
 
 
+def test_los_dominios_contienen_la_matriz_por_defecto_y_solo_el_catalogo() -> None:
+    for rol, codigos in PERMISOS_POR_ROL.items():
+        assert set(codigos) <= set(PERMISOS_ASIGNABLES_POR_ROL[rol])
+    for rol, codigos in PERMISOS_ASIGNABLES_POR_ROL.items():
+        assert set(codigos) <= set(PERMISOS), rol
+
+
 def _admin_logueado(db: Session, client: TestClient) -> tuple[Rol, Institucion]:
     """Siembra el catálogo, crea un administrador y abre su sesión."""
     asegurar_catalogo(db)
@@ -94,10 +101,11 @@ def test_la_matriz_muestra_roles_permisos_y_asignaciones(
 
     assert respuesta.status_code == 200
     datos = respuesta.json()
-    assert {rol["nombre"] for rol in datos["roles"]} == {"admin", "doctor", "researcher"}
+    assert {rol["nombre"] for rol in datos["roles"]} == {"doctor", "researcher"}
     assert {permiso["codigo"] for permiso in datos["permisos"]} == set(PERMISOS)
     doctor = next(rol for rol in datos["roles"] if rol["nombre"] == "doctor")
     assert doctor["permisos"] == sorted(PERMISOS_POR_ROL["doctor"])
+    assert doctor["asignables"] == list(PERMISOS_ASIGNABLES_POR_ROL["doctor"])
 
 
 def test_el_admin_edita_la_matriz_y_queda_en_la_bitacora(
@@ -154,16 +162,17 @@ def test_un_permiso_desconocido_no_cambia_nada(db_session: Session, client: Test
     )
 
 
-def test_el_admin_conserva_la_gestion_de_roles(db_session: Session, client: TestClient) -> None:
+def test_el_rol_administrador_no_se_edita(db_session: Session, client: TestClient) -> None:
     _skip_if_no_db()
     rol_admin, _ = _admin_logueado(db_session, client)
 
     respuesta = client.put(
         f"/roles/{rol_admin.id}/permisos",
-        json={"permisos": ["usuario.gestionar"]},
+        json={"permisos": ["rol.gestionar", "usuario.gestionar"]},
     )
 
     assert respuesta.status_code == 422
+    assert respuesta.json()["error"]["message"] == "Los permisos del rol administrador son fijos"
     db_session.expire_all()
     codigos = {
         codigo
@@ -172,7 +181,27 @@ def test_el_admin_conserva_la_gestion_de_roles(db_session: Session, client: Test
         .filter(RolPermiso.rol_id == rol_admin.id)
         .all()
     }
-    assert PERMISO_IRRENUNCIABLE_ADMIN in codigos
+    assert codigos == set(PERMISOS_POR_ROL["admin"])
+
+
+def test_un_permiso_fuera_del_dominio_del_rol_se_rechaza(
+    db_session: Session, client: TestClient
+) -> None:
+    _skip_if_no_db()
+    _admin_logueado(db_session, client)
+    investigador = db_session.query(Rol).filter(Rol.nombre == "researcher").one()
+
+    respuesta = client.put(
+        f"/roles/{investigador.id}/permisos",
+        json={"permisos": ["investigacion.leer", "usuario.gestionar"]},
+    )
+
+    assert respuesta.status_code == 422
+    assert "usuario.gestionar" in respuesta.json()["error"]["message"]
+    db_session.expire_all()
+    assert db_session.query(RolPermiso).filter(RolPermiso.rol_id == investigador.id).count() == len(
+        PERMISOS_POR_ROL["researcher"]
+    )
 
 
 def test_un_rol_inexistente_devuelve_404(db_session: Session, client: TestClient) -> None:

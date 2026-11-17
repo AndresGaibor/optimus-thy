@@ -1,7 +1,8 @@
 """Rutas de administración de roles y de la matriz de permisos (HU-011).
 
-La matriz es visible y editable por el rol administrador, y cada cambio queda
-en la bitácora como ``ADMIN.PERMISSION_CHANGE``.
+La matriz es visible y editable por el rol administrador, sin incluir al propio
+rol administrador (permisos fijos); cada cambio queda en la bitácora como
+``ADMIN.PERMISSION_CHANGE``.
 """
 
 from __future__ import annotations
@@ -19,7 +20,7 @@ from app.audit.http import registrar
 from app.auth.deps import SesionActual, requiere_permiso
 from app.db import session_dep
 from app.models.usuarios import Permiso, Rol, RolPermiso
-from app.security.permisos import PERMISO_IRRENUNCIABLE_ADMIN
+from app.security.permisos import PERMISOS_ASIGNABLES_POR_ROL
 
 router = APIRouter(tags=["roles"])
 
@@ -34,6 +35,7 @@ class RolMatrizOut(BaseModel):
     nombre: str
     descripcion: str | None = None
     permisos: list[str]
+    asignables: list[str]
 
 
 class MatrizOut(BaseModel):
@@ -68,6 +70,7 @@ def _rol_matriz(db: Session, rol: Rol) -> RolMatrizOut:
         nombre=rol.nombre,
         descripcion=rol.descripcion,
         permisos=[codigo for (codigo,) in codigos],
+        asignables=list(PERMISOS_ASIGNABLES_POR_ROL.get(rol.nombre, ())),
     )
 
 
@@ -77,7 +80,7 @@ def matriz_roles(
     db: Annotated[Session, Depends(session_dep)],
     actual: Annotated[SesionActual, Depends(requiere_permiso("rol.gestionar"))],
 ) -> MatrizOut | JSONResponse:
-    roles = db.query(Rol).order_by(Rol.nombre.asc()).all()
+    roles = db.query(Rol).filter(Rol.nombre != "admin").order_by(Rol.nombre.asc()).all()
     permisos = db.query(Permiso).order_by(Permiso.codigo.asc()).all()
     return MatrizOut(
         roles=[_rol_matriz(db, rol) for rol in roles],
@@ -119,11 +122,20 @@ def put_permisos_rol(
             status.HTTP_422_UNPROCESSABLE_ENTITY,
         )
 
-    if rol.nombre == "admin" and PERMISO_IRRENUNCIABLE_ADMIN not in codigos:
+    if rol.nombre == "admin":
         return _error(
             request,
             "unprocessable_entity",
-            "El rol administrador debe conservar el permiso de gestión de roles",
+            "Los permisos del rol administrador son fijos",
+            status.HTTP_422_UNPROCESSABLE_ENTITY,
+        )
+
+    fuera_dominio = sorted(set(codigos) - set(PERMISOS_ASIGNABLES_POR_ROL.get(rol.nombre, ())))
+    if fuera_dominio:
+        return _error(
+            request,
+            "unprocessable_entity",
+            f"Permiso no aplicable al rol: {', '.join(fuera_dominio)}",
             status.HTTP_422_UNPROCESSABLE_ENTITY,
         )
 

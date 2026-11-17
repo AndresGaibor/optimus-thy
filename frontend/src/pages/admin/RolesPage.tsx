@@ -22,8 +22,6 @@ import {
 } from '../../api/roles';
 import { mapBackendRoleToUi, ROLE_LABEL } from '../../session/roles';
 
-const PERMISO_QUE_CONSERVA_ADMIN = 'rol.gestionar';
-
 type Seleccion = Record<string, string[]>;
 
 function etiquetaRol(rol: RolMatriz): string {
@@ -181,21 +179,26 @@ export function RolesPage() {
                 </TableCell>
                 {matriz.roles.map((rol) => {
                   const marcado = (seleccion[rol.id] ?? []).includes(permiso.codigo);
-                  const bloqueado =
-                    rol.nombre === 'admin' && permiso.codigo === PERMISO_QUE_CONSERVA_ADMIN;
+                  const aplica = (rol.asignables ?? []).includes(permiso.codigo);
                   return (
                     <TableCell key={`${rol.id}-${permiso.codigo}`}>
-                      <div className="flex items-center gap-2">
-                        <Switch
-                          checked={marcado}
-                          disabled={bloqueado}
-                          aria-label={`Permiso ${permiso.codigo} para ${etiquetaRol(rol)}`}
-                          onCheckedChange={() => alternar(rol.id, permiso.codigo)}
-                        />
+                      {aplica ? (
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            checked={marcado}
+                            aria-label={`Permiso ${permiso.codigo} para ${etiquetaRol(rol)}`}
+                            onCheckedChange={() => alternar(rol.id, permiso.codigo)}
+                          />
+                          <span className="text-sm text-muted-foreground">
+                            {marcado ? 'Concedido' : 'Denegado'}
+                          </span>
+                        </div>
+                      ) : (
                         <span className="text-sm text-muted-foreground">
-                          {marcado ? 'Concedido' : 'Denegado'}
+                          <span className="sr-only">No aplica a {etiquetaRol(rol)}</span>
+                          <span aria-hidden="true">—</span>
                         </span>
-                      </div>
+                      )}
                     </TableCell>
                   );
                 })}
@@ -203,7 +206,6 @@ export function RolesPage() {
             ))}
           </TableBody>
         </Table>
-        {bloqueadoNote(matriz)}
       </div>
     );
   }, [cargando, error, matriz, seleccion, alternar, cargar]);
@@ -221,8 +223,8 @@ export function RolesPage() {
       />
 
       <Callout tone="info" title="Mínimo privilegio">
-        Concede solo los permisos que el rol necesita. El rol administrador conserva la gestión de
-        roles para no bloquear esta pantalla.
+        Concede solo los permisos que el rol necesita. Cada rol muestra únicamente los permisos de
+        su ámbito; el rol administrador tiene permisos fijos y no se edita en esta matriz.
       </Callout>
 
       {error && matriz ? (
@@ -235,15 +237,5 @@ export function RolesPage() {
 
       {contenido}
     </section>
-  );
-}
-
-function bloqueadoNote(matriz: MatrizRoles) {
-  const admin = matriz.roles.find((rol) => rol.nombre === 'admin');
-  if (!admin) return null;
-  return (
-    <p className="mt-3 text-sm text-muted-foreground">
-      El permiso {PERMISO_QUE_CONSERVA_ADMIN} del rol {etiquetaRol(admin)} no se puede retirar.
-    </p>
   );
 }

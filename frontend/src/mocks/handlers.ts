@@ -59,6 +59,7 @@ export interface RolMatrizOut {
   nombre: string;
   descripcion: string | null;
   permisos: string[];
+  asignables: string[];
 }
 
 export interface MatrizRolesResponse {
@@ -112,22 +113,23 @@ export const pacientesVacios: PacientesListResponse = { total: 0, items: [] };
 export const matrizRolesOk: MatrizRolesResponse = {
   roles: [
     {
-      id: 'rol-admin',
-      nombre: 'admin',
-      descripcion: 'Administración del sistema',
-      permisos: ['usuarios:leer', 'usuarios:escribir', 'roles:administrar'],
-    },
-    {
       id: 'rol-medico',
-      nombre: 'medico',
+      nombre: 'doctor',
       descripcion: 'Atención clínica',
       permisos: ['pacientes:leer', 'pacientes:escribir', 'casos:leer'],
+      asignables: ['pacientes:leer', 'pacientes:escribir', 'casos:leer'],
+    },
+    {
+      id: 'rol-investigador',
+      nombre: 'researcher',
+      descripcion: 'Investigación',
+      permisos: ['casos:leer'],
+      asignables: ['casos:leer'],
     },
   ],
   permisos: [
     { codigo: 'usuarios:leer', descripcion: 'Ver usuarios' },
     { codigo: 'usuarios:escribir', descripcion: 'Gestionar usuarios' },
-    { codigo: 'roles:administrar', descripcion: 'Administrar roles y permisos' },
     { codigo: 'pacientes:leer', descripcion: 'Ver pacientes' },
     { codigo: 'pacientes:escribir', descripcion: 'Gestionar pacientes' },
     { codigo: 'casos:leer', descripcion: 'Ver casos' },
