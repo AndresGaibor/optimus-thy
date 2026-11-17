@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import contextlib
 import os
 
 import pytest
@@ -11,8 +10,8 @@ from sqlalchemy import create_engine, event, text
 from sqlalchemy.orm import sessionmaker
 
 from app import models  # noqa: F401
+from app.config import get_settings
 from app.db import Base
-from app.main import app, create_app
 from app.models.usuarios import Rol
 from app.security.permisos import PERMISOS, PERMISOS_POR_ROL
 
@@ -41,7 +40,16 @@ def _permisos_de_los_roles_base(mapper, connection, rol) -> None:
 
 
 def pytest_configure(config: pytest.Config) -> None:
-    """En CI y en `make check` saltarse las pruebas de BD es un error, no un «verde»."""
+    """Deja el entorno listo antes de que se importen los módulos de prueba.
+
+    El limitador de HT-082 va apagado por defecto en la suite: las pruebas que
+    lo ejercitan crean su propia app con otro valor y limpian la caché de
+    ``get_settings``. Se fija aquí (y no al importar ``app.main``) para que las
+    apps creadas en el arranque y en las fixtures ya lo lean desactivado.
+    """
+    os.environ.setdefault("RATE_LIMIT_POR_MINUTO", "0")
+    os.environ.setdefault("INFERENCIA_POR_MINUTO", "0")
+    get_settings.cache_clear()
     if os.environ.get("REQUIRE_TEST_DB") == "1" and not os.environ.get("TEST_DATABASE_URL"):
         raise pytest.UsageError(
             "REQUIRE_TEST_DB=1 pero TEST_DATABASE_URL no está definida. "
@@ -110,6 +118,10 @@ def _clean_db(test_engine):
 
 @pytest.fixture()
 def client(test_engine):
+    from app.db import session_dep
+    from app.main import app as app_global
+    from app.main import create_app
+
     app_instance = create_app()
     TestingSessionLocal = sessionmaker(bind=test_engine, autoflush=False, autocommit=False)
 
@@ -120,49 +132,8 @@ def client(test_engine):
         finally:
             db.close()
 
-    try:
-        from app import db as app_db
-
-        app_instance.dependency_overrides[app_db.session_dep] = _override_session
-    except Exception:
-        pass
-
-    with contextlib.suppress(Exception):
-        app_instance.dependency_overrides[app_db.session_dep] = _override_session
-
-    # Also override in the global app if different
-    with contextlib.suppress(Exception):
-        app.dependency_overrides[__import__("app.db", fromlist=["session_dep"]).session_dep] = (
-            _override_session
-        )
-
-    app_instance.dependency_overrides = getattr(app_instance, "dependency_overrides", {})
-    # try to import and override common dependency names
-    try:
-        from app.db import session_dep as session_dep_app
-
-        app_instance.dependency_overrides[session_dep_app] = _override_session
-    except Exception:
-        pass
-
-    try:
-        import app.auth.deps as auth_deps
-
-        # If there is a session dependency used by auth, try to override by common patterns
-        for name in dir(auth_deps):
-            getattr(auth_deps, name)
-            # not obvious; we'll also rely on routes using session_dep from app.db
-    except Exception:
-        pass
-
-    # Ensure using app.db.session_dep
-    try:
-        from app import db as app_db_mod
-
-        app_instance.dependency_overrides[app_db_mod.session_dep] = _override_session
-        app.dependency_overrides[app_db_mod.session_dep] = _override_session
-    except Exception:
-        pass
+    app_instance.dependency_overrides[session_dep] = _override_session
+    app_global.dependency_overrides[session_dep] = _override_session
 
     with TestClient(app_instance) as c:
         yield c
@@ -170,6 +141,10 @@ def client(test_engine):
 
 @pytest.fixture()
 def bare_app(test_engine):
+    from app.db import session_dep
+    from app.main import app as app_global
+    from app.main import create_app
+
     app_instance = create_app()
     TestingSessionLocal = sessionmaker(bind=test_engine, autoflush=False, autocommit=False)
 
@@ -180,11 +155,6 @@ def bare_app(test_engine):
         finally:
             db.close()
 
-    try:
-        from app import db as app_db_mod
-
-        app_instance.dependency_overrides[app_db_mod.session_dep] = _override_session
-        app.dependency_overrides[app_db_mod.session_dep] = _override_session
-    except Exception:
-        pass
+    app_instance.dependency_overrides[session_dep] = _override_session
+    app_global.dependency_overrides[session_dep] = _override_session
     return app_instance
