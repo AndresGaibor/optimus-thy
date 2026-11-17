@@ -1,5 +1,5 @@
+import { Pencil, Power, PowerOff } from 'lucide-react';
 import {
-  ActionsMenu,
   Button,
   StatusBadge,
   Table,
@@ -26,51 +26,61 @@ export function InstitucionesTabla({
   onSolicitarDesactivar,
 }: InstitucionesTablaProps) {
   return (
-    <Table caption="Listado de instituciones">
+    <Table caption="Listado de instituciones" className="table-fixed">
       <TableHeader>
         <TableRow>
           <TableHead>Nombre</TableHead>
-          <TableHead>Código</TableHead>
-          <TableHead>Usuarios activos</TableHead>
-          <TableHead>Estado</TableHead>
-          <TableHead className="w-40 px-2 sm:px-4">Acciones</TableHead>
+          <TableHead className="w-32">Código</TableHead>
+          <TableHead className="w-40 text-right">Usuarios activos</TableHead>
+          <TableHead className="w-28">Estado</TableHead>
+          <TableHead className="w-64 px-2">Acciones</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {instituciones.map((institucion) => (
           <TableRow key={institucion.id}>
-            <TableCell className="font-medium text-foreground">{institucion.nombre}</TableCell>
-            <TableCell>{institucion.codigo}</TableCell>
-            <TableCell>
-              {institucion.usuarios_activos > 0 ? institucion.usuarios_activos : '-'}
+            <TableCell className="py-7 font-medium text-foreground">{institucion.nombre}</TableCell>
+            <TableCell className="py-7">{institucion.codigo}</TableCell>
+            <TableCell className="py-7 text-right tabular-nums">
+              {institucion.usuarios_activos}
             </TableCell>
-            <TableCell>
+            <TableCell className="py-7">
               <StatusBadge kind="user" status={institucion.activa ? 'Activo' : 'Inactivo'} />
             </TableCell>
-            <TableCell>
-              <div className="flex items-center gap-2">
+            <TableCell className="px-2 py-5">
+              <div className="flex flex-nowrap items-center gap-2">
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
                   aria-label={`Editar institución ${institucion.codigo}`}
                   onClick={() => onEditar(institucion)}
                 >
+                  <Pencil aria-hidden className="size-4" />
                   Editar
                 </Button>
-                <ActionsMenu
-                  label={`Acciones de ${institucion.codigo}`}
-                  items={
-                    institucion.activa
-                      ? [
-                          {
-                            label: 'Desactivar',
-                            tone: 'danger' as const,
-                            onSelect: () => onSolicitarDesactivar(institucion),
-                          },
-                        ]
-                      : [{ label: 'Activar', onSelect: () => onActivar(institucion) }]
-                  }
-                />
+                {institucion.activa ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    aria-label={`Desactivar institución ${institucion.codigo}`}
+                    onClick={() => onSolicitarDesactivar(institucion)}
+                    className="border-danger/40 text-danger hover:bg-danger/10"
+                  >
+                    <PowerOff aria-hidden className="size-4" />
+                    Desactivar
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    aria-label={`Activar institución ${institucion.codigo}`}
+                    onClick={() => onActivar(institucion)}
+                    className="border-success/40 text-success hover:bg-success/10"
+                  >
+                    <Power aria-hidden className="size-4" />
+                    Activar
+                  </Button>
+                )}
               </div>
             </TableCell>
           </TableRow>
