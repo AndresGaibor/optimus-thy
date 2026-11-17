@@ -19,6 +19,12 @@ export interface MatrizRoles {
   permisos: Permiso[];
 }
 
+/** Estado deseado y estado del que partió el cliente, por rol. */
+export interface MatrizPermisosPayload {
+  estado: Record<string, string[]>;
+  esperado: Record<string, string[]>;
+}
+
 function esErrorStatus(status: number): status is 401 | 403 | 404 | 409 | 422 {
   return status === 401 || status === 403 || status === 404 || status === 409 || status === 422;
 }
@@ -35,16 +41,10 @@ export async function obtenerMatriz(): Promise<ApiResult<MatrizRoles>> {
   return { ok: true, data: data as unknown as MatrizRoles };
 }
 
-export async function actualizarPermisosRol(
-  id: string,
-  permisos: string[],
-): Promise<ApiResult<RolMatriz>> {
-  const { data, error, response } = await client.PUT('/roles/{id}/permisos', {
-    params: {
-      path: { id },
-    },
-    body: { permisos },
-  });
+export async function guardarMatriz(
+  payload: MatrizPermisosPayload,
+): Promise<ApiResult<MatrizRoles>> {
+  const { data, error, response } = await client.PUT('/roles/permisos', { body: payload });
   if (error || !response?.ok) {
     const status = response?.status;
     if (typeof status === 'number' && esErrorStatus(status)) {
@@ -52,5 +52,5 @@ export async function actualizarPermisosRol(
     }
     return { ok: false, status: 422, error };
   }
-  return { ok: true, data: data as unknown as RolMatriz };
+  return { ok: true, data: data as unknown as MatrizRoles };
 }

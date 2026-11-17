@@ -16,7 +16,8 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.audit.actions import AuditAction, AuditModule, AuditObjectType
-from app.audit.http import registrar
+from app.audit.http import _ip
+from app.audit.service import _MAX_AGENTE, AuditService
 from app.auth.deps import SesionActual, requiere_permiso
 from app.db import session_dep
 from app.models.usuarios import Permiso, Rol, RolPermiso
@@ -43,8 +44,11 @@ class MatrizOut(BaseModel):
     permisos: list[PermisoOut]
 
 
-class PermisosRequest(BaseModel):
-    permisos: list[str]
+class MatrizPermisosRequest(BaseModel):
+    """Estado deseado y estado del que partió el cliente, por id de rol."""
+
+    estado: dict[str, list[str]]
+    esperado: dict[str, list[str]]
 
 
 def _error(request: Request, code: str, message: str, status_code: int) -> JSONResponse:
@@ -74,12 +78,13 @@ def _rol_matriz(db: Session, rol: Rol) -> RolMatrizOut:
     )
 
 
-@router.get("/roles", response_model=None)
-def matriz_roles(
-    request: Request,
-    db: Annotated[Session, Depends(session_dep)],
-    actual: Annotated[SesionActual, Depends(requiere_permiso("rol.gestionar"))],
-) -> MatrizOut | JSONResponse:
+def _codigos(valores: list[str]) -> set[str]:
+    """Códigos de permiso sin vacíos ni repetidos."""
+    return {codigo.strip() for codigo in valores if codigo.strip()}
+
+
+def _matriz(db: Session) -> MatrizOut:
+    """Matriz completa: los roles editables y el catálogo de permisos."""
     roles = db.query(Rol).filter(Rol.nombre != "admin").order_by(Rol.nombre.asc()).all()
     permisos = db.query(Permiso).order_by(Permiso.codigo.asc()).all()
     return MatrizOut(
@@ -91,69 +96,134 @@ def matriz_roles(
     )
 
 
-@router.put("/roles/{id}/permisos", response_model=None)
-def put_permisos_rol(
-    request: Request,
-    id: str,
-    body: PermisosRequest,
-    db: Annotated[Session, Depends(session_dep)],
-    actual: Annotated[SesionActual, Depends(requiere_permiso("rol.gestionar"))],
-) -> RolMatrizOut | JSONResponse:
-    try:
-        rol_id = UUID(id)
-    except ValueError:
-        return _error(request, "not_found", "Rol no encontrado", status.HTTP_404_NOT_FOUND)
-
-    rol = db.query(Rol).filter(Rol.id == rol_id).first()
-    if rol is None:
-        return _error(request, "not_found", "Rol no encontrado", status.HTTP_404_NOT_FOUND)
-
-    codigos = sorted({codigo.strip() for codigo in body.permisos if codigo.strip()})
-    permisos = (
-        db.query(Permiso).filter(Permiso.codigo.in_(codigos)).order_by(Permiso.codigo.asc()).all()
-        if codigos
-        else []
-    )
-    if len(permisos) != len(codigos):
-        return _error(
-            request,
-            "unprocessable_entity",
-            "Permiso desconocido",
-            status.HTTP_422_UNPROCESSABLE_ENTITY,
-        )
-
-    if rol.nombre == "admin":
-        return _error(
-            request,
-            "unprocessable_entity",
-            "Los permisos del rol administrador son fijos",
-            status.HTTP_422_UNPROCESSABLE_ENTITY,
-        )
-
-    fuera_dominio = sorted(set(codigos) - set(PERMISOS_ASIGNABLES_POR_ROL.get(rol.nombre, ())))
-    if fuera_dominio:
-        return _error(
-            request,
-            "unprocessable_entity",
-            f"Permiso no aplicable al rol: {', '.join(fuera_dominio)}",
-            status.HTTP_422_UNPROCESSABLE_ENTITY,
-        )
-
-    db.query(RolPermiso).filter(RolPermiso.rol_id == rol.id).delete()
-    for permiso in permisos:
-        db.add(RolPermiso(rol_id=rol.id, permiso_id=permiso.id))
-
-    registrar(
-        db,
-        request,
+def _registrar_cambio(
+    db: Session, request: Request, actual: SesionActual, objetivo: Rol, total: int
+) -> None:
+    """Añade el evento sin confirmar: la transacción la cierra la ruta."""
+    agente = request.headers.get("user-agent")
+    AuditService(db).record(
         AuditAction.PERMISSION_CHANGE,
         AuditModule.ADMIN,
         usuario=actual.usuario,
         rol=actual.rol_activo.nombre if actual.rol_activo is not None else None,
         tipo_objeto=AuditObjectType.ROLE,
-        objeto_id=rol.id,
-        detalles={"resource_count": len(permisos)},
+        objeto_id=objetivo.id,
+        ip=_ip(request),
+        agente_usuario=agente[:_MAX_AGENTE] if agente else None,
+        detalles={"resource_count": total},
     )
-    db.refresh(rol)
 
-    return _rol_matriz(db, rol)
+
+@router.get("/roles", response_model=None)
+def matriz_roles(
+    request: Request,
+    db: Annotated[Session, Depends(session_dep)],
+    actual: Annotated[SesionActual, Depends(requiere_permiso("rol.gestionar"))],
+) -> MatrizOut | JSONResponse:
+    return _matriz(db)
+
+
+@router.put("/roles/permisos", response_model=None)
+def put_matriz_permisos(
+    request: Request,
+    body: MatrizPermisosRequest,
+    db: Annotated[Session, Depends(session_dep)],
+    actual: Annotated[SesionActual, Depends(requiere_permiso("rol.gestionar"))],
+) -> MatrizOut | JSONResponse:
+    if not body.estado:
+        return _error(
+            request,
+            "unprocessable_entity",
+            "La matriz no puede estar vacía",
+            status.HTTP_422_UNPROCESSABLE_ENTITY,
+        )
+    if set(body.estado) != set(body.esperado):
+        return _error(
+            request,
+            "unprocessable_entity",
+            "El estado esperado debe cubrir los mismos roles que el estado a guardar",
+            status.HTTP_422_UNPROCESSABLE_ENTITY,
+        )
+
+    roles: list[tuple[str, Rol]] = []
+    for clave in body.estado:
+        try:
+            rol_id = UUID(clave)
+        except ValueError:
+            return _error(
+                request,
+                "unprocessable_entity",
+                "Rol no encontrado",
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+            )
+        rol = db.query(Rol).filter(Rol.id == rol_id).first()
+        if rol is None:
+            return _error(
+                request,
+                "unprocessable_entity",
+                "Rol no encontrado",
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+            )
+        if rol.nombre == "admin":
+            return _error(
+                request,
+                "unprocessable_entity",
+                "Los permisos del rol administrador son fijos",
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+            )
+        roles.append((clave, rol))
+
+    # Control de concurrencia: el estado del que partió el cliente debe seguir vigente.
+    for clave, rol in roles:
+        actuales = {
+            codigo
+            for (codigo,) in db.query(Permiso.codigo)
+            .join(RolPermiso, RolPermiso.permiso_id == Permiso.id)
+            .filter(RolPermiso.rol_id == rol.id)
+            .all()
+        }
+        if actuales != _codigos(body.esperado[clave]):
+            return _error(
+                request,
+                "conflict",
+                "La matriz cambió mientras editabas; recarga para ver el estado actual.",
+                status.HTTP_409_CONFLICT,
+            )
+
+    permisos_por_rol: list[tuple[Rol, list[Permiso]]] = []
+    for clave, rol in roles:
+        codigos = _codigos(body.estado[clave])
+        permisos = (
+            db.query(Permiso)
+            .filter(Permiso.codigo.in_(codigos))
+            .order_by(Permiso.codigo.asc())
+            .all()
+            if codigos
+            else []
+        )
+        if len(permisos) != len(codigos):
+            return _error(
+                request,
+                "unprocessable_entity",
+                "Permiso desconocido",
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+            )
+        fuera_dominio = sorted(set(codigos) - set(PERMISOS_ASIGNABLES_POR_ROL.get(rol.nombre, ())))
+        if fuera_dominio:
+            return _error(
+                request,
+                "unprocessable_entity",
+                f"Permiso no aplicable al rol: {', '.join(fuera_dominio)}",
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+            )
+        permisos_por_rol.append((rol, permisos))
+
+    for rol, _ in permisos_por_rol:
+        db.query(RolPermiso).filter(RolPermiso.rol_id == rol.id).delete()
+    for rol, permisos in permisos_por_rol:
+        for permiso in permisos:
+            db.add(RolPermiso(rol_id=rol.id, permiso_id=permiso.id))
+        _registrar_cambio(db, request, actual, rol, len(permisos))
+    db.commit()
+
+    return _matriz(db)

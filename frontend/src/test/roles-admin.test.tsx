@@ -108,7 +108,7 @@ describe('roles y permisos admin', () => {
     (globalThis as unknown as { fetch: typeof fetch }).fetch = fetchMock as unknown as typeof fetch;
   });
 
-  it('muestra la matriz con los roles y su estado', async () => {
+  it('muestra la matriz con descripción, código y estado por rol', async () => {
     fetchMock.mockResolvedValueOnce(responderJson(mockSessionAdmin));
     fetchMock.mockResolvedValueOnce(responderJson(matriz));
 
@@ -120,19 +120,21 @@ describe('roles y permisos admin', () => {
     expect(within(tabla).getByText('Médico')).toBeInTheDocument();
     expect(within(tabla).getByText('Investigador')).toBeInTheDocument();
     expect(within(tabla).queryByText('Administrador')).not.toBeInTheDocument();
+    expect(within(tabla).getByText('Consultar pacientes')).toBeInTheDocument();
     expect(within(tabla).getByText('paciente.leer')).toBeInTheDocument();
+    expect(within(tabla).getByText('Pacientes')).toBeInTheDocument();
 
-    const concedido = within(tabla).getByRole('switch', {
-      name: /permiso paciente\.leer para médico/i,
+    const concedido = within(tabla).getByRole('checkbox', {
+      name: /permiso «consultar pacientes» para médico/i,
     });
-    expect(concedido).toHaveAttribute('aria-checked', 'true');
-    const denegado = within(tabla).getByRole('switch', {
-      name: /permiso ficha\.leer para médico/i,
+    expect(concedido).toBeChecked();
+    const denegado = within(tabla).getByRole('checkbox', {
+      name: /permiso «consultar la ficha» para médico/i,
     });
-    expect(denegado).toHaveAttribute('aria-checked', 'false');
+    expect(denegado).not.toBeChecked();
   });
 
-  it('no ofrece permisos fuera del ámbito del rol', async () => {
+  it('no ofrece controles para permisos fuera del ámbito del rol', async () => {
     fetchMock.mockResolvedValueOnce(responderJson(mockSessionAdmin));
     fetchMock.mockResolvedValueOnce(responderJson(matriz));
 
@@ -141,38 +143,79 @@ describe('roles y permisos admin', () => {
     const region = await screen.findByRole('region', { name: /matriz de permisos por rol/i });
     const tabla = within(region).getByRole('table');
     expect(
-      within(tabla).queryByRole('switch', { name: /permiso usuario\.gestionar/i }),
+      within(tabla).queryByRole('checkbox', { name: /permiso «gestionar usuarios» para médico/i }),
     ).not.toBeInTheDocument();
-    expect(within(tabla).getAllByText(/no aplica a médico/i).length).toBeGreaterThan(0);
+    expect(within(tabla).getAllByText('No aplica').length).toBeGreaterThan(0);
   });
 
-  it('guardar envía PUT con los permisos del rol modificado', async () => {
+  it('cuenta los cambios pendientes y los descarta', async () => {
     const user = userEvent.setup();
     fetchMock.mockResolvedValueOnce(responderJson(mockSessionAdmin));
-    fetchMock.mockResolvedValueOnce(responderJson(matriz));
-    fetchMock.mockResolvedValueOnce(
-      responderJson({
-        ...matriz.roles[0],
-        permisos: ['paciente.leer', 'ficha.leer'],
-      }),
-    );
     fetchMock.mockResolvedValueOnce(responderJson(matriz));
 
     montarApp();
 
-    const casilla = await screen.findByRole('switch', {
-      name: /permiso ficha\.leer para médico/i,
+    const casilla = await screen.findByRole('checkbox', {
+      name: /permiso «consultar la ficha» para médico/i,
+    });
+    await user.click(casilla);
+
+    expect(await screen.findByText(/1 cambio sin guardar/i)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /descartar/i }));
+
+    expect(screen.queryByText(/cambios sin guardar/i)).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('checkbox', { name: /permiso «consultar la ficha» para médico/i }),
+    ).not.toBeChecked();
+  });
+
+  it('guarda los roles editados en una sola llamada con el estado esperado', async () => {
+    const user = userEvent.setup();
+    fetchMock.mockResolvedValueOnce(responderJson(mockSessionAdmin));
+    fetchMock.mockResolvedValueOnce(responderJson(matriz));
+    fetchMock.mockResolvedValueOnce(responderJson(matriz));
+
+    montarApp();
+
+    const casilla = await screen.findByRole('checkbox', {
+      name: /permiso «consultar la ficha» para médico/i,
     });
     await user.click(casilla);
     await user.click(screen.getByRole('button', { name: /guardar cambios/i }));
 
     await waitFor(() => {
-      expect(llamadaA(fetchMock, '/roles/r-doctor/permisos', 'PUT')).toBeDefined();
+      expect(llamadaA(fetchMock, '/roles/permisos', 'PUT')).toBeDefined();
     });
-    const llamada = llamadaA(fetchMock, '/roles/r-doctor/permisos', 'PUT');
+    const llamada = llamadaA(fetchMock, '/roles/permisos', 'PUT');
     expect(await extraerCuerpo(llamada as unknown[])).toEqual({
-      permisos: ['paciente.leer', 'ficha.leer'],
+      estado: { 'r-doctor': ['paciente.leer', 'ficha.leer'] },
+      esperado: { 'r-doctor': ['paciente.leer'] },
     });
+    expect(await screen.findByText(/cambios guardados/i)).toBeInTheDocument();
+  });
+
+  it('un conflicto conserva lo editado y ofrece recargar', async () => {
+    const user = userEvent.setup();
+    fetchMock.mockResolvedValueOnce(responderJson(mockSessionAdmin));
+    fetchMock.mockResolvedValueOnce(responderJson(matriz));
+    fetchMock.mockResolvedValueOnce(
+      responderJson({ error: { code: 'conflict', message: 'cambió' } }, 409),
+    );
+
+    montarApp();
+
+    const casilla = await screen.findByRole('checkbox', {
+      name: /permiso «consultar la ficha» para médico/i,
+    });
+    await user.click(casilla);
+    await user.click(screen.getByRole('button', { name: /guardar cambios/i }));
+
+    expect(await screen.findByText(/la matriz cambió mientras editabas/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /recargar matriz/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('checkbox', { name: /permiso «consultar la ficha» para médico/i }),
+    ).toBeChecked();
   });
 
   it('un error de carga ofrece reintentar', async () => {

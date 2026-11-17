@@ -108,40 +108,69 @@ def test_la_matriz_muestra_roles_permisos_y_asignaciones(
     assert doctor["asignables"] == list(PERMISOS_ASIGNABLES_POR_ROL["doctor"])
 
 
-def test_el_admin_edita_la_matriz_y_queda_en_la_bitacora(
+def _codigos_rol(db_session: Session, rol_id: object) -> set[str]:
+    """Códigos de permiso que el rol tiene en la base."""
+    return {
+        codigo
+        for (codigo,) in db_session.query(Permiso.codigo)
+        .join(RolPermiso, RolPermiso.permiso_id == Permiso.id)
+        .filter(RolPermiso.rol_id == rol_id)
+        .all()
+    }
+
+
+def test_el_admin_guarda_dos_roles_en_una_sola_llamada_y_queda_en_la_bitacora(
     db_session: Session, client: TestClient
 ) -> None:
     _skip_if_no_db()
     _admin_logueado(db_session, client)
     investigador = db_session.query(Rol).filter(Rol.nombre == "researcher").one()
+    doctor = db_session.query(Rol).filter(Rol.nombre == "doctor").one()
 
     respuesta = client.put(
-        f"/roles/{investigador.id}/permisos",
-        json={"permisos": ["investigacion.leer", "inferencia.leer"]},
+        "/roles/permisos",
+        json={
+            "estado": {
+                str(investigador.id): ["inferencia.leer", "investigacion.leer"],
+                str(doctor.id): ["ficha.leer", "paciente.leer"],
+            },
+            "esperado": {
+                str(investigador.id): list(PERMISOS_POR_ROL["researcher"]),
+                str(doctor.id): list(PERMISOS_POR_ROL["doctor"]),
+            },
+        },
     )
 
     assert respuesta.status_code == 200
-    assert respuesta.json()["permisos"] == ["inferencia.leer", "investigacion.leer"]
+    datos = respuesta.json()
+    assert {rol["nombre"] for rol in datos["roles"]} == {"doctor", "researcher"}
+    siguiente = next(rol for rol in datos["roles"] if rol["nombre"] == "researcher")
+    assert siguiente["permisos"] == ["inferencia.leer", "investigacion.leer"]
 
     db_session.expire_all()
-    asignados = (
-        db_session.query(Permiso.codigo)
-        .join(RolPermiso, RolPermiso.permiso_id == Permiso.id)
-        .filter(RolPermiso.rol_id == investigador.id)
-        .all()
-    )
-    assert {codigo for (codigo,) in asignados} == {"inferencia.leer", "investigacion.leer"}
+    assert _codigos_rol(db_session, investigador.id) == {
+        "inferencia.leer",
+        "investigacion.leer",
+    }
+    assert _codigos_rol(db_session, doctor.id) == {"ficha.leer", "paciente.leer"}
 
-    evento = (
+    eventos = (
         db_session.query(Auditoria)
         .filter(Auditoria.accion == "ADMIN.PERMISSION_CHANGE")
-        .order_by(Auditoria.id.desc())
-        .first()
+        .order_by(Auditoria.id.asc())
+        .all()
     )
-    assert evento is not None
-    assert evento.entidad == "ROLE"
-    assert evento.entidad_id == str(investigador.id)
-    assert evento.detalles == {"role_code": "admin", "resource_count": 2}
+    assert len(eventos) == 2
+    assert {evento.entidad_id for evento in eventos} == {
+        str(investigador.id),
+        str(doctor.id),
+    }
+    for evento in eventos:
+        assert evento.entidad == "ROLE"
+    assert {evento.entidad_id: evento.detalles["resource_count"] for evento in eventos} == {
+        str(investigador.id): 2,
+        str(doctor.id): 2,
+    }
 
 
 def test_un_permiso_desconocido_no_cambia_nada(db_session: Session, client: TestClient) -> None:
@@ -150,16 +179,17 @@ def test_un_permiso_desconocido_no_cambia_nada(db_session: Session, client: Test
     investigador = db_session.query(Rol).filter(Rol.nombre == "researcher").one()
 
     respuesta = client.put(
-        f"/roles/{investigador.id}/permisos",
-        json={"permisos": ["investigacion.leer", "permiso.inventado"]},
+        "/roles/permisos",
+        json={
+            "estado": {str(investigador.id): ["investigacion.leer", "permiso.inventado"]},
+            "esperado": {str(investigador.id): list(PERMISOS_POR_ROL["researcher"])},
+        },
     )
 
     assert respuesta.status_code == 422
     assert respuesta.json()["error"]["code"] == "unprocessable_entity"
     db_session.expire_all()
-    assert db_session.query(RolPermiso).filter(RolPermiso.rol_id == investigador.id).count() == len(
-        PERMISOS_POR_ROL["researcher"]
-    )
+    assert _codigos_rol(db_session, investigador.id) == set(PERMISOS_POR_ROL["researcher"])
 
 
 def test_el_rol_administrador_no_se_edita(db_session: Session, client: TestClient) -> None:
@@ -167,21 +197,17 @@ def test_el_rol_administrador_no_se_edita(db_session: Session, client: TestClien
     rol_admin, _ = _admin_logueado(db_session, client)
 
     respuesta = client.put(
-        f"/roles/{rol_admin.id}/permisos",
-        json={"permisos": ["rol.gestionar", "usuario.gestionar"]},
+        "/roles/permisos",
+        json={
+            "estado": {str(rol_admin.id): ["rol.gestionar", "usuario.gestionar"]},
+            "esperado": {str(rol_admin.id): list(PERMISOS_POR_ROL["admin"])},
+        },
     )
 
     assert respuesta.status_code == 422
     assert respuesta.json()["error"]["message"] == "Los permisos del rol administrador son fijos"
     db_session.expire_all()
-    codigos = {
-        codigo
-        for (codigo,) in db_session.query(Permiso.codigo)
-        .join(RolPermiso, RolPermiso.permiso_id == Permiso.id)
-        .filter(RolPermiso.rol_id == rol_admin.id)
-        .all()
-    }
-    assert codigos == set(PERMISOS_POR_ROL["admin"])
+    assert _codigos_rol(db_session, rol_admin.id) == set(PERMISOS_POR_ROL["admin"])
 
 
 def test_un_permiso_fuera_del_dominio_del_rol_se_rechaza(
@@ -192,31 +218,37 @@ def test_un_permiso_fuera_del_dominio_del_rol_se_rechaza(
     investigador = db_session.query(Rol).filter(Rol.nombre == "researcher").one()
 
     respuesta = client.put(
-        f"/roles/{investigador.id}/permisos",
-        json={"permisos": ["investigacion.leer", "usuario.gestionar"]},
+        "/roles/permisos",
+        json={
+            "estado": {str(investigador.id): ["investigacion.leer", "usuario.gestionar"]},
+            "esperado": {str(investigador.id): list(PERMISOS_POR_ROL["researcher"])},
+        },
     )
 
     assert respuesta.status_code == 422
     assert "usuario.gestionar" in respuesta.json()["error"]["message"]
     db_session.expire_all()
-    assert db_session.query(RolPermiso).filter(RolPermiso.rol_id == investigador.id).count() == len(
-        PERMISOS_POR_ROL["researcher"]
-    )
+    assert _codigos_rol(db_session, investigador.id) == set(PERMISOS_POR_ROL["researcher"])
 
 
-def test_un_rol_inexistente_devuelve_404(db_session: Session, client: TestClient) -> None:
+def test_un_rol_inexistente_devuelve_422(db_session: Session, client: TestClient) -> None:
     _skip_if_no_db()
     _admin_logueado(db_session, client)
+    fantasma = "00000000-0000-0000-0000-000000000000"
 
     respuesta = client.put(
-        "/roles/00000000-0000-0000-0000-000000000000/permisos",
-        json={"permisos": ["investigacion.leer"]},
+        "/roles/permisos",
+        json={
+            "estado": {fantasma: ["investigacion.leer"]},
+            "esperado": {fantasma: []},
+        },
     )
 
-    assert respuesta.status_code == 404
+    assert respuesta.status_code == 422
+    assert respuesta.json()["error"]["code"] == "unprocessable_entity"
 
 
-def test_el_medico_no_puede_ver_la_matriz(db_session: Session, client: TestClient) -> None:
+def test_el_medico_no_puede_editar_la_matriz(db_session: Session, client: TestClient) -> None:
     _skip_if_no_db()
     asegurar_catalogo(db_session)
     institucion = Institucion(nombre="Hospital Norte", codigo="hosp_norte")
@@ -237,7 +269,144 @@ def test_el_medico_no_puede_ver_la_matriz(db_session: Session, client: TestClien
     client.post("/auth/login", json={"correo": "doctor@hospital.test", "password": "docpass123"})
 
     assert client.get("/roles").status_code == 403
-    assert client.put(f"/roles/{rol_doctor.id}/permisos", json={"permisos": []}).status_code == 403
+    respuesta = client.put(
+        "/roles/permisos",
+        json={
+            "estado": {str(rol_doctor.id): ["ficha.leer"]},
+            "esperado": {str(rol_doctor.id): list(PERMISOS_POR_ROL["doctor"])},
+        },
+    )
+    assert respuesta.status_code == 403
+
+
+def test_guardar_dos_roles_a_la_vez_cambia_solo_esos(
+    db_session: Session, client: TestClient
+) -> None:
+    _skip_if_no_db()
+    _admin_logueado(db_session, client)
+    investigador = db_session.query(Rol).filter(Rol.nombre == "researcher").one()
+    doctor = db_session.query(Rol).filter(Rol.nombre == "doctor").one()
+
+    respuesta = client.put(
+        "/roles/permisos",
+        json={
+            "estado": {
+                str(investigador.id): ["investigacion.leer"],
+                str(doctor.id): ["ficha.leer"],
+            },
+            "esperado": {
+                str(investigador.id): list(PERMISOS_POR_ROL["researcher"]),
+                str(doctor.id): list(PERMISOS_POR_ROL["doctor"]),
+            },
+        },
+    )
+
+    assert respuesta.status_code == 200
+    db_session.expire_all()
+    assert _codigos_rol(db_session, investigador.id) == {"investigacion.leer"}
+    assert _codigos_rol(db_session, doctor.id) == {"ficha.leer"}
+
+
+def test_si_la_matriz_cambio_responde_409_y_no_guarda(
+    db_session: Session, client: TestClient
+) -> None:
+    _skip_if_no_db()
+    _admin_logueado(db_session, client)
+    investigador = db_session.query(Rol).filter(Rol.nombre == "researcher").one()
+    esperado = list(PERMISOS_POR_ROL["researcher"])
+
+    # Otro administrador guarda antes que este cliente.
+    primero = client.put(
+        "/roles/permisos",
+        json={
+            "estado": {str(investigador.id): ["investigacion.leer"]},
+            "esperado": {str(investigador.id): esperado},
+        },
+    )
+    assert primero.status_code == 200
+
+    respuesta = client.put(
+        "/roles/permisos",
+        json={
+            "estado": {str(investigador.id): ["investigacion.exportar"]},
+            "esperado": {str(investigador.id): esperado},
+        },
+    )
+
+    assert respuesta.status_code == 409
+    assert respuesta.json()["error"]["code"] == "conflict"
+    assert (
+        respuesta.json()["error"]["message"]
+        == "La matriz cambió mientras editabas; recarga para ver el estado actual."
+    )
+    db_session.expire_all()
+    assert _codigos_rol(db_session, investigador.id) == {"investigacion.leer"}
+
+
+def test_un_409_no_cambia_ningun_rol(db_session: Session, client: TestClient) -> None:
+    _skip_if_no_db()
+    _admin_logueado(db_session, client)
+    investigador = db_session.query(Rol).filter(Rol.nombre == "researcher").one()
+    doctor = db_session.query(Rol).filter(Rol.nombre == "doctor").one()
+
+    primero = client.put(
+        "/roles/permisos",
+        json={
+            "estado": {str(investigador.id): ["investigacion.leer"]},
+            "esperado": {str(investigador.id): list(PERMISOS_POR_ROL["researcher"])},
+        },
+    )
+    assert primero.status_code == 200
+
+    # Este cliente aún cree que el investigador tiene su matriz por defecto.
+    respuesta = client.put(
+        "/roles/permisos",
+        json={
+            "estado": {str(investigador.id): ["investigacion.exportar"]},
+            "esperado": {str(investigador.id): list(PERMISOS_POR_ROL["researcher"])},
+        },
+    )
+
+    assert respuesta.status_code == 409
+    db_session.expire_all()
+    assert _codigos_rol(db_session, investigador.id) == {"investigacion.leer"}
+    assert _codigos_rol(db_session, doctor.id) == set(PERMISOS_POR_ROL["doctor"])
+
+
+def test_un_422_no_cambia_ningun_rol(db_session: Session, client: TestClient) -> None:
+    _skip_if_no_db()
+    _admin_logueado(db_session, client)
+    investigador = db_session.query(Rol).filter(Rol.nombre == "researcher").one()
+    doctor = db_session.query(Rol).filter(Rol.nombre == "doctor").one()
+
+    respuesta = client.put(
+        "/roles/permisos",
+        json={
+            "estado": {
+                str(investigador.id): ["investigacion.leer"],
+                str(doctor.id): ["ficha.leer", "usuario.gestionar"],
+            },
+            "esperado": {
+                str(investigador.id): list(PERMISOS_POR_ROL["researcher"]),
+                str(doctor.id): list(PERMISOS_POR_ROL["doctor"]),
+            },
+        },
+    )
+
+    assert respuesta.status_code == 422
+    db_session.expire_all()
+    assert _codigos_rol(db_session, investigador.id) == set(PERMISOS_POR_ROL["researcher"])
+    assert _codigos_rol(db_session, doctor.id) == set(PERMISOS_POR_ROL["doctor"])
+
+
+def test_una_matriz_vacia_se_rechaza(db_session: Session, client: TestClient) -> None:
+    _skip_if_no_db()
+    _admin_logueado(db_session, client)
+
+    respuesta = client.put("/roles/permisos", json={"estado": {}, "esperado": {}})
+
+    assert respuesta.status_code == 422
+    assert respuesta.json()["error"]["code"] == "unprocessable_entity"
 
 
 def test_asegurar_catalogo_no_revierte_la_matriz_editada(db_session: Session) -> None:

@@ -127,7 +127,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/roles/{id}/permisos": {
+    "/roles/permisos": {
         parameters: {
             query?: never;
             header?: never;
@@ -135,8 +135,8 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** Put Permisos Rol */
-        put: operations["put_permisos_rol_roles__id__permisos_put"];
+        /** Put Matriz Permisos */
+        put: operations["put_matriz_permisos_roles_permisos_put"];
         post?: never;
         delete?: never;
         options?: never;
@@ -618,6 +618,20 @@ export interface components {
             /** Password */
             password: string;
         };
+        /**
+         * MatrizPermisosRequest
+         * @description Estado deseado y estado del que partió el cliente, por id de rol.
+         */
+        MatrizPermisosRequest: {
+            /** Estado */
+            estado: {
+                [key: string]: string[];
+            };
+            /** Esperado */
+            esperado: {
+                [key: string]: string[];
+            };
+        };
         /** ModeloOut */
         ModeloOut: {
             /**
@@ -679,11 +693,6 @@ export interface components {
             activo?: boolean | null;
             /** Institucion Id */
             institucion_id?: string | null;
-        };
-        /** PermisosRequest */
-        PermisosRequest: {
-            /** Permisos */
-            permisos: string[];
         };
         /** RolActivoRequest */
         RolActivoRequest: {
@@ -953,18 +962,16 @@ export interface operations {
             };
         };
     };
-    put_permisos_rol_roles__id__permisos_put: {
+    put_matriz_permisos_roles_permisos_put: {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["PermisosRequest"];
+                "application/json": components["schemas"]["MatrizPermisosRequest"];
             };
         };
         responses: {
