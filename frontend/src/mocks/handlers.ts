@@ -1,5 +1,6 @@
 import { delay, http, HttpResponse } from 'msw';
 
+import { eventosOk, eventosVacios } from './auditoria';
 import { resultadosOk, resultadosVacios } from './resultados';
 
 /**
@@ -197,6 +198,7 @@ const API = {
   usuarios: /\/(?:api\/)?usuarios(?:\?.*)?$/,
   instituciones: /\/(?:api\/)?instituciones(?:\?.*)?$/,
   resultados: /\/(?:api\/)?resultados(?:\?.*)?$/,
+  auditoria: /\/(?:api\/)?auditoria(?:\?.*)?$/,
 };
 
 // Handlers de datos (sin identidad). Reutilizable por flujos con sesión propia.
@@ -233,6 +235,12 @@ export function crearHandlersDatos(escenario: EscenarioApi = 'ok') {
         return HttpResponse.json<PacientesListResponse>({ total: 45, items: pacientesOk.items });
       }
       return HttpResponse.json<PacientesListResponse>(pacientesOk);
+    }),
+    http.get(API.auditoria, async () => {
+      const error = respuestaError(escenario, 'Permiso insuficiente');
+      if (error) return error;
+      await demorar();
+      return HttpResponse.json(escenario === 'vacio' ? eventosVacios : eventosOk);
     }),
     http.get(API.resultados, async () => {
       const error = respuestaError(escenario, 'Permiso insuficiente');
