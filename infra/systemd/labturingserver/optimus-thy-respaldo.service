@@ -1,0 +1,26 @@
+[Unit]
+Description=OPTIMUS-THY respaldo diario cifrado (labturingserver)
+Documentation=file:///opt/apps/optimus-thy/infra/systemd/labturingserver/README.md
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/apps/optimus-thy
+# Credenciales externas (BACKUP_S3_*, etc.) SOLO en /etc/optimus-thy/respaldo.env (modo 600), nunca en este unit.
+EnvironmentFile=-/etc/optimus-thy/respaldo.env
+Environment=COMPOSE_PROJECT_NAME=optimus-thy
+Environment=DEPLOY_ENV=production
+Environment=BACKUP_KEY_FILE=/etc/optimus-thy/backup.key
+Environment=BACKUP_DIR=/var/backups/optimus-thy
+# Requiere gpg y acceso a Docker (el servicio corre como root en /etc/systemd/system).
+ExecStart=/opt/apps/optimus-thy/infra/scripts/respaldo.sh
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
+PrivateTmp=true
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/var/backups/optimus-thy /opt/apps/optimus-thy /run
+TimeoutStartSec=2h

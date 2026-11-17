@@ -1,5 +1,9 @@
 # Despliegue en tiroides2.andresgaibor.com
 
+> **Alcance exclusivo:** este runbook aplica solo a `tiroides2`, con Cloudflare Tunnel y nginx en `127.0.0.1:5033`. Para `labturingserver` (Docker Compose, HTTPS 18443 por Tailscale), usa [labturingserver.md](labturingserver.md). No mezclar procedimientos, rutas, servicios ni volúmenes entre ambos entornos.
+
+> Referencia: [labturingserver.md](labturingserver.md) documenta el servidor nuevo; sus procedimientos no aplican a tiroides2.
+
 ## Topología
 
 ```mermaid
@@ -43,8 +47,8 @@ tailscale serve --bg --https 443 http://127.0.0.1:5033
 
 URLs resultantes:
 
-- `https://oracle.tail4a8b59.ts.net/` (app)
-- `https://oracle.tail4a8b59.ts.net/storybook/` (catálogo)
+- `https://<NOMBRE_TAILNET>/` (app)
+- `https://<NOMBRE_TAILNET>/storybook/` (catálogo)
 
 Handlers actuales en 443:
 
@@ -53,7 +57,7 @@ Handlers actuales en 443:
 | `/` | `127.0.0.1:5033` | este despliegue |
 | `/__sablier/elcaliz` | `127.0.0.1:80` | preexistente, ajeno a este despliegue |
 
-Se usa 443 porque el cliente Vite fija `STORYBOOK_HMR_PORT=443`; con otro puerto la página carga pero el HMR no conecta. Handshake esperado: `wss://oracle.tail4a8b59.ts.net:443/storybook/?token=…` → `101`.
+Se usa 443 porque el cliente Vite fija `STORYBOOK_HMR_PORT=443`; con otro puerto la página carga pero el HMR no conecta. Handshake esperado: `wss://<NOMBRE_TAILNET>:443/storybook/?token=…` → `101`.
 
 Deshacer:
 
@@ -117,15 +121,15 @@ curl -sS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8000/health
 ```
 
 Si responde `200`, el backend está vivo; si falla la conexión o nginx sigue devolviendo `502`, revisar estado/logs del servicio activo (`docker compose ps backend` y `docker compose logs backend`, o el unit systemd si se usa la alternativa) antes de asumir fallo de nginx.
-- Base: contenedor `optimus-thy-postgres-1`, usuario `optimus`, base `optimus`. La base puede estar en Alembic `0008` mientras el repo tiene hasta `0009_bloqueo_y_actividad.py`; queda pendiente `alembic upgrade head` (0008→0009) cuando corresponda.
+- Base: contenedor `optimus-thy-postgres-1`, usuario `optimus`, base `optimus`. La revisión de migración efectiva debe comprobarse en el host; no se afirma una revisión concreta ni se presume que haya un upgrade pendiente. El flujo nuevo de migraciones explícitas corresponde al procedimiento de labturingserver en [labturingserver.md](labturingserver.md), no a este runbook.
 - `DATABASE_URL` debe usar el nombre de servicio `postgres:5432` (DNS interno del compose); no usar IPs de contenedor.
 
 
 ## Corte al repo operativo
 
-Este runbook deja el repo y la configuración listos; **no ejecuta el corte real** (no reinstala, no reconstruye, no recrea contenedores). Pasos seguros, en orden, cuando se ejecute el corte:
+Este runbook describe la operación/corte del entorno tiroides2; **no ejecuta el corte real** (no reinstala, no reconstruye, no recrea contenedores). Las referencias a repo, mounts, Compose y sistema son específicas de esta instalación antigua. Para desplegar en labturingserver, no usar estos pasos.
 
-1. **Preparar entorno:** confirmar que `.env` existe con valores de producción y, como mínimo, `ENVIRONMENT=production`, `SESSION_COOKIE_SECURE=true` y `ALLOWED_ORIGINS=https://tiroides2.andresgaibor.com`. Verificar que MinIO sigue fijado por digest en `docker-compose.yml`.
+1. **Preparar entorno:** confirmar que `.env` existe con valores de tiroides2 y, como mínimo, `ENVIRONMENT=production`, `SESSION_COOKIE_SECURE=true` y `ALLOWED_ORIGINS` correspondiente a ese entorno. Verificar que MinIO sigue fijado por digest en `docker-compose.yml`.
 2. **Frontend:** desde `frontend/`, instalar dependencias si hace falta y ejecutar `bun run build`. El resultado queda en `frontend/dist`.
 3. **Servicios de datos/API:** `docker compose up -d backend storage` (y `postgres` si corresponde al estado del stack). Confirmar que el backend publica `127.0.0.1:8000`.
 4. **Verificar backend antes del edge:** `curl -sS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8000/health` debe responder `200`.
