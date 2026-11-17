@@ -25,16 +25,18 @@ Al cerrar un issue se actualizan las filas de los requisitos que cubre: cambiar
 
 ## Resumen
 
-| Sección | Requisitos M | Aprobados | En curso | Pendientes |
+Una fila por requisito documentado en la matriz (M y los S que se registraron al cerrarlos).
+
+| Sección | Requisitos en la matriz | Aprobados | En curso | Pendientes |
 | --- | --- | --- | --- | --- |
 | El modelo existente (app.py y base.py) | 9 | 0 | 0 | 9 |
-| Requisitos funcionales | 67 | 10 | 8 | 49 |
-| Diseño y sistema de diseño | 8 | 0 | 0 | 8 |
-| Seguridad, privacidad y cumplimiento legal | 34 | 2 | 5 | 27 |
+| Requisitos funcionales | 70 | 18 | 8 | 44 |
+| Diseño y sistema de diseño | 8 | 2 | 0 | 6 |
+| Seguridad, privacidad y cumplimiento legal | 36 | 5 | 7 | 24 |
 | Requisitos no funcionales | 16 | 2 | 4 | 10 |
-| Datos, integración y despliegue | 14 | 4 | 2 | 8 |
+| Datos, integración y despliegue | 14 | 5 | 2 | 7 |
 | Proceso del trabajo de titulación | 8 | 2 | 0 | 6 |
-| **Total** | **156** | **20** | **19** | **117** |
+| **Total** | **161** | **34** | **21** | **106** |
 
 ## El modelo existente (app.py y base.py)
 
