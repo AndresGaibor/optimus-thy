@@ -3,7 +3,7 @@ import { Activity, LogOut, Menu, X, type LucideIcon } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { NavLink } from 'react-router-dom';
 import { cn } from '../../lib/cn';
-import { ROLE_CLASSES, ROLE_LABELS, type RoleKey } from '../../tones';
+import { ROLE_CLASSES, type RoleKey } from '../../tones';
 import { BrandMark } from '../atoms/BrandMark';
 import { Button } from '../atoms/Button';
 
@@ -68,7 +68,7 @@ interface SidebarBodyProps extends Pick<
 function BrandBlock({ tone, roleLabel }: { tone: RoleKey; roleLabel?: string | undefined }) {
   if (!tone) return null;
   const classes = ROLE_CLASSES[tone];
-  const label = roleLabel ?? ROLE_LABELS[tone];
+  const label = roleLabel;
   return (
     <div className="flex items-center gap-3">
       <span
@@ -82,7 +82,7 @@ function BrandBlock({ tone, roleLabel }: { tone: RoleKey; roleLabel?: string | u
       </span>
       <div className="flex flex-col">
         <span className="text-lg font-bold tracking-tight text-foreground">OPTIMUS-THY</span>
-        <span className={cn('text-xs font-medium', classes.text)}>{label}</span>
+        {label ? <span className={cn('text-xs font-medium', classes.text)}>{label}</span> : null}
       </div>
     </div>
   );
@@ -118,7 +118,7 @@ function SidebarBody({
                 {...(onNavigate ? { onClick: onNavigate } : {})}
                 className={({ isActive }) =>
                   cn(
-                    'flex items-center gap-3 rounded-control px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring',
+                    'flex min-h-11 items-center gap-3 rounded-control px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring',
                     isActive
                       ? activeClass
                       : 'text-muted-foreground hover:bg-border-subtle hover:text-foreground',

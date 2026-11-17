@@ -61,6 +61,7 @@ export const MedicoDelAccesoAPacientes: Story = {
     });
 
     await step('Cierra sesión y vuelve al acceso', async () => {
+      await userEvent.click(canvas.getByRole('button', { name: /médica demo/i }));
       await userEvent.click(canvas.getByRole('button', { name: 'Cerrar sesión' }));
       await expect(await canvas.findByRole('button', { name: 'Entrar' })).toBeInTheDocument();
     });
@@ -218,8 +219,8 @@ export const CambioDeRolActivo: Story = {
     });
 
     await step('Cambia al rol administrador', async () => {
-      const grupo = canvas.getByRole('group', { name: 'Cambiar de rol' });
-      await userEvent.click(within(grupo).getByRole('button', { name: 'Administrador' }));
+      await userEvent.click(canvas.getByRole('button', { name: /persona demo multirrol/i }));
+      await userEvent.click(canvas.getByRole('button', { name: /^administrador$/i }));
       await expect(await canvas.findByRole('heading', { name: 'Usuarios' })).toBeInTheDocument();
     });
   },

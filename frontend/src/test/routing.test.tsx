@@ -220,6 +220,7 @@ describe('navegación por rol', () => {
       json: async () => ({ ...mockSessionAdmin, roles: ['admin', 'doctor'], rol_activo: 'doctor' }),
     });
     montarApp('/administrador/usuarios');
+    await user.click(await screen.findByRole('button', { name: /admin test/i }));
     await user.click(await screen.findByRole('button', { name: 'Médico' }));
     expect(await screen.findByRole('heading', { name: 'Pacientes' })).toBeInTheDocument();
   });
