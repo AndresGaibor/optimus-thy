@@ -1,4 +1,4 @@
-import { Check, Copy } from 'lucide-react';
+import { Check, Copy, Pencil, ShieldCheck, UserCheck, UserX } from 'lucide-react';
 import { useState } from 'react';
 import type { OrdenUsuarios, Usuario } from '../../api/usuarios';
 import { Button } from '../../design-system/components/atoms/Button';
@@ -10,7 +10,6 @@ import {
   TableHeader,
   TableRow,
 } from '../../design-system/components/atoms/Table';
-import { ActionsMenu } from '../../design-system/components/molecules/ActionsMenu';
 import { Callout } from '../../design-system/components/molecules/Callout';
 import { StatusBadge } from '../../design-system/components/molecules/StatusBadge';
 import { obtenerEtiquetaRol } from './etiquetas-rol';
@@ -35,10 +34,9 @@ export interface UsuariosTablaProps {
 /** Roles como texto: cada uno es un elemento propio, así el salto ocurre entre roles. */
 function RolesTexto({ roles, className }: { roles: string[]; className?: string }) {
   return (
-    <span className={className ?? 'flex flex-wrap gap-x-2 gap-y-1 text-sm text-foreground'}>
-      {roles.map((rol, indice) => (
+    <span className={className ?? 'flex flex-wrap gap-x-3 gap-y-1 text-sm text-foreground'}>
+      {roles.map((rol) => (
         <span key={rol} className="whitespace-nowrap">
-          {indice > 0 ? <span aria-hidden>· </span> : null}
           {rol}
         </span>
       ))}
@@ -90,10 +88,9 @@ export function UsuariosTabla({
               orden={orden}
               direccion={direccion}
               onOrden={onOrden}
-              className="w-1/3"
             />
-            <TableHead className="hidden w-48 sm:table-cell">Institución</TableHead>
-            <TableHead className="hidden w-1/5 sm:table-cell">Roles</TableHead>
+            <TableHead className="hidden w-44 sm:table-cell">Institución</TableHead>
+            <TableHead className="hidden w-56 sm:table-cell">Roles</TableHead>
             <EncabezadoOrdenable
               campo="estado"
               etiqueta="Estado"
@@ -102,7 +99,7 @@ export function UsuariosTabla({
               onOrden={onOrden}
               className="hidden w-24 sm:table-cell"
             />
-            <TableHead className="w-1/4 px-2 sm:px-4">Acciones</TableHead>
+            <TableHead className="w-96 px-2 sm:px-4">Acciones</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -119,7 +116,7 @@ export function UsuariosTabla({
                   >
                     {usuario.nombre || 'Sin nombre'}
                   </span>
-                  <span className="flex min-w-0 items-center gap-1">
+                  <span className="group flex min-w-0 items-center gap-1">
                     <span className="truncate text-muted-foreground" title={usuario.correo}>
                       {usuario.correo}
                     </span>
@@ -128,7 +125,7 @@ export function UsuariosTabla({
                       size="icon"
                       onClick={() => void copiarCorreo(usuario.correo)}
                       aria-label={`Copiar correo de ${usuario.correo}`}
-                      className="size-6 shrink-0 text-muted-foreground"
+                      className="size-6 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 max-sm:opacity-100"
                     >
                       {copiadoAqui ? (
                         <Check aria-hidden className="size-3.5" />
@@ -164,44 +161,43 @@ export function UsuariosTabla({
                   <StatusBadge kind="user" status={usuario.activo ? 'Activo' : 'Inactivo'} />
                 </TableCell>
                 <TableCell className="px-2 py-4 align-middle sm:px-4">
-                  <div className="flex flex-wrap items-center gap-1">
+                  <div className="flex flex-nowrap items-center gap-2">
                     <Button
-                      variant="ghost"
+                      variant="outline"
                       size="sm"
                       onClick={() => onEditar(usuario)}
                       aria-label={`Editar usuario ${usuario.correo}`}
+                      className="whitespace-nowrap"
                     >
+                      <Pencil aria-hidden className="size-4" />
                       Editar
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onRoles(usuario)}
+                      aria-label={`Gestionar roles de ${usuario.correo}`}
+                      className="whitespace-nowrap"
+                    >
+                      <ShieldCheck aria-hidden className="size-4" />
+                      Roles
                     </Button>
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => onRoles(usuario)}
-                      aria-label={`Gestionar roles de ${usuario.correo}`}
+                      onClick={() => onCambiarEstado(usuario)}
+                      disabled={esLaPropiaCuenta || cambiandoEstadoId === usuario.id}
+                      title={esLaPropiaCuenta ? 'No puedes desactivar tu propia cuenta' : undefined}
+                      aria-label={`${usuario.activo ? 'Desactivar' : 'Activar'} usuario ${usuario.correo}`}
+                      className="whitespace-nowrap"
                     >
-                      Gestionar roles
+                      {usuario.activo ? (
+                        <UserX aria-hidden className="size-4" />
+                      ) : (
+                        <UserCheck aria-hidden className="size-4" />
+                      )}
+                      {usuario.activo ? 'Desactivar' : 'Activar'}
                     </Button>
-                    <ActionsMenu
-                      label={`Acciones de ${usuario.correo}`}
-                      busy={cambiandoEstadoId === usuario.id}
-                      disabled={cambiandoEstadoId === usuario.id}
-                      items={[
-                        usuario.activo
-                          ? {
-                              label: 'Desactivar',
-                              tone: 'danger',
-                              disabled: esLaPropiaCuenta,
-                              ...(esLaPropiaCuenta
-                                ? { title: 'No puedes desactivar tu propia cuenta' }
-                                : {}),
-                              onSelect: () => onCambiarEstado(usuario),
-                            }
-                          : {
-                              label: 'Activar',
-                              onSelect: () => onCambiarEstado(usuario),
-                            },
-                      ]}
-                    />
                   </div>
                 </TableCell>
               </TableRow>

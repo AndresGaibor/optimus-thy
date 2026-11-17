@@ -30,16 +30,17 @@ export const ConUsuarios: Story = {
   },
 };
 
-export const ConAccionesAbiertas: Story = {
+export const AccionesVisibles: Story = {
   parameters: { msw: { handlers: crearHandlers('ok') } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await canvas.findByText('ana.garcia@example.test');
-    const usuario = userEvent.setup();
-    await usuario.click(canvas.getByRole('button', { name: /acciones de ana\.garcia/i }));
-    const menu = await within(document.body).findByRole('menu');
-    await expect(within(menu).getByRole('menuitem', { name: 'Desactivar' })).toBeVisible();
+    await expect(canvas.getByRole('button', { name: /editar usuario ana\.garcia/i })).toBeVisible();
     await expect(canvas.getByRole('button', { name: /gestionar roles de ana/i })).toBeVisible();
+    await expect(
+      canvas.getByRole('button', { name: /desactivar usuario ana\.garcia/i }),
+    ).toBeVisible();
+    await expect(canvas.queryByRole('button', { name: /acciones de/i })).toBeNull();
   },
 };
 
