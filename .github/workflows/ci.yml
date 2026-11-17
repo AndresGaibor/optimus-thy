@@ -195,6 +195,7 @@ jobs:
           path: ~/.bun/install/cache
           key: bun-${{ runner.os }}-${{ hashFiles('frontend/bun.lock') }}
       - uses: actions/cache@v4
+        id: cache-chromium
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('frontend/bun.lock') }}
@@ -203,6 +204,7 @@ jobs:
       - name: Build catalogo
         run: bun run catalogo:build
       - name: Instalar Chromium para pruebas de historias
+        if: steps.cache-chromium.outputs.cache-hit != 'true'
         run: bun x playwright install --with-deps chromium
       # Ejecuta los play y las comprobaciones a11y de cada historia.
       - name: Pruebas de historias del catálogo
@@ -269,7 +271,7 @@ jobs:
     if: needs.cambios.outputs.deploy == 'true'
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Ejecutar E2E aislado
