@@ -46,7 +46,7 @@ function DemoDuracion({ activa }: { activa: boolean }) {
           )}
         >
           <CardHeader>
-            <CardTitle as="h3" className="text-base">
+            <CardTitle as="h2" className="text-base">
               {item.etiqueta}
             </CardTitle>
             <CardDescription>
@@ -113,7 +113,7 @@ function DemoCurva({ activa }: { activa: boolean }) {
             )}
           >
             <CardHeader>
-              <CardTitle as="h3" className="text-base">
+              <CardTitle as="h2" className="text-base">
                 Entrada de panel
               </CardTitle>
               <CardDescription>{item.nota}</CardDescription>

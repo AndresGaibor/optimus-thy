@@ -293,12 +293,14 @@ export function PacientesPage() {
                 <TableCell colSpan={4}>
                   {q === '' ? (
                     <EmptyState
+                      as="h2"
                       title="Todavía no hay pacientes"
                       description="Registra el primer paciente para empezar."
                       action={<Button onClick={abrirCrear}>Registrar el primero</Button>}
                     />
                   ) : (
                     <EmptyState
+                      as="h2"
                       title="No se encontraron pacientes"
                       description="Prueba con otro término de búsqueda."
                       action={
@@ -449,6 +451,7 @@ export function PacientesPage() {
                   <CasosDelPaciente casos={pacienteDetalle.casos} />
                 ) : (
                   <EmptyState
+                    as="h2"
                     title="Sin casos registrados"
                     description="Este paciente aún no tiene casos asociados."
                   />

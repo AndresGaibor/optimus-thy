@@ -32,7 +32,7 @@ Cifras contadas sobre el árbol actual:
 - **Versión y stack**: Storybook **10.6.6** con framework `@storybook/react-vite` (`frontend/package.json`, `frontend/.storybook/main.ts`).
 - **Addons**: `@storybook/addon-docs`, `@storybook/addon-a11y`, `@storybook/addon-themes`, `@storybook/addon-mcp`, `@storybook/addon-vitest` y `msw-storybook-addon` (`frontend/package.json`, `frontend/.storybook/main.ts`).
 - **Configuración relevante** (`frontend/.storybook/main.ts`): carga MDX e historias TS/TSX, excluye `__screenshots__`, habilita `componentsManifest` y `experimentalReview`, usa `react-docgen-typescript`, telemetría desactivada y `@tailwindcss/vite`.
-- **Preview** (`frontend/.storybook/preview.tsx`): `tags: ['autodocs']` global (no `docs.autodocs`), `a11y: { test: 'todo' }` global, MSW mediante `mswLoader`, cuatro viewports (`movil` 360×800, `tablet` 768×1024, `escritorio` 1366×768 y `escritorioAmplio` 1440×900), globals `theme`, `shell` y `motion`, y las seis raíces ordenadas: `Documentación`, `Fundamentos`, `Sistema de diseño`, `Patrones`, `Aplicación` y `Calidad`.
+- **Preview** (`frontend/.storybook/preview.tsx`): `tags: ['autodocs']` global (no `docs.autodocs`), `a11y: { test: 'error' }` global, MSW mediante `mswLoader`, cuatro viewports (`movil` 360×800, `tablet` 768×1024, `escritorio` 1366×768 y `escritorioAmplio` 1440×900), globals `theme`, `shell` y `motion`, y las seis raíces ordenadas: `Documentación`, `Fundamentos`, `Sistema de diseño`, `Patrones`, `Aplicación` y `Calidad`.
 - **Catálogo vivo**: el índice de `http://127.0.0.1:6114/index.json` y `frontend/catalogo-static/index.json`, medidos el 2026-11-08, coinciden y contienen **591 entradas: 133 páginas de Docs y 458 historias**.
 - **Pantallas públicas mantenidas**: `Aplicación/Pública` sigue incluida en la taxonomía aprobada (`PRODUCT.md`) y en el catálogo.
 
@@ -84,7 +84,7 @@ El catálogo medido contiene **133 páginas de Docs**. Las fichas de componentes
 |---|---|---|
 | La comparación visual usa fuentes y línea base locales | Los resultados pueden diferir entre máquinas; CI no compara imágenes | `capturar:comparar` compara localmente contra la línea base versionada. CI captura y publica las 12 historias críticas sin comparar. |
 | `Aplicación/Pública` se conserva | Difiere de propuestas antiguas que retiraban esa superficie | Alcance aprobado en `PRODUCT.md`; la decisión está documentada en `docs/storybook/decisiones.md`. |
-| Accesibilidad con niveles graduales | Historias legadas pueden mostrar hallazgos sin bloquear el catálogo | El estado global permanece en `todo`; los componentes y patrones nuevos deben usar `error`. No hay marcadores `a11y-deuda` en `frontend/src` al medir esta auditoría. |
+| Accesibilidad con niveles graduales | Desde HT-023 el catálogo no bloquea con deudas pendientes | El estado global pasó a `error` (2026-11-17): `bun run catalogo:test` falla ante cualquier violación axe. Sin marcadores `a11y-deuda` en `frontend/src`. |
 | MCP bajo el subpath público | El servidor MCP podría quedar expuesto si el proxy no bloquea la ruta | La petición medida a `https://tiroides.andresgaibor.com/storybook/mcp` respondió **302**; el endpoint local escucha con `allowedHosts: true`. Ver `docs/storybook/integracion-agentes.md`. |
 | Densidad, idioma y alto contraste sin soporte | No se pueden verificar variantes inexistentes | No simularlas en Storybook; reevaluar cuando la app las implemente. |
 | Crecimiento de archivos UI | Reduce mantenibilidad | `frontend/scripts/tamanos.ts` aplica límites con baseline ratchet. |

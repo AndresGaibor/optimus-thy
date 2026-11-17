@@ -132,7 +132,7 @@ Al cerrar un issue se actualizan las filas de los requisitos que cubre: cambiar
 | RDS-05 | Biblioteca de componentes base: botón, campo, selector, tabla, tarjeta, modal, aviso, pestañas, navegación, paginación | CP-080 | Pendiente | — | — |
 | RDS-06 | Patrones clínicos: tarjeta de paciente, ficha, resultado de IA con confianza, aviso de apoyo, visor de imagen, campo… | CP-081 | Pendiente | — | — |
 | RDS-07 | Estados de carga, vacío y error definidos y usados en cada pantalla | CP-082 | Pendiente | — | — |
-| RDS-09 | Accesibilidad WCAG 2.2 AA: contraste, foco visible, uso completo con teclado, etiquetas y lectores de pantalla | CP-083 | Pendiente | — | — |
+| RDS-09 | Accesibilidad WCAG 2.2 AA: contraste, foco visible, uso completo con teclado, etiquetas y lectores de pantalla | CP-083 | Aprobado | `bun run catalogo:test` con `a11y: { test: 'error' }` (axe sobre las 288 pruebas de historia, en CI); contraste de `--success` corregido a 6.39:1; foco y teclado cubiertos en `src/test/design-system.test.tsx` y en los `play` de `Modales` y `Navegacion` | Revisión manual con lector de pantalla sigue pendiente (HT-023) |
 | RDS-11 | Contenido en español claro, con glosario de términos clínicos y mensajes de error que dicen qué hacer | CP-084 | Pendiente | — | — |
 
 ## Seguridad, privacidad y cumplimiento legal

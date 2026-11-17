@@ -20,7 +20,7 @@ const NAV_ITEMS: SidebarNavItem[] = [
 
 function AdaptableGuia() {
   return (
-    <main className="min-h-screen bg-background p-6 text-foreground sm:p-8">
+    <div className="min-h-screen bg-background p-6 text-foreground sm:p-8">
       <div className="mx-auto max-w-(--content-max-width) space-y-8">
         <header className="space-y-2">
           <p className="text-sm font-semibold uppercase tracking-wide text-brand">
@@ -154,7 +154,7 @@ function AdaptableGuia() {
           </Callout>
         </section>
       </div>
-    </main>
+    </div>
   );
 }
 
