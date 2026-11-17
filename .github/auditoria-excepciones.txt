@@ -1,3 +1,4 @@
 # Excepciones temporales: ID|AAAA-MM-DD|motivo
 # Ejemplo: GHSA-xxxx-xxxx-xxxx|2026-12-31|Dependencia transitiva en actualización coordinada
 # Ejemplo: CVE-2026-12345|2026-12-31|No hay versión corregida disponible
+GHSA-fc5q-39xc-vjpf|2027-01-31|picomatch <=4.0.7 (ReDoS en extglobs) llega por vite, fdir y unplugin; no hay versión corregida publicada
