@@ -34,10 +34,12 @@ export interface UsuariosTablaProps {
 /** Roles como texto: cada uno es un elemento propio, así el salto ocurre entre roles. */
 function RolesTexto({ roles, className }: { roles: string[]; className?: string }) {
   return (
-    <span className={className ?? 'flex flex-wrap gap-x-3 gap-y-1 text-sm text-foreground'}>
-      {roles.map((rol) => (
+    <span className={className ?? 'flex flex-wrap gap-x-1 gap-y-1 text-sm text-foreground'}>
+      {roles.map((rol, indice) => (
+        // El punto viaja con su rol: al cortar línea queda al final, nunca suelto al inicio.
         <span key={rol} className="whitespace-nowrap">
           {rol}
+          {indice < roles.length - 1 ? ' · ' : ''}
         </span>
       ))}
     </span>
@@ -89,8 +91,8 @@ export function UsuariosTabla({
               direccion={direccion}
               onOrden={onOrden}
             />
-            <TableHead className="hidden w-44 sm:table-cell">Institución</TableHead>
-            <TableHead className="hidden w-56 sm:table-cell">Roles</TableHead>
+            <TableHead className="hidden w-36 sm:table-cell">Institución</TableHead>
+            <TableHead className="hidden w-80 sm:table-cell">Roles</TableHead>
             <EncabezadoOrdenable
               campo="estado"
               etiqueta="Estado"
@@ -99,7 +101,7 @@ export function UsuariosTabla({
               onOrden={onOrden}
               className="hidden w-24 sm:table-cell"
             />
-            <TableHead className="w-96 px-2 sm:px-4">Acciones</TableHead>
+            <TableHead className="w-80 px-2">Acciones</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -160,7 +162,7 @@ export function UsuariosTabla({
                 <TableCell className="hidden py-4 align-middle sm:table-cell">
                   <StatusBadge kind="user" status={usuario.activo ? 'Activo' : 'Inactivo'} />
                 </TableCell>
-                <TableCell className="px-2 py-4 align-middle sm:px-4">
+                <TableCell className="px-2 py-4 align-middle">
                   <div className="flex flex-nowrap items-center gap-2">
                     <Button
                       variant="outline"
@@ -189,7 +191,11 @@ export function UsuariosTabla({
                       disabled={esLaPropiaCuenta || cambiandoEstadoId === usuario.id}
                       title={esLaPropiaCuenta ? 'No puedes desactivar tu propia cuenta' : undefined}
                       aria-label={`${usuario.activo ? 'Desactivar' : 'Activar'} usuario ${usuario.correo}`}
-                      className="whitespace-nowrap"
+                      className={`whitespace-nowrap ${
+                        usuario.activo
+                          ? 'border-danger/40 text-danger hover:bg-danger/10'
+                          : 'border-success/40 text-success hover:bg-success/10'
+                      }`}
                     >
                       {usuario.activo ? (
                         <UserX aria-hidden className="size-4" />
