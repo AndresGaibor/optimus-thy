@@ -81,6 +81,24 @@ curl -sS -o /dev/null -w '%{http_code}\n' https://tiroides2.andresgaibor.com/
 curl -sS -o /dev/null -w '%{http_code}\n' https://tiroides2.andresgaibor.com/login
 ```
 
+## Despliegue automático
+
+`scripts/desplegar.sh` despliega en este host el resultado de cada merge en `main`, sin intervención:
+
+- Lo ejecuta `optimus-thy-deploy.timer` (systemd de usuario, cada 3 minutos, `Persistent=true`).
+- Si `HEAD` ya es `origin/main`, no hace nada; solo despliega merges.
+- Aborta sin tocar nada si hay archivos modificados que no coincidan con `main`: no pisa trabajo local.
+- Reconstruye el frontend solo si cambió `frontend/` y el backend solo si cambió `backend/` o `docker-compose.yml`.
+- Verifica `/health` en `127.0.0.1:8000`, `/` = `200` y `/api/auth/me` = `401` antes de dar el despliegue por bueno.
+
+```bash
+systemctl --user status optimus-thy-deploy.service
+journalctl --user -u optimus-thy-deploy.service -n 50
+bash scripts/desplegar.sh   # despliegue manual, mismo camino
+```
+
+`docker-compose.yml` exige `COMPOSE_NETWORK`; el script la fija en `optimus-thy-net` cuando no viene del entorno.
+
 ## Recrear el contenedor edge
 
 Usar el montaje real del repo y la configuración de nginx del host:
