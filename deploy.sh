@@ -8,6 +8,7 @@ source "$ROOT/infra/deploy/release.sh"
 source "$ROOT/infra/deploy/migrate.sh"
 source "$ROOT/infra/deploy/health.sh"
 source "$ROOT/infra/deploy/rollback.sh"
+source "$ROOT/infra/deploy/adoptar.sh"
 
 usage() {
   cat <<'EOF'
@@ -17,6 +18,7 @@ Comandos:
   help       muestra esta ayuda (no requiere root ni .env)
   status     release actual, imágenes, revisión DB, salud y último backup
   check      valida prerequisitos de host, Git, .env y Compose
+  adopt      inspecciona una instalación Compose existente y emite un plan de adopción (solo lectura; --json)
   backup     crea y valida un respaldo
   deploy     construye y despliega un release por commit
   rollback   vuelve a la aplicación del release anterior compatible con la DB
@@ -25,6 +27,7 @@ Configuración por entorno: APP_DIR, ENV_FILE, COMPOSE_SERVER, RELEASES_DIR,
 DEPLOYMENTS_DIR, COMPOSE_PROJECT_NAME, REPO_REMOTE, MAIN_REF, PUBLIC_URL.
 APP_DIR puede contener .env y compose.server.yaml. El overlay de producción
 requiere RELEASE, TAILSCALE_IP, APP_DIR y RELEASE_DIR.
+Notas: adopt es solo lectura (sin lock ni confirmación) y funciona sin release previo.
 EOF
 }
 
@@ -127,10 +130,14 @@ shift || true
 REF="main"
 REF_GIVEN=false
 YES=false
+ADOPT_ARGS=()
 while (($#)); do
   case "$1" in
     --ref) (($# >= 2)) || die "--ref requiere un valor"; REF="$2"; REF_GIVEN=true; shift 2 ;;
     --yes|-y) YES=true; shift ;;
+    --json)
+      if [[ "$command_name" == adopt ]]; then ADOPT_ARGS+=(--json); shift; else die "argumento desconocido: $1"; fi
+      ;;
     *) [[ "$command_name" == rollback && -z "${ROLLBACK_TARGET:-}" ]] || die "argumento desconocido: $1"; ROLLBACK_TARGET="$1"; shift ;;
   esac
 done
@@ -141,6 +148,12 @@ case "$command_name" in
     verify_environment
     resolved="$(preflight "$REF")"
     log "prerequisitos válidos; commit: $resolved (env=$DEPLOY_ENV project=$COMPOSE_PROJECT_NAME)"
+    ;;
+  adopt)
+    # Solo lectura: sin lock ni confirm. Funciona también sin release previo.
+    load_env
+    verify_environment
+    adopt_plan "${ADOPT_ARGS[@]}"
     ;;
   status)
     show_status
