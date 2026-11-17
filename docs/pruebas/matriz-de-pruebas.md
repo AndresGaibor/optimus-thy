@@ -30,13 +30,13 @@ Una fila por requisito documentado en la matriz (M y los S que se registraron al
 | Sección | Requisitos en la matriz | Aprobados | En curso | Pendientes |
 | --- | --- | --- | --- | --- |
 | El modelo existente (app.py y base.py) | 9 | 0 | 0 | 9 |
-| Requisitos funcionales | 70 | 18 | 8 | 44 |
+| Requisitos funcionales | 70 | 22 | 8 | 40 |
 | Diseño y sistema de diseño | 8 | 2 | 0 | 6 |
 | Seguridad, privacidad y cumplimiento legal | 36 | 5 | 7 | 24 |
 | Requisitos no funcionales | 16 | 2 | 4 | 10 |
 | Datos, integración y despliegue | 14 | 5 | 2 | 7 |
 | Proceso del trabajo de titulación | 8 | 2 | 0 | 6 |
-| **Total** | **161** | **34** | **21** | **106** |
+| **Total** | **161** | **38** | **21** | **102** |
 
 ## El modelo existente (app.py y base.py)
 
@@ -106,13 +106,13 @@ Una fila por requisito documentado en la matriz (M y los S que se registraron al
 | RF-INF-01 | El médico elige paciente, caso e imagen y ejecuta la inferencia | CP-054 | Pendiente | — | — |
 | RF-INF-02 | La API valida, preprocesa, llama al modelo OPTIMUS-THY y devuelve el resultado | CP-055 | Pendiente | — | — |
 | RF-INF-03 | El resultado muestra, por cada nódulo detectado, la clase benigno o maligno con su probabilidad; si el detector no… | CP-056 | Pendiente | — | — |
-| RF-INF-04 | Todo resultado lleva un aviso visible: es apoyo, no diagnóstico definitivo; en pantalla, reporte y exportaciones | CP-057 | Pendiente | — | — |
+| RF-INF-04 | Todo resultado lleva un aviso visible: es apoyo, no diagnóstico definitivo; en pantalla, reporte y exportaciones | CP-057 | Aprobado | `SupportNotice` en `frontend/src/pages/medico/CasoPage.tsx` («Resultado de IA: apoyo, no diagnóstico», asertado en `CasoPage.stories.tsx`); aviso en `backend/app/reportes/inferencia.py` | — |
 | RF-INF-05 | Guardar cada resultado con versión del modelo, parámetros, fecha, usuario e imagen de entrada | CP-058 | Pendiente | — | — |
 | RF-INF-06 | Ejecución con estado visible, tiempo máximo y manejo de errores | CP-059 | Pendiente | — | — |
 | RF-INF-07 | Si el modelo no responde, el sistema lo dice y no inventa un resultado | CP-060 | Pendiente | — | — |
-| RF-INF-08 | Consultar el historial de inferencias de un caso | CP-061 | Pendiente | — | — |
-| RF-INF-12 | Mostrar por nódulo la imagen original, la caja del detector, la máscara final, la región analizada y la superposición… | CP-062 | Pendiente | — | — |
-| RF-INF-13 | Una imagen puede tener hasta 3 nódulos; cada uno recibe su caja, su máscara y su clasificación | CP-063 | Pendiente | — | — |
+| RF-INF-08 | Consultar el historial de inferencias de un caso | CP-061 | Aprobado | `backend/tests/test_resultados.py::test_lista_inferencias_con_artefactos`, `test_sin_inferencias_devuelve_lista_vacia`, `test_caso_de_otra_institucion_responde_404`, `test_sin_permiso_responde_403`; historial en `CasoPage` con `ResultadoInferencia` | — |
+| RF-INF-12 | Mostrar por nódulo la imagen original, la caja del detector, la máscara final, la región analizada y la superposición… | CP-062 | Aprobado | `frontend/src/pages/medico/ResultadoNodulo.tsx` (caja, máscara, MGAC, región, superposición y XML) con historia propia; `backend/tests/test_inferencia.py::test_inferencia_en_colas_persiste_contrato_11_nodulo_y_artefactos` | — |
+| RF-INF-13 | Una imagen puede tener hasta 3 nódulos; cada uno recibe su caja, su máscara y su clasificación | CP-063 | Aprobado | `backend/app/ia/cliente.py` (`MAX_NODULOS = 3` con validación de índice y contrato) y `backend/tests/test_inferencia.py`; cada nódulo con su tarjeta en `ResultadoNodulo` | — |
 | RF-INF-14 | Si el detector no encuentra nódulo, el sistema no clasifica la imagen completa como si fuera un nódulo y lo informa | CP-064 | Aprobado | `backend/tests/test_inferencia.py::test_inferencia_sin_nodulos_persiste_resultado_normal`; `frontend/src/pages/medico/ResultadoInferencia.stories.tsx::SinNodulo` («Normal: sin nódulo detectado») | — |
 | RF-REP-01 | Generar un reporte PDF por inferencia con datos mínimos del paciente, imagen, resultado, confianza, versión del modelo,… | CP-065 | Aprobado | `GET /casos/{id}/inferencias/{id}/reporte.pdf`; `backend/tests/test_reportes.py` (PDF con encabezado, aviso, imagen, resultado y nódulos; 404 para caso ajeno, otra inferencia y rol sin permiso) | — |
 | RF-REP-02 | El reporte incluye el aviso de apoyo, no de diagnóstico | CP-066 | Aprobado | `backend/app/reportes/inferencia.py` (aviso y leyenda «normal = sin nódulo»); el texto queda en el PDF y no depende de la interfaz | — |
