@@ -271,6 +271,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/casos/{caso_id}/consentimientos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listar Consentimientos */
+        get: operations["listar_consentimientos_casos__caso_id__consentimientos_get"];
+        put?: never;
+        /** Crear Consentimiento */
+        post: operations["crear_consentimiento_casos__caso_id__consentimientos_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/casos/{caso_id}/consentimientos/{consentimiento_id}/revocar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Revocar Consentimiento
+         * @description Retiro del consentimiento: efecto inmediato, sin paso de aprobación.
+         */
+        post: operations["revocar_consentimiento_casos__caso_id__consentimientos__consentimiento_id__revocar_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/casos/{caso_id}/inferencias": {
         parameters: {
             query?: never;
@@ -414,6 +452,21 @@ export interface components {
             nombre: string;
             /** Version */
             version: string;
+        };
+        /**
+         * CrearConsentimientoRequest
+         * @description Finalidad y versión del texto firmado; nunca contenido clínico.
+         */
+        CrearConsentimientoRequest: {
+            /**
+             * Base Legal
+             * @enum {string}
+             */
+            base_legal: "consentimiento" | "atencion_de_salud" | "investigacion_con_anonimizacion";
+            /** Version Texto */
+            version_texto: string;
+            /** Otorgado En */
+            otorgado_en?: string | null;
         };
         /**
          * CrearPacienteRequest
@@ -1105,6 +1158,104 @@ export interface operations {
         responses: {
             /** @description Successful Response */
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listar_consentimientos_casos__caso_id__consentimientos_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                caso_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    crear_consentimiento_casos__caso_id__consentimientos_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                caso_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CrearConsentimientoRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    revocar_consentimiento_casos__caso_id__consentimientos__consentimiento_id__revocar_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                caso_id: string;
+                consentimiento_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };

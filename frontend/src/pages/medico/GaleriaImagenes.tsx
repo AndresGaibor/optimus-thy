@@ -12,13 +12,19 @@ import type { ImagenCaso } from '../../api/imagenes';
 interface GaleriaImagenesProps {
   imagenes: ImagenCaso[];
   analizando: string | null;
+  puedeAnalizar: boolean;
   onAnalizar: (imagen: ImagenCaso) => void;
 }
 
 const FORMATO_FECHA = new Intl.DateTimeFormat('es', { dateStyle: 'medium', timeStyle: 'short' });
 
 /** Ecografías del caso con la acción de analizarlas. */
-export function GaleriaImagenes({ imagenes, analizando, onAnalizar }: GaleriaImagenesProps) {
+export function GaleriaImagenes({
+  imagenes,
+  analizando,
+  puedeAnalizar,
+  onAnalizar,
+}: GaleriaImagenesProps) {
   return (
     <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
       {imagenes.map((imagen) => (
@@ -43,11 +49,20 @@ export function GaleriaImagenes({ imagenes, analizando, onAnalizar }: GaleriaIma
               {analizando === imagen.id ? (
                 <Spinner size="sm" label="Analizando la ecografía" />
               ) : (
-                <Button size="sm" onClick={() => onAnalizar(imagen)} disabled={analizando !== null}>
+                <Button
+                  size="sm"
+                  onClick={() => onAnalizar(imagen)}
+                  disabled={!puedeAnalizar || analizando !== null}
+                >
                   Analizar
                 </Button>
               )}
             </CardFooter>
+            {puedeAnalizar ? null : (
+              <p className="px-6 pb-4 text-xs text-muted-foreground">
+                Falta un consentimiento vigente de atención de salud.
+              </p>
+            )}
           </Card>
         </li>
       ))}

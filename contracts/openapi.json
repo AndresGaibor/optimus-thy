@@ -875,6 +875,159 @@
         }
       }
     },
+    "/casos/{caso_id}/consentimientos": {
+      "get": {
+        "tags": [
+          "consentimientos"
+        ],
+        "summary": "Listar Consentimientos",
+        "operationId": "listar_consentimientos_casos__caso_id__consentimientos_get",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "caso_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Caso Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "consentimientos"
+        ],
+        "summary": "Crear Consentimiento",
+        "operationId": "crear_consentimiento_casos__caso_id__consentimientos_post",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "caso_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Caso Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CrearConsentimientoRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/casos/{caso_id}/consentimientos/{consentimiento_id}/revocar": {
+      "post": {
+        "tags": [
+          "consentimientos"
+        ],
+        "summary": "Revocar Consentimiento",
+        "description": "Retiro del consentimiento: efecto inmediato, sin paso de aprobación.",
+        "operationId": "revocar_consentimiento_casos__caso_id__consentimientos__consentimiento_id__revocar_post",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "caso_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Caso Id"
+            }
+          },
+          {
+            "name": "consentimiento_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Consentimiento Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/casos/{caso_id}/inferencias": {
       "get": {
         "tags": [
@@ -1205,6 +1358,45 @@
           "version"
         ],
         "title": "Body_cargar_modelo_modelos_ia_post"
+      },
+      "CrearConsentimientoRequest": {
+        "properties": {
+          "base_legal": {
+            "type": "string",
+            "enum": [
+              "consentimiento",
+              "atencion_de_salud",
+              "investigacion_con_anonimizacion"
+            ],
+            "title": "Base Legal"
+          },
+          "version_texto": {
+            "type": "string",
+            "maxLength": 32,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9._-]+$",
+            "title": "Version Texto"
+          },
+          "otorgado_en": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Otorgado En"
+          }
+        },
+        "type": "object",
+        "required": [
+          "base_legal",
+          "version_texto"
+        ],
+        "title": "CrearConsentimientoRequest",
+        "description": "Finalidad y versión del texto firmado; nunca contenido clínico."
       },
       "CrearPacienteRequest": {
         "properties": {
