@@ -189,6 +189,14 @@ export const usuariosOk: UsuarioOutAdmin[] = [
     institucion: institucionDemoOk,
     roles: ['doctor'],
   },
+  {
+    id: 'u-extremo',
+    correo: 'prueba.api.1793854938@example.institucion-larga.test',
+    nombre: 'Prueba de Integración Automática del Sistema',
+    activo: false,
+    institucion: { id: 'inst-larga', nombre: 'Hospital Universitario de la Sierra Central' },
+    roles: ['admin', 'doctor', 'researcher'],
+  },
 ];
 
 export const usuariosVacios: UsuariosListResponse = { total: 0, items: [] };

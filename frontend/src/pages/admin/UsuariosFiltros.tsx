@@ -36,13 +36,13 @@ export function UsuariosFiltros({
       className="flex flex-col gap-3 sm:flex-row sm:items-end"
     >
       <div className="flex w-full flex-col gap-2 sm:w-80">
-        <Label htmlFor="filtro-busqueda">Buscar por correo o nombre</Label>
+        <Label htmlFor="filtro-busqueda">Buscar usuario</Label>
         <Input
           id="filtro-busqueda"
           type="search"
           value={busqueda}
           onChange={(evento) => onBusqueda(evento.target.value)}
-          placeholder="correo o nombre"
+          placeholder="Nombre o correo electrónico"
         />
       </div>
       <div className="grid w-full grid-cols-1 gap-3 sm:contents">

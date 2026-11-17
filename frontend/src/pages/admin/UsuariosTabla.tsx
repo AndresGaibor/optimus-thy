@@ -1,3 +1,5 @@
+import { Check, Copy } from 'lucide-react';
+import { useState } from 'react';
 import type { OrdenUsuarios, Usuario } from '../../api/usuarios';
 import { Button } from '../../design-system/components/atoms/Button';
 import {
@@ -30,6 +32,20 @@ export interface UsuariosTablaProps {
   cambiandoEstadoId?: string | null;
 }
 
+/** Roles como texto: cada uno es un elemento propio, así el salto ocurre entre roles. */
+function RolesTexto({ roles, className }: { roles: string[]; className?: string }) {
+  return (
+    <span className={className ?? 'flex flex-wrap gap-x-2 gap-y-1 text-sm text-foreground'}>
+      {roles.map((rol, indice) => (
+        <span key={rol} className="whitespace-nowrap">
+          {indice > 0 ? <span aria-hidden>· </span> : null}
+          {rol}
+        </span>
+      ))}
+    </span>
+  );
+}
+
 export function UsuariosTabla({
   usuarios,
   orden,
@@ -43,6 +59,18 @@ export function UsuariosTabla({
   correoSesion,
   cambiandoEstadoId = null,
 }: UsuariosTablaProps) {
+  const [copiado, setCopiado] = useState<string | null>(null);
+
+  const copiarCorreo = async (correo: string) => {
+    try {
+      await navigator.clipboard.writeText(correo);
+      setCopiado(correo);
+      window.setTimeout(() => setCopiado((actual) => (actual === correo ? null : actual)), 2000);
+    } catch {
+      setCopiado(null);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-4">
       {errorEstado ? (
@@ -51,7 +79,7 @@ export function UsuariosTabla({
         </Callout>
       ) : null}
       <p role="status" className="sr-only">
-        {avisoEstado}
+        {copiado ? `Correo ${copiado} copiado.` : avisoEstado}
       </p>
       <Table caption="Listado de usuarios" className="table-fixed">
         <TableHeader>
@@ -62,10 +90,10 @@ export function UsuariosTabla({
               orden={orden}
               direccion={direccion}
               onOrden={onOrden}
-              className="w-auto sm:w-2/5"
+              className="w-1/3"
             />
             <TableHead className="hidden w-48 sm:table-cell">Institución</TableHead>
-            <TableHead className="hidden w-56 sm:table-cell">Roles</TableHead>
+            <TableHead className="hidden w-1/5 sm:table-cell">Roles</TableHead>
             <EncabezadoOrdenable
               campo="estado"
               etiqueta="Estado"
@@ -74,13 +102,14 @@ export function UsuariosTabla({
               onOrden={onOrden}
               className="hidden w-24 sm:table-cell"
             />
-            <TableHead className="w-28 px-2 sm:w-72 sm:px-4">Acciones</TableHead>
+            <TableHead className="w-1/4 px-2 sm:px-4">Acciones</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {usuarios.map((usuario) => {
             const esLaPropiaCuenta = Boolean(correoSesion && usuario.correo === correoSesion);
-            const etiquetasRoles = (usuario.roles || []).map(obtenerEtiquetaRol).join(' · ');
+            const roles = (usuario.roles || []).map(obtenerEtiquetaRol);
+            const copiadoAqui = copiado === usuario.correo;
             return (
               <TableRow key={usuario.id}>
                 <TableCell className="max-w-0 py-4 align-middle">
@@ -90,14 +119,29 @@ export function UsuariosTabla({
                   >
                     {usuario.nombre || 'Sin nombre'}
                   </span>
-                  <span className="block truncate text-muted-foreground" title={usuario.correo}>
-                    {usuario.correo}
+                  <span className="flex min-w-0 items-center gap-1">
+                    <span className="truncate text-muted-foreground" title={usuario.correo}>
+                      {usuario.correo}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => void copiarCorreo(usuario.correo)}
+                      aria-label={`Copiar correo de ${usuario.correo}`}
+                      className="size-6 shrink-0 text-muted-foreground"
+                    >
+                      {copiadoAqui ? (
+                        <Check aria-hidden className="size-3.5" />
+                      ) : (
+                        <Copy aria-hidden className="size-3.5" />
+                      )}
+                    </Button>
                   </span>
-                  <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm sm:hidden">
-                    <span className="break-words text-muted-foreground">
+                  <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 sm:hidden">
+                    <span className="break-words text-sm text-muted-foreground">
                       {usuario.institucion?.nombre || 'Sin institución'}
                     </span>
-                    <span className="break-words text-muted-foreground">{etiquetasRoles}</span>
+                    <RolesTexto roles={roles} />
                     <StatusBadge
                       kind="user"
                       status={usuario.activo ? 'Activo' : 'Inactivo'}
@@ -114,7 +158,7 @@ export function UsuariosTabla({
                   </span>
                 </TableCell>
                 <TableCell className="hidden py-4 align-middle sm:table-cell">
-                  <span className="flex flex-wrap text-sm text-foreground">{etiquetasRoles}</span>
+                  <RolesTexto roles={roles} />
                 </TableCell>
                 <TableCell className="hidden py-4 align-middle sm:table-cell">
                   <StatusBadge kind="user" status={usuario.activo ? 'Activo' : 'Inactivo'} />
