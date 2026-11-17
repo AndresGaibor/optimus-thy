@@ -5,6 +5,7 @@ import { PasswordRecoveryPage } from './pages/PasswordRecoveryPage';
 import { PlaceholderPage } from './pages/PlaceholderPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { RolesPage } from './pages/admin/RolesPage';
+import { AuditoriaPage } from './pages/admin/AuditoriaPage';
 import { UsuariosPage } from './pages/admin/UsuariosPage';
 import { ModelosPage } from './pages/admin/ModelosPage';
 import { PacientesPage } from './pages/medico/PacientesPage';
@@ -59,7 +60,7 @@ export function AppRoutes() {
         <Route path="usuarios" element={<UsuariosPage />} />
         <Route path="roles" element={<RolesPage />} />
         <Route path="modelos" element={<ModelosPage />} />
-        <Route path="auditoria" element={<PlaceholderPage titulo="Auditoría" />} />
+        <Route path="auditoria" element={<AuditoriaPage />} />
       </Route>
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
