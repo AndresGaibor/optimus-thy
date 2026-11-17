@@ -16,6 +16,7 @@ from app.ia.cliente import ClienteIA
 from app.jobs import manejadores
 from app.jobs.queue import encolar
 from app.jobs.worker import MANEJADORES, procesar_una
+from app.models.consentimientos import Consentimiento
 from app.models.fichas import Caso
 from app.models.imagenes import Imagen, Inferencia, Nodulo
 from app.models.instituciones import Institucion
@@ -79,6 +80,10 @@ def mundo(db_session: Session) -> dict[str, Any]:
     caso = Caso(institucion_id=institucion.id, paciente_id=paciente.id, codigo_caso="CASO-0001")
     db_session.add(caso)
     db_session.commit()
+    db_session.add(
+        Consentimiento(caso_id=caso.id, base_legal="atencion_de_salud", version_texto="v1")
+    )
+    db_session.commit()
     imagen = Imagen(caso_id=caso.id, ruta_s3="casos/abc/imagenes/eco.png", hash_sha256="b" * 64)
     db_session.add(imagen)
     db_session.commit()
@@ -107,11 +112,13 @@ def _ejecutar(
     doble: ClienteS3Falso,
     monkeypatch: pytest.MonkeyPatch,
     status: int = 200,
+    contrato: dict[str, Any] | None = None,
 ) -> Trabajo:
     doble.put_object(
         Bucket="pruebas", Key=imagen.ruta_s3, Body=b"image-bytes", ContentType="image/png"
     )
-    contrato = CONTRATO if status == 200 else {"detail": "service unavailable"}
+    cuerpo = contrato if contrato is not None else CONTRATO
+    contrato = cuerpo if status == 200 else {"detail": "service unavailable"}
     transporte = httpx.MockTransport(lambda _: httpx.Response(status, json=contrato))
     cliente = ClienteIA("http://ia:8002", transporte=transporte)
     monkeypatch.setattr(manejadores, "get_cliente_ia", lambda: cliente)
@@ -165,3 +172,24 @@ def test_fallo_del_servicio_ia_deja_trabajo_en_error_sin_resultado(
     assert db.query(Inferencia).count() == 0
     assert db.query(Nodulo).count() == 0
     assert not any(clave.startswith("inferencias/") for clave in almacen.objetos)
+
+
+def test_inferencia_sin_nodulos_persiste_resultado_normal(
+    mundo: dict[str, Any],
+    almacen: ClienteS3Falso,
+    sesiones: None,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    db: Session = mundo["db"]
+    sin_nodulos = {**CONTRATO, "nodulos": [], "sin_nodulo": True}
+    trabajo = _ejecutar(db, mundo["imagen"], almacen, monkeypatch, contrato=sin_nodulos)
+
+    assert trabajo.estado == "completado"
+    assert trabajo.resultado is not None
+    inferencia = db.get(Inferencia, uuid.UUID(trabajo.resultado["inferencia_id"]))
+    assert inferencia is not None
+    assert inferencia.resultado == "sin_nodulo"
+    assert inferencia.confianza is None
+    assert db.query(Nodulo).count() == 0
+    ruta = trabajo.resultado["contrato_ruta_s3"]
+    assert json.loads(almacen.objetos[ruta]["Body"]) == sin_nodulos
