@@ -63,6 +63,32 @@ export const CierreConEscape: Story = {
   },
 };
 
+export const NavegacionConTab: Story = {
+  name: 'Tab y Escape',
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const disparador = canvas.getByRole('button', { name: /andres gaibor/i });
+    await userEvent.click(disparador);
+    await expect(disparador).toHaveFocus();
+    await expect(canvas.getByRole('group', { name: 'Cambiar área de trabajo' })).toBeVisible();
+
+    const grupo = canvas.getByRole('group', { name: 'Cambiar área de trabajo' });
+    const medico = within(grupo).getByRole('button', { name: /^médico$/i });
+    const investigador = within(grupo).getByRole('button', { name: /^investigador$/i });
+
+    await userEvent.tab();
+    await expect(medico).toHaveFocus();
+    await userEvent.tab();
+    await expect(investigador).toHaveFocus();
+    await userEvent.tab({ shift: true });
+    await expect(medico).toHaveFocus();
+
+    await userEvent.keyboard('{Escape}');
+    await expect(disparador).toHaveFocus();
+    await expect(canvas.queryByText('Cambiar área de trabajo')).not.toBeInTheDocument();
+  },
+};
+
 export const UnaSolaArea: Story = {
   name: 'Una sola área',
   args: {
