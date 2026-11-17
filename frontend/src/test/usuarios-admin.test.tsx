@@ -219,11 +219,11 @@ describe('usuarios admin', () => {
 
     montarApp();
 
-    const menu = await screen.findByRole('button', {
-      name: /acciones de maria@hospital\.es/i,
-    });
-    await user.click(menu);
-    await user.click(await screen.findByRole('menuitem', { name: 'Desactivar' }));
+    await user.click(
+      await screen.findByRole('button', {
+        name: /desactivar usuario maria@hospital\.es/i,
+      }),
+    );
     const confirmDialog = await screen.findByRole('dialog');
     await user.click(within(confirmDialog).getByRole('button', { name: /^desactivar$/i }));
 
@@ -528,9 +528,8 @@ describe('usuarios admin', () => {
     montarApp();
 
     await user.click(
-      await screen.findByRole('button', { name: /acciones de maria@hospital\.es/i }),
+      await screen.findByRole('button', { name: /desactivar usuario maria@hospital\.es/i }),
     );
-    await user.click(await screen.findByRole('menuitem', { name: 'Desactivar' }));
     const dialog = await screen.findByRole('dialog');
     await user.click(within(dialog).getByRole('button', { name: /^desactivar$/i }));
 
@@ -560,9 +559,8 @@ describe('usuarios admin', () => {
     montarApp();
 
     await user.click(
-      await screen.findByRole('button', { name: /acciones de maria@hospital\.es/i }),
+      await screen.findByRole('button', { name: /activar usuario maria@hospital\.es/i }),
     );
-    await user.click(await screen.findByRole('menuitem', { name: 'Activar' }));
 
     expect(await screen.findByText(/maria@hospital\.es activado/i)).toBeInTheDocument();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
@@ -678,7 +676,6 @@ describe('usuarios admin', () => {
   });
 
   it('la propia cuenta no ofrece desactivarse', async () => {
-    const user = userEvent.setup();
     fetchMock.mockResolvedValueOnce(responderJson(mockSessionAdmin));
     fetchMock.mockResolvedValueOnce(
       responderJson({
@@ -699,13 +696,14 @@ describe('usuarios admin', () => {
 
     montarApp();
 
-    await user.click(await screen.findByRole('button', { name: /acciones de admin@t\.com/i }));
-    const item = await screen.findByRole('menuitem', { name: 'Desactivar' });
+    const item = await screen.findByRole('button', {
+      name: /desactivar usuario admin@t\.com/i,
+    });
     expect(item).toBeDisabled();
     expect(item).toHaveAttribute('title', 'No puedes desactivar tu propia cuenta');
   });
 
-  it('el menú de acciones se abre y cierra con teclado', async () => {
+  it('el botón de estado abre la confirmación con teclado', async () => {
     const user = userEvent.setup();
     fetchMock.mockResolvedValueOnce(responderJson(mockSessionAdmin));
     fetchMock.mockResolvedValueOnce(
@@ -727,16 +725,12 @@ describe('usuarios admin', () => {
 
     montarApp();
 
-    const disparador = await screen.findByRole('button', {
-      name: /acciones de maria@hospital\.es/i,
+    const accion = await screen.findByRole('button', {
+      name: /desactivar usuario maria@hospital\.es/i,
     });
-    disparador.focus();
+    accion.focus();
     await user.keyboard('{Enter}');
-    const menu = await screen.findByRole('menu');
-    expect(within(menu).getByRole('menuitem', { name: 'Desactivar' })).toHaveFocus();
-    await user.keyboard('{Escape}');
-    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
-    expect(disparador).toHaveFocus();
+    expect(await screen.findByRole('dialog')).toBeInTheDocument();
   });
 
   it('combina búsqueda, institución y estado en la misma consulta', async () => {
