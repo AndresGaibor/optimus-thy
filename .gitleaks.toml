@@ -18,3 +18,14 @@ paths = [
   '''backend/tests/test_sesiones_seguridad\.py''',
 ]
 condition = "AND"
+[[allowlists]]
+description = "IP privada Tailscale documentada, no es credencial"
+regexTarget = "line"
+regexes = ['''TAILSCALE_IP=100\.107\.225\.79''']
+paths = ['''docs/operacion/despliegue-produccion\.md''']
+condition = "AND"
+
+[allowlist]
+description = "IP privada Tailscale en runbook, no credencial"
+regexTarget = "line"
+regexes = ['''TAILSCALE_IP=100\.107\.225\.79''']
