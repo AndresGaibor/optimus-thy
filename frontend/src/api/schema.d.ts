@@ -329,6 +329,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/resultados": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Listar Resultados Guardados
+         * @description Resultados guardados de la institución con filtros combinables (HU-081).
+         */
+        get: operations["listar_resultados_guardados_resultados_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/casos/{caso_id}/inferencias/{inferencia_id}/reporte.pdf": {
         parameters: {
             query?: never;
@@ -1301,6 +1321,42 @@ export interface operations {
             path: {
                 caso_id: string;
             };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listar_resultados_guardados_resultados_get: {
+        parameters: {
+            query?: {
+                paciente?: string | null;
+                desde?: string | null;
+                hasta?: string | null;
+                clase?: string | null;
+                limite?: number;
+                desplazamiento?: number;
+            };
+            header?: never;
+            path?: never;
             cookie?: never;
         };
         requestBody?: never;
