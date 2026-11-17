@@ -53,9 +53,13 @@ for s in "$TODAY" "$YESTERDAY" "$DAY20" "$WEEK1" "$WEEK2" "$DAY40" "$MONTH3" "$M
 done
 pass "dry-run no borra"
 
-# 2) política: días=1 conserva hoy+yesterday; semanas/meses conservan representantes;
-# keep-stamp conserva TODAY. MONTH8 debería quedar fuera con meses=1.
-python3 "$RETENER" --dir "$DIR" --days 1 --weeks 2 --months 2 --keep-stamp "$TODAY" >/dev/null
+# 2) política: días=2 conserva hoy y ayer; semanas/meses conservan representantes;
+# keep-stamp conserva TODAY. MONTH8 debería quedar fuera con meses=2.
+# Se usa días=2 y no días=1 porque el corte es today-(days-1): con días=1 la política
+# solo conserva HOY, así que el set de AYER únicamente sobrevive si cae en otra semana
+# ISO (los lunes). Con días=2 la ventana de días cubre ayer todos los días de la semana
+# y la prueba deja de depender del día en que se ejecute.
+python3 "$RETENER" --dir "$DIR" --days 2 --weeks 2 --months 2 --keep-stamp "$TODAY" >/dev/null
 
 exists_set "$DIR" "$TODAY" || fail "se borró el set recién creado (keep-stamp)"
 exists_set "$DIR" "$YESTERDAY" || fail "se borró set dentro de días"
@@ -70,7 +74,7 @@ pass "política días/semanas/meses y keep-stamp"
 
 # 3) idempotencia.
 before=$(find "$DIR" -name 'SHA256SUMS-*' | sort)
-python3 "$RETENER" --dir "$DIR" --days 1 --weeks 2 --months 2 --keep-stamp "$TODAY" >/dev/null
+python3 "$RETENER" --dir "$DIR" --days 2 --weeks 2 --months 2 --keep-stamp "$TODAY" >/dev/null
 after=$(find "$DIR" -name 'SHA256SUMS-*' | sort)
 [[ "$before" == "$after" ]] || fail "no es idempotente"
 pass "idempotente"

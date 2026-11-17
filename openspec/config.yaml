@@ -1,0 +1,32 @@
+schema: spec-driven
+
+context: |
+  Idioma: Español (es-EC).
+
+  Todas las propuestas, especificaciones, diseños, tareas, explicaciones y resúmenes
+  de OpenSpec deben estar escritos en español, técnico y profesional.
+
+  Mantener en inglés:
+  - Nombres de funciones, variables, componentes, clases y tipos.
+  - Comandos, rutas de archivos, URLs e identificadores.
+  - Palabras técnicas que las herramientas requieren (API, TypeScript, Astro, HTML).
+  - Encabezados estructurales de OpenSpec (Why, What Changes, Goals, Non-Goals,
+    Requirements, Scenarios) y las palabras SHALL/MUST: el validador los necesita.
+
+  Contenido esperado en los artefactos:
+  - Especificaciones: un requisito por comportamiento observable, con escenarios
+    Given/WHEN/THEN redactados en español (WHEN → «CUANDO», THEN → «ENTONCES»).
+  - Historias de usuario: «Como <rol>, quiero <acción>, para <beneficio>».
+  - Casos de uso: pasos numerados del flujo principal y sus excepciones.
+  - Tareas: verbo en imperativo, criterios de aceptación comprobables y el comando
+    o archivo de verificación.
+
+  El código, los identificadores, los mensajes de error mostrados al usuario final
+  y los commits van en inglés salvo que el repositorio ya use otro idioma.
+
+  Rol de este repositorio: es producción (despliegue en tiroides2.andresgaibor.com)
+  y fuente de las implementaciones. Las implementaciones se entregan de forma
+  progresiva y selectiva al repo académico (AndresGaibor/optimus); los repos
+  divergen de forma esperada en esquema y migraciones de base de datos, módulos,
+  configuración y dependencias. Ningún cambio se copia entre repos sin revisión
+  (docs/adr/ADR-012-repo-produccion.md).

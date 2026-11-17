@@ -1,10 +1,10 @@
-.PHONY: up down check certificado-dev db-test respaldo-prueba comparar-academico help deploy-check deploy-status
+.PHONY: up down check certificado-dev db-test respaldo-prueba comparar-academico tareas comentar help deploy-check deploy-status
 
 
 ACADEMICO_DIR ?= /home/ubuntu/code/optimus-thy-academico
 
 help:
-	@printf '%s\n' 'Targets: up down check deploy-check deploy-status certificado-dev db-test respaldo-prueba comparar-academico'
+	@printf '%s\n' 'Targets: up down check deploy-check deploy-status certificado-dev db-test respaldo-prueba comparar-academico tareas comentar'
 
 deploy-check:
 	./deploy.sh check
@@ -43,3 +43,13 @@ respaldo-prueba:
 
 comparar-academico:
 	bash scripts/comparar-academico.sh "$(ACADEMICO_DIR)" "$(ACADEMICO_REF)"
+
+# Tablero de Linear en solo lectura: equipo TESIS, proyecto «OPTIMUS-THY · Backlog de producto».
+# Filtra con ARGS="--estado progress|revision|done|todo" o ARGS="--persona daniel".
+tareas:
+	@bash scripts/tareas.sh $(ARGS)
+
+# Único camino de escritura permitido desde este repo: un comentario de progreso.
+# El estado de un issue lo mueve solo el repo académico, su dueño.
+comentar:
+	@bash scripts/comentar.sh $(ISSUE) $(TEXTO)

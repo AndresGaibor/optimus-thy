@@ -57,8 +57,6 @@ def test_rangos(db_session):
         assert Decimal("0.8") <= f.t4 <= Decimal("1.8")
         assert f.tipo_consulta in {"consulta", "control", "urgencia", "teleconsulta"}
         assert f.tipo_diagnostico in {"presuntivo", "confirmado", "descartado"}
-        assert f.origen_datos is not None
-        assert set(f.origen_datos.values()) == {"digitado"}
     # consentimientos
     assert db_session.query(Consentimiento).count() >= 9
 

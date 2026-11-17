@@ -73,6 +73,14 @@ class Settings(BaseSettings):
         alias="PII_ENCRYPTION_KEY",
         description="Clave de cifrado de datos personales; nunca se guarda en el repositorio.",
     )
+    modelos_dir: str = Field(default="/modelos", alias="MODELOS_DIR")
+    ia_url: str = Field(default="http://ia:8002", alias="IA_URL")
+    ia_timeout_segundos: float = Field(
+        default=30.0,
+        alias="IA_TIMEOUT_SEGUNDOS",
+        description="Tope de espera del servicio de IA por inferencia (RNF-REN-02).",
+        gt=0,
+    )
 
     def model_post_init(self, __context: object) -> None:
         if "session_cookie_secure" not in self.model_fields_set:

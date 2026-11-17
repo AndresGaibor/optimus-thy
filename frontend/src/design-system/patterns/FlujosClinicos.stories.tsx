@@ -1,16 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { useState, type ReactNode } from 'react';
-import { expect, userEvent, within } from 'storybook/test';
-import {
-  AiResultCard,
-  Button,
-  Callout,
-  ConfidenceBadge,
-  OcrField,
-  PageHeader,
-  SupportNotice,
-  Timeline,
-} from '../index';
+import type { ReactNode } from 'react';
+import { expect, within } from 'storybook/test';
+import { AiResultCard, Callout, PageHeader, SupportNotice, Timeline } from '../index';
 
 function Pagina({ descripcion, children }: { descripcion: string; children: ReactNode }) {
   return (
@@ -31,42 +22,6 @@ const meta = {
 
 export default meta;
 type Story = StoryObj<typeof meta>;
-
-export const ConfirmacionOcr: Story = {
-  render: () => <ConfirmacionOcrForm />,
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const input = canvas.getByRole('textbox', { name: 'Código de demostración' });
-    await userEvent.clear(input);
-    await userEvent.type(input, 'DEMO-204');
-    await userEvent.click(canvas.getByRole('button', { name: 'Confirmar' }));
-    await expect(canvas.getByRole('status')).toHaveTextContent('Valor confirmado: DEMO-204');
-  },
-};
-
-function ConfirmacionOcrForm() {
-  const [value, setValue] = useState('DEMO-204');
-  const [confirmed, setConfirmed] = useState(false);
-  return (
-    <Pagina descripcion="Revisa un dato extraído antes de confirmar su valor.">
-      <div className="max-w-xl space-y-4">
-        <OcrField
-          label="Código de demostración"
-          value={value}
-          onChange={(event) => {
-            setValue(event.target.value);
-            setConfirmed(false);
-          }}
-          confidence={0.92}
-          source="ocr"
-        />
-        <ConfidenceBadge value={92} label="Confianza de extracción" tone="info" />
-        <Button onClick={() => setConfirmed(true)}>Confirmar</Button>
-        {confirmed ? <p role="status">Valor confirmado: {value}</p> : null}
-      </div>
-    </Pagina>
-  );
-}
 
 export const ApoyoADecision: Story = {
   render: () => (

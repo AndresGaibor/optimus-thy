@@ -100,7 +100,7 @@ const rolePermissions: DemoRolePermissions[] = [
     usuarios: 2,
     permisos: [
       'Ver registros asignados de demostración',
-      'Revisar campos extraídos por OCR',
+      'Revisar campos extraídos',
       'Solicitar apoyo de inferencia',
       'Consultar resultados ilustrativos',
       'Abrir reportes sintéticos',

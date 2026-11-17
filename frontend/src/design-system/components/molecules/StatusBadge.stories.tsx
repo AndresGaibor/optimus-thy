@@ -13,7 +13,6 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const FichaCompleta: Story = { args: { kind: 'record', status: 'Completa' } };
-export const FichaEnOCR: Story = { args: { kind: 'record', status: 'En OCR' } };
 export const FichaEnRevisión: Story = { args: { kind: 'record', status: 'Revisión' } };
 export const FichaPendiente: Story = { args: { kind: 'record', status: 'Pendiente' } };
 export const InferenciaEnCola: Story = { args: { kind: 'inference', status: 'En cola' } };

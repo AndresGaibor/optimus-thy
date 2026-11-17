@@ -207,7 +207,7 @@ def test_hu010_crear_usuario_valida_correo_y_longitud_de_clave(client, escenario
 # ---------------------------------------------------------------- HT-010 ----
 
 
-def _trabajo_via_api(client, tipo="ocr"):
+def _trabajo_via_api(client, tipo="inferencia"):
     resp = client.post("/trabajos", json={"tipo": tipo, "payload": {"caso": 1}})
     assert resp.status_code == 202, resp.text
     return resp.json()["id"]
@@ -237,7 +237,7 @@ def test_ht010_el_error_al_cliente_no_expone_detalles_internos(client, db_sessio
             Trabajo.__table__.update().values(disponible_en=datetime.now(UTC) - timedelta(hours=1))
         )
         db_session.commit()
-        procesar_una(db_session, {"ocr": roto})
+        procesar_una(db_session, {"inferencia": roto})
     cuerpo = client.get(f"/trabajos/{tid}").json()
     assert cuerpo["estado"] == "error"
     assert "10.0.0.5" not in repr(cuerpo) and "/srv/" not in repr(cuerpo)
@@ -246,7 +246,7 @@ def test_ht010_el_error_al_cliente_no_expone_detalles_internos(client, db_sessio
 def test_ht010_trabajo_que_excede_su_tiempo_maximo_pasa_a_error(db_session, escenario):
     from app.jobs.queue import encolar, recuperar_vencidos, reservar_siguiente
 
-    t = encolar(db_session, "ocr", {"x": 1}, max_intentos=1)
+    t = encolar(db_session, "inferencia", {"x": 1}, max_intentos=1)
     t = reservar_siguiente(db_session)
     assert t is not None and t.estado == "en_proceso" and t.iniciado_en is not None
     t.iniciado_en = datetime.now(UTC) - timedelta(seconds=t.timeout_segundos + 5)
@@ -273,7 +273,7 @@ def test_ht010_un_fallo_no_tumba_el_worker_y_agota_reintentos(db_session, escena
     from app.jobs.queue import encolar
     from app.jobs.worker import procesar_una
 
-    encolar(db_session, "ocr", {}, max_intentos=2)
+    encolar(db_session, "inferencia", {}, max_intentos=2)
 
     def roto(_t):
         raise RuntimeError("boom")
@@ -283,7 +283,7 @@ def test_ht010_un_fallo_no_tumba_el_worker_y_agota_reintentos(db_session, escena
             Trabajo.__table__.update().values(disponible_en=datetime.now(UTC) - timedelta(hours=1))
         )
         db_session.commit()
-        procesar_una(db_session, {"ocr": roto})
+        procesar_una(db_session, {"inferencia": roto})
     db_session.expire_all()
     assert db_session.query(Trabajo).one().estado == "error"
 

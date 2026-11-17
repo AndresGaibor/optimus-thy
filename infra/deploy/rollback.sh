@@ -45,7 +45,7 @@ if meta['release'] != target:
 for field, expected in (('environment', env), ('project', project), ('image_prefix', prefix), ('network', network)):
     if meta[field] != expected:
         raise SystemExit(f'metadata objetivo {field}={meta[field]!r} no coincide con entorno actual {expected!r}')
-services = ('backend', 'frontend', 'ocr', 'ia')
+services = ('backend', 'frontend', 'ia')
 images = meta['images']
 image_ids = meta['image_ids']
 if set(images) != set(services) or set(image_ids) != set(services):
@@ -74,7 +74,7 @@ PY
   # shellcheck disable=SC2153
   export RELEASE_DIR="$RELEASES_DIR/$target"
   verify_compose_target
-  COMPOSE_PROJECT_DIR="$RELEASE_DIR" compose up -d --no-build --wait --wait-timeout 180 backend frontend ocr ia edge
+  COMPOSE_PROJECT_DIR="$RELEASE_DIR" compose up -d --no-build --wait --wait-timeout 180 backend frontend ia edge
   check_health "$target" >/dev/null
   deployed_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   metadata="$(python3 - "$target" "$current_release" "$deployed_at" "$DEPLOY_ENV" "$COMPOSE_PROJECT_NAME" "$IMAGE_PREFIX" "$COMPOSE_NETWORK" "$DEPLOYMENTS_DIR/$target.json" "$recorded_revision" <<'PY'

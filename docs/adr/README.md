@@ -12,7 +12,7 @@ Registro de decisiones para el repositorio operativo `AndresGaibor/optimus-thy`.
 
 | ADR original | Estado en producción | Decisión vigente | Evidencia |
 | --- | --- | --- | --- |
-| ADR-001 Monorepo modular | Adaptada | Monorepo con `frontend/`, `backend/`, `ia/`, `ocr/`, `contracts/`, `infra/`, `docs/`. No se usa `apps/` ni `packages/`. | estructura del snapshot |
+| ADR-001 Monorepo modular | Adaptada | Monorepo con `frontend/`, `backend/`, `ia/`, `contracts/`, `infra/`, `docs/`. No se usa `apps/` ni `packages/`. | estructura del snapshot |
 | ADR-002 Clean Architecture modular por capacidad | Reemplazada por [ADR-017](ADR-017-estructura-backend.md) | Backend modular por capacidad con capas ligeras (`api`, `auth`, `audit`, `jobs`, `models`, `security`, `storage`), sin `domain/application/infrastructure` estrictos. | `backend/app/` |
 | ADR-003 OpenAPI canónico | Adoptada | `contracts/openapi.json` generado por FastAPI; el cliente TS se genera con `gen:api`; CI falla si hay drift. | `backend/scripts/export_openapi.py`, `frontend/package.json`, `.github/workflows/ci.yml` |
 | ADR-004 PostgreSQL durable + UUID | Adoptada | PostgreSQL 16, PK UUID con `gen_random_uuid()`, estado durable. | `backend/alembic/`, `docs/arquitectura/modelo-de-datos-v1.md` |
@@ -21,7 +21,7 @@ Registro de decisiones para el repositorio operativo `AndresGaibor/optimus-thy`.
 | ADR-007 Sesiones opacas en PostgreSQL | Adoptada; endurecida por [ADR-015](ADR-015-cookie-strict-origin.md) | Sesión opaca persistida, token no almacenado en claro, Argon2id, cookie `HttpOnly`. | `backend/app/auth/`, `backend/app/models/sesiones.py` |
 | ADR-008 Un rol real y vista admin | Reemplazada por [ADR-013](ADR-013-multirol-rol-activo.md) | Multirol con `rol_activo` auditado; el administrador cambia de rol para actuar como médico o investigador. | `usuarios_roles`, `sesiones.rol_activo_id`, `requiere_permiso()` |
 | ADR-009 Separación de PII | Adoptada | Identidad cifrada en `identidades_paciente`; datos clínicos sin PII; investigación con proyecciones desidentificadas. | `docs/arquitectura/cifrado-en-reposo.md` |
-| ADR-010 OCRRunner y ModelRunner | Adaptada | OCR e IA son servicios HTTP separados (`ocr/`, `ia/`) con contrato versionado; no hay puertos Python. | `ocr/`, `ia/`, `backend/app/jobs/worker.py` |
+| ADR-010 OCRRunner y ModelRunner | Adaptada; OCR retirado por [ADR-020](ADR-020-operativo-sin-ocr.md) | La IA es un servicio HTTP separado con contrato versionado; no hay puertos Python. El operativo no tiene servicio de OCR. | `ia/`, `backend/app/jobs/worker.py` |
 | ADR-011 Observabilidad ligera y pruebas por capas | Adoptada | Logs, `X-Request-ID`, `/health`, auditoría insert-only, pytest/Vitest/Playwright y CI. | `backend/app/logging.py`, `backend/app/audit/`, `.github/workflows/ci.yml` |
 
 ## Decisiones nuevas (producción)
@@ -34,6 +34,7 @@ Registro de decisiones para el repositorio operativo `AndresGaibor/optimus-thy`.
 - [ADR-017 — Estructura del backend de producción](ADR-017-estructura-backend.md)
 - [ADR-018 — Despliegue por releases con migraciones explícitas](ADR-018-despliegue-por-releases.md)
 - [ADR-019 — Respaldos cifrados y retención escalonada](ADR-019-respaldos-cifrados.md)
+- [ADR-020 — El operativo no procesa OCR](ADR-020-operativo-sin-ocr.md)
 
 ## Verificación del corte (2026-11-09)
 

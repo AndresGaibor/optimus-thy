@@ -9,10 +9,17 @@ Sistema web de gestión de datos clínicos con IA para cáncer de tiroides (tesi
 | `frontend/` | React + TypeScript + Vite, gestor `bun` |
 | `backend/` | Python 3.12, FastAPI, SQLAlchemy, Alembic, PostgreSQL |
 | `ia/` | Servicio de IA aparte (cadena YOLO, MGAC, BGAU-Net, Swin) |
-| `ocr/` | OCR local: Tesseract (español) + PyMuPDF + reglas por campo |
 | `infra/` | Docker, scripts y configuración de despliegue |
 | `contracts/` | `openapi.json`, contrato de la API (lo exporta el backend) |
 | `docs/` | Requisitos, ADR, decisiones. `docs/referencia/` = paquete de consulta |
+
+## Producción y repo académico
+
+- Este repo (`optimus-thy-operativo`) es producción: el software que se despliega en `tiroides2.andresgaibor.com`.
+- El repo académico (`AndresGaibor/optimus`, copia local `../optimus-thy-academico`) conserva tesis, requisitos, backlog y evidencia, y recibe de forma progresiva las implementaciones que se construyen aquí.
+- La divergencia es esperada y permanente: esquema y migraciones de base de datos, módulos, configuración y dependencias evolucionan a distinto ritmo en cada repo. Ver `docs/adr/ADR-012-repo-produccion.md`.
+- Ningún cambio se copia entre repos en bloque: se entrega como PR adaptado a la base de datos y los módulos del repo destino, con revisión.
+- Planificación: OpenSpec manda (`openspec/`, skills `openspec-*`); no se abre un plan paralelo de Superpowers para el mismo cambio. Superpowers aporta el proceso (brainstorming, revisión, verificación), no un segundo plan.
 
 ## Comandos
 
@@ -23,9 +30,13 @@ Sistema web de gestión de datos clínicos con IA para cáncer de tiroides (tesi
 
 ## Flujo de trabajo
 
-- Kanban: Pendiente, En proceso, Revisión, Finalizado. Límite por persona: 2 en proceso, 3 en revisión.
+- Linear es la única fuente de verdad del trabajo: equipo `TESIS`, proyecto «OPTIMUS-THY · Backlog de producto». Cada historia es un issue `TES-nnn` que lleva su ID de backlog en el título (`HU-001 · …`, `HT-007 · …`).
+- GitHub es solo para código, PR e integración continua: no se abren issues en GitHub ni se replica el estado de las tareas en archivos del repositorio.
+- Este repo (producción) consulta el tablero, solo en lectura, con `make tareas`; filtra con `ARGS="--estado progress"`, `ARGS="--estado revision"`, `ARGS="--estado done"`, `ARGS="--estado todo"` o `ARGS="--persona daniel"`.
+- Desde aquí **no** se cambia el estado ni ningún otro campo del issue: el estado lo mueve únicamente el repo `optimus-thy-academico`, su dueño.
+- El progreso de este repo se registra como comentario: `make comentar ISSUE=TES-nnn TEXTO="…"`. Las notas locales que no se commitean también valen.
 - Un pull request por historia (`HT-xxx` / `HU-xxx`). Rama `ht-001-estructura`, commit `tipo(HT-001): resumen`.
-- La rama `main` solo recibe cambios por PR con integración continua en verde. El PR cita requisito, historia y tarjeta.
+- La rama `main` solo recibe cambios por PR con integración continua en verde. El PR cita requisito, historia e issue de Linear.
 - Catálogo de requisitos y backlog: `docs/referencia/04-requisitos/`, `docs/referencia/05-backlog/`.
 - Una historia de más de 8 h se parte.
 

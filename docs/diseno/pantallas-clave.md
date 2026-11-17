@@ -209,9 +209,10 @@ Dashboard ─→ Usuarios ─→ Roles y permisos ─→ Auditoría ─→ Ajust
 ## Registro de revisión con el director
 
 El estado pasa de «propuesto» a «aprobado» solo cuando este registro tenga la fecha, el
-revisor y una decisión por cada punto. Hasta entonces la historia HT-024 queda en
-«Revisión», no en «Finalizado»; construir sobre el diseño propuesto es un riesgo
-conocido (si el director cambia algo, se corrige la pantalla).
+revisor y una decisión por cada punto. Hasta entonces la historia HT-024 sigue en
+`In Progress` con la etiqueta «En revisión» en Linear, no en `Done`; construir sobre
+el diseño propuesto es un riesgo conocido (si el director cambia algo, se corrige la
+pantalla).
 
 | Dato | Valor |
 | --- | --- |

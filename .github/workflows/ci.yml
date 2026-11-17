@@ -30,7 +30,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        project: [backend, ocr, ia]
+        project: [backend, ia]
     services:
       postgres:
         image: postgres:16-alpine
@@ -249,7 +249,6 @@ jobs:
           cache: pip
           cache-dependency-path: |
             backend/pyproject.toml
-            ocr/pyproject.toml
             ia/pyproject.toml
       - name: Instalar pip-audit
         run: python -m pip install pip-audit
@@ -258,12 +257,6 @@ jobs:
         run: python -m pip install -e ".[dev]"
       - name: pip-audit (entorno con backend instalado)
         working-directory: backend
-        run: bash ../scripts/auditoria-dependencias.sh pip
-      - name: Instalar ocr
-        working-directory: ocr
-        run: python -m pip install -e ".[dev]"
-      - name: pip-audit (entorno con ocr instalado)
-        working-directory: ocr
         run: bash ../scripts/auditoria-dependencias.sh pip
       - name: Instalar ia
         working-directory: ia

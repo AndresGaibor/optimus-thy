@@ -25,6 +25,7 @@ import {
   obtenerPaciente,
   type Paciente,
 } from '../../api/pacientes';
+import { CasosDelPaciente } from './CasosDelPaciente';
 
 const LIMITE_POR_PAGINA = 20;
 
@@ -445,24 +446,7 @@ export function PacientesPage() {
               <div className="flex flex-col gap-2">
                 <div className="text-sm font-medium text-foreground">Casos</div>
                 {pacienteDetalle.casos && pacienteDetalle.casos.length > 0 ? (
-                  <div className="overflow-hidden rounded-panel border border-border">
-                    <Table caption="Listado de casos del paciente">
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Código</TableHead>
-                          <TableHead>Fecha</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {pacienteDetalle.casos.map((caso) => (
-                          <TableRow key={caso.id}>
-                            <TableCell className="font-medium">{caso.codigo}</TableCell>
-                            <TableCell>{formatearFecha(caso.creado_en)}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
+                  <CasosDelPaciente casos={pacienteDetalle.casos} />
                 ) : (
                   <EmptyState
                     title="Sin casos registrados"

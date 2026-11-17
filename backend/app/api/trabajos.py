@@ -10,16 +10,18 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from app.api.consentimientos import hay_consentimiento_vigente
 from app.auth.deps import SesionActual, requiere_permiso
 from app.db import session_dep
 from app.jobs.queue import encolar, reintentar
+from app.models.imagenes import Imagen
 from app.models.trabajos import Trabajo
 
 router = APIRouter(tags=["trabajos"])
 
 
 class CrearTrabajoRequest(BaseModel):
-    tipo: Literal["ocr", "inferencia"]
+    tipo: Literal["inferencia"]
     payload: dict[str, Any]
 
 
@@ -31,6 +33,42 @@ def _no_encontrado(request: Request) -> JSONResponse:
             "request_id": getattr(request.state, "request_id", "-"),
         },
     )
+
+
+def _sin_consentimiento(request: Request) -> JSONResponse:
+    return JSONResponse(
+        status_code=status.HTTP_409_CONFLICT,
+        content={
+            "error": {
+                "code": "sin_consentimiento",
+                "message": (
+                    "El caso no tiene un consentimiento vigente de atención de salud. "
+                    "Regístralo en «POST /casos/{caso_id}/consentimientos» y vuelve a "
+                    "solicitar la inferencia."
+                ),
+            },
+            "request_id": getattr(request.state, "request_id", "-"),
+        },
+    )
+
+
+def _consentimiento_del_payload(db: Session, payload: dict[str, Any]) -> bool | None:
+    """True con consentimiento vigente, False sin él y None si no hay imagen_id.
+
+    Sin ``imagen_id`` el payload es inválido y lo rechaza el manejador; aquí solo
+    se comprueba lo que se puede resolver.
+    """
+    valor = payload.get("imagen_id")
+    if not isinstance(valor, str):
+        return None
+    try:
+        imagen_id = UUID(valor)
+    except ValueError:
+        return None
+    imagen = db.get(Imagen, imagen_id)
+    if imagen is None:
+        return None
+    return hay_consentimiento_vigente(db, imagen.caso_id)
 
 
 def _propio(db: Session, request: Request, id: str, actual: SesionActual) -> Trabajo | None:
@@ -70,6 +108,8 @@ def crear_trabajo(
     db: Annotated[Session, Depends(session_dep)],
     actual: Annotated[SesionActual, Depends(requiere_permiso("inferencia.ejecutar"))],
 ) -> dict[str, Any] | JSONResponse:
+    if body.tipo == "inferencia" and _consentimiento_del_payload(db, body.payload) is False:
+        return _sin_consentimiento(request)
     trabajo = encolar(db, body.tipo, body.payload, creado_por=actual.usuario.id)
     return {"id": str(trabajo.id), "estado": trabajo.estado}
 

@@ -11,10 +11,9 @@ Entorno de desarrollo de un solo comando (`make up`) para laptop sin GPU. Esta g
 | `backend`  | `./backend`           | —                      | 8000           | interna          | FastAPI + Alembic; CMD lanza uvicorn, no migra al arrancar. |
 | `frontend` | `./frontend`          | —                      | 8080           | interna          | Nginx con proxy `/api/ → backend:8000` |
 | `edge`     | `nginx:1.27-alpine`   | `${HTTP_PORT:-8080}` (HTTP) / `${HTTPS_PORT:-18443}` (HTTPS) | 8080 / 8443 | interna | Borde TLS: redirige HTTP→HTTPS y añade cabeceras de seguridad |
-| `ocr`      | `./ocr`               | —                      | 8001           | interna          | FastAPI, sin OCR real todavía |
-| `ia`       | `./ia`                | —                      | 8002           | interna          | FastAPI, sin modelos todavía |
+| `ia`       | `./ia`                | —                      | 8002           | interna          | Cadena de inferencia real; pesos en `${IA_MODELOS_DIR}` montado de solo lectura |
 
-OCR, IA y la base de datos no exponen puertos al host: solo son accesibles dentro de la red `optimus-thy-net`.
+IA y la base de datos no exponen puertos al host: solo son accesibles dentro de la red `optimus-thy-net`.
 
 ## Arranque
 
@@ -40,7 +39,6 @@ docker compose down -v     # solo desarrollo desechable: borra volúmenes Postgr
 | `backend`  | `docker compose exec backend curl -fsS http://localhost:8000/health` |
 | `frontend` | `docker compose exec frontend wget -qO- http://127.0.0.1:8080/healthz` |
 | `edge`     | `curl -kfsS https://localhost:${HTTPS_PORT:-18443}/healthz` |
-| `ocr`      | `docker compose exec ocr curl -fsS http://localhost:8001/health` |
 | `ia`       | `docker compose exec ia curl -fsS http://localhost:8002/health` |
 
 `docker compose ps` muestra la columna `STATUS` con `(healthy)` cuando cada healthcheck pasa.

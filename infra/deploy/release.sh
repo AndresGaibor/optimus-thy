@@ -13,8 +13,8 @@ build_release() {
   else
     git -C "$APP_DIR" worktree add --detach "$release_dir" "$sha" >&2
   fi
-  RELEASE="$sha" RELEASE_DIR="$release_dir" COMPOSE_PROJECT_DIR="$release_dir" compose build backend frontend ocr ia >&2
-  for service in backend frontend ocr ia; do
+  RELEASE="$sha" RELEASE_DIR="$release_dir" COMPOSE_PROJECT_DIR="$release_dir" compose build backend frontend ia >&2
+  for service in backend frontend ia; do
     image="${IMAGE_PREFIX}-${service}:${sha}"
     image_id="$(docker image inspect --format '{{.Id}}' "$image")" || die "no se encontró la imagen de $service: $image"
     printf '%s=%s\n' "$service" "$image_id"

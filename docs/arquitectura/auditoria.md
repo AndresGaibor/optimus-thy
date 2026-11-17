@@ -9,9 +9,10 @@ objeto, y nadie puede corregir ese rastro después.
 | Grupo | Acciones |
 | --- | --- |
 | Sesión | `SESSION_START`, `SESSION_END`, `LOGIN_FAILED` |
-| Consultas | `PATIENT_READ`, `RECORD_READ`, `DOCUMENT_READ`, `IMAGE_READ` |
+| Consultas | `PATIENT_READ`, `RECORD_READ`, `DOCUMENT_READ`, `IMAGE_READ`, `INFERENCE_READ` |
 | Cargas | `DOCUMENT_UPLOAD`, `IMAGE_UPLOAD` |
-| Procesamiento | `OCR_REQUEST`, `INFERENCE_REQUEST` |
+| Consentimiento | `CONSENT_CREATE`, `CONSENT_REVOKE` |
+| Procesamiento | `INFERENCE_REQUEST` |
 | Exportaciones | `EXPORT` |
 | Administración | `USER_CREATE`, `USER_UPDATE`, `USER_ROLE_CHANGE`, `PERMISSION_CHANGE`, `SETTINGS_CHANGE` |
 | Datos personales | `PII_REVEAL` (consultar la identidad de un paciente) |
@@ -19,7 +20,7 @@ objeto, y nadie puede corregir ese rastro después.
 | Accesos denegados | `ACCESS_DENIED` |
 
 Cada acción se cruza con el módulo de origen (`AUTH`, `PATIENTS`, `CLINICAL`,
-`FILES`, `OCR`, `INFERENCE`, `ADMIN`, `EXPORT`, `AUDIT`) y se guarda en
+`FILES`, `INFERENCE`, `ADMIN`, `EXPORT`, `AUDIT`) y se guarda en
 `auditoria.accion` como `MODULO.ACCION`, por ejemplo `PATIENTS.PATIENT_READ`.
 
 ## Qué se guarda y qué no

@@ -1,7 +1,7 @@
 ## Historia
 
 Historia: HT-xxx / HU-xxx
-Tarjeta del tablero: <!-- enlace -->
+Issue de Linear: TES-nnn
 
 ## Requisito que cubre
 

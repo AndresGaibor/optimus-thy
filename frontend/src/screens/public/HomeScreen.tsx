@@ -59,7 +59,7 @@ export function HomeScreen({ onChooseRole, onExploreRoles }: HomeScreenProps) {
                 La decisión sigue en manos del profesional.
               </h2>
               <p className="mt-3 text-muted-foreground">
-                OCR e IA ayudan a organizar la información; no establecen diagnósticos.
+                La IA ayuda a organizar la información; no establece diagnósticos.
               </p>
             </CardContent>
           </Card>
