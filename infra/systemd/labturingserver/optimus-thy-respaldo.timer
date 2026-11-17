@@ -1,0 +1,11 @@
+[Unit]
+Description=OPTIMUS-THY respaldo diario (labturingserver)
+
+[Timer]
+OnCalendar=*-*-* 03:00:00
+RandomizedDelaySec=10min
+Persistent=true
+Unit=optimus-thy-respaldo.service
+
+[Install]
+WantedBy=timers.target
