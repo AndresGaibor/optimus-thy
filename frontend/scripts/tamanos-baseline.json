@@ -1,7 +1,6 @@
 {
   "src/design-system/components/organisms/SidebarLayout.tsx": 275,
   "src/mocks/handlers.ts": 345,
-  "src/pages/admin/RolesPage.tsx": 242,
   "src/pages/admin/UsuariosPage.tsx": 649,
   "src/pages/medico/PacientesPage.tsx": 467,
   "src/screens/doctor/ClinicalRecordsScreen.tsx": 353,

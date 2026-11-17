@@ -1,47 +1,18 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from '../../design-system/components/atoms/Button';
 import { Spinner } from '../../design-system/components/atoms/Spinner';
-import { Switch } from '../../design-system/components/atoms/Switch';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '../../design-system/components/atoms/Table';
 import { Callout } from '../../design-system/components/molecules/Callout';
 import { EmptyState } from '../../design-system/components/molecules/EmptyState';
 import { PageHeader } from '../../design-system/components/molecules/PageHeader';
 import { Toast } from '../../design-system/components/molecules/Toast';
-import {
-  actualizarPermisosRol,
-  obtenerMatriz,
-  type MatrizRoles,
-  type RolMatriz,
-} from '../../api/roles';
-import { mapBackendRoleToUi, ROLE_LABEL } from '../../session/roles';
+import { guardarMatriz, obtenerMatriz, type MatrizRoles, type RolMatriz } from '../../api/roles';
+import { RolesTabla } from './RolesTabla';
+import { RolesGuardado } from './RolesGuardado';
 
 type Seleccion = Record<string, string[]>;
 
-function etiquetaRol(rol: RolMatriz): string {
-  const rolUi = mapBackendRoleToUi(rol.nombre);
-  return rolUi ? ROLE_LABEL[rolUi] : rol.nombre;
-}
-
 function aSeleccion(roles: RolMatriz[]): Seleccion {
   return Object.fromEntries(roles.map((rol) => [rol.id, [...rol.permisos]]));
-}
-
-function mismasSelecciones(a: Seleccion, b: Seleccion): boolean {
-  const clavesA = Object.keys(a);
-  const clavesB = Object.keys(b);
-  if (clavesA.length !== clavesB.length) return false;
-  return clavesA.every((clave) => {
-    const listaA = [...(a[clave] ?? [])].sort();
-    const listaB = [...(b[clave] ?? [])].sort();
-    return listaA.length === listaB.length && listaA.every((valor, i) => valor === listaB[i]);
-  });
 }
 
 export function RolesPage() {
@@ -52,10 +23,12 @@ export function RolesPage() {
   const [error, setError] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
+  const [conflicto, setConflicto] = useState(false);
 
   const cargar = useCallback(async () => {
     setCargando(true);
     setError(null);
+    setConflicto(false);
     const res = await obtenerMatriz();
     if (!res.ok) {
       setMatriz(null);
@@ -79,7 +52,29 @@ export function RolesPage() {
     void cargar();
   }, [cargar]);
 
-  const hayCambios = useMemo(() => !mismasSelecciones(original, seleccion), [original, seleccion]);
+  const cambios = useMemo(() => {
+    let total = 0;
+    for (const rol of matriz?.roles ?? []) {
+      const antes = new Set(original[rol.id] ?? []);
+      const ahora = new Set(seleccion[rol.id] ?? []);
+      for (const codigo of new Set([...antes, ...ahora])) {
+        if (antes.has(codigo) !== ahora.has(codigo)) total += 1;
+      }
+    }
+    return total;
+  }, [matriz, original, seleccion]);
+
+  const hayCambios = cambios > 0;
+
+  useEffect(() => {
+    if (!hayCambios) return;
+    const avisar = (evento: BeforeUnloadEvent) => {
+      evento.preventDefault();
+      evento.returnValue = '';
+    };
+    window.addEventListener('beforeunload', avisar);
+    return () => window.removeEventListener('beforeunload', avisar);
+  }, [hayCambios]);
 
   const alternar = useCallback((rolId: string, codigo: string) => {
     setSeleccion((previo) => {
@@ -90,36 +85,46 @@ export function RolesPage() {
       return { ...previo, [rolId]: siguientes };
     });
     setAviso(null);
+    setError(null);
+    setConflicto(false);
   }, []);
 
   const guardar = useCallback(async () => {
-    if (!matriz) return;
-    const rolesEditados = matriz.roles.filter((rol) => {
-      const antes = original[rol.id] ?? [];
-      const ahora = seleccion[rol.id] ?? [];
-      return !mismasSelecciones({ [rol.id]: antes }, { [rol.id]: ahora });
+    if (!matriz || !hayCambios || guardando) return;
+    const editados = matriz.roles.filter((rol) => {
+      const antes = [...(original[rol.id] ?? [])].sort();
+      const ahora = [...(seleccion[rol.id] ?? [])].sort();
+      return antes.length !== ahora.length || antes.some((valor, i) => valor !== ahora[i]);
     });
-
-    if (rolesEditados.length === 0) return;
 
     setGuardando(true);
     setError(null);
-    for (const rol of rolesEditados) {
-      const res = await actualizarPermisosRol(rol.id, seleccion[rol.id] ?? []);
-      if (!res.ok) {
-        setGuardando(false);
+    setConflicto(false);
+    const res = await guardarMatriz({
+      estado: Object.fromEntries(editados.map((rol) => [rol.id, seleccion[rol.id] ?? []])),
+      esperado: Object.fromEntries(editados.map((rol) => [rol.id, original[rol.id] ?? []])),
+    });
+    setGuardando(false);
+
+    if (!res.ok) {
+      if (res.status === 409) {
+        setConflicto(true);
+      } else {
         setError(
           res.status === 422
             ? 'La matriz no se guardó: revisa los permisos marcados.'
             : 'No se pudieron guardar los cambios. Reintenta la operación.',
         );
-        return;
       }
+      return;
     }
-    setGuardando(false);
+
+    const roles = res.data.roles ?? [];
+    setMatriz({ roles, permisos: res.data.permisos ?? [] });
+    setOriginal(aSeleccion(roles));
+    setSeleccion(aSeleccion(roles));
     setAviso('Cambios guardados. La bitácora registró la nueva matriz.');
-    await cargar();
-  }, [matriz, original, seleccion, cargar]);
+  }, [matriz, original, seleccion, hayCambios, guardando]);
 
   const contenido = useMemo(() => {
     if (cargando) {
@@ -133,13 +138,11 @@ export function RolesPage() {
     if (error && !matriz) {
       return (
         <Callout tone="danger" title="Error">
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col items-start gap-3">
             <p>{error}</p>
-            <div>
-              <Button variant="secondary" size="sm" onClick={() => void cargar()}>
-                Reintentar
-              </Button>
-            </div>
+            <Button variant="secondary" size="sm" onClick={() => void cargar()}>
+              Reintentar
+            </Button>
           </div>
         </Callout>
       );
@@ -156,57 +159,12 @@ export function RolesPage() {
     }
 
     return (
-      <div className="overflow-x-auto">
-        <Table caption="Matriz de permisos por rol">
-          <TableHeader>
-            <TableRow>
-              <TableHead>Permiso</TableHead>
-              {matriz.roles.map((rol) => (
-                <TableHead key={rol.id}>{etiquetaRol(rol)}</TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {matriz.permisos.map((permiso) => (
-              <TableRow key={permiso.codigo}>
-                <TableCell>
-                  <div className="flex flex-col">
-                    <span className="font-medium text-foreground">{permiso.codigo}</span>
-                    {permiso.descripcion ? (
-                      <span className="text-sm text-muted-foreground">{permiso.descripcion}</span>
-                    ) : null}
-                  </div>
-                </TableCell>
-                {matriz.roles.map((rol) => {
-                  const marcado = (seleccion[rol.id] ?? []).includes(permiso.codigo);
-                  const aplica = (rol.asignables ?? []).includes(permiso.codigo);
-                  return (
-                    <TableCell key={`${rol.id}-${permiso.codigo}`}>
-                      {aplica ? (
-                        <div className="flex items-center gap-2">
-                          <Switch
-                            checked={marcado}
-                            aria-label={`Permiso ${permiso.codigo} para ${etiquetaRol(rol)}`}
-                            onCheckedChange={() => alternar(rol.id, permiso.codigo)}
-                          />
-                          <span className="text-sm text-muted-foreground">
-                            {marcado ? 'Concedido' : 'Denegado'}
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="text-sm text-muted-foreground">
-                          <span className="sr-only">No aplica a {etiquetaRol(rol)}</span>
-                          <span aria-hidden="true">—</span>
-                        </span>
-                      )}
-                    </TableCell>
-                  );
-                })}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+      <RolesTabla
+        roles={matriz.roles}
+        permisos={matriz.permisos}
+        seleccion={seleccion}
+        onAlternar={alternar}
+      />
     );
   }, [cargando, error, matriz, seleccion, alternar, cargar]);
 
@@ -214,18 +172,8 @@ export function RolesPage() {
     <section className="mx-auto w-full max-w-(--content-max-width) space-y-6 px-4 py-6">
       <PageHeader
         title="Roles y permisos"
-        description="Matriz de mínimo privilegio por rol. Cada cambio queda registrado en la bitácora."
-        actions={
-          <Button onClick={() => void guardar()} disabled={!hayCambios || guardando}>
-            {guardando ? 'Guardando...' : 'Guardar cambios'}
-          </Button>
-        }
+        description="Matriz de mínimo privilegio por rol. Los permisos del administrador son fijos y cada cambio guardado queda en la bitácora."
       />
-
-      <Callout tone="info" title="Mínimo privilegio">
-        Concede solo los permisos que el rol necesita. Cada rol muestra únicamente los permisos de
-        su ámbito; el rol administrador tiene permisos fijos y no se edita en esta matriz.
-      </Callout>
 
       {error && matriz ? (
         <Callout tone="danger" role="alert">
@@ -233,9 +181,39 @@ export function RolesPage() {
         </Callout>
       ) : null}
 
+      {conflicto ? (
+        <Callout tone="warning" role="alert" title="La matriz cambió mientras editabas">
+          <div className="flex flex-col gap-3">
+            <p>
+              Otro administrador guardó permisos antes que tú. Tus cambios no se aplicaron y siguen
+              en pantalla.
+            </p>
+            <div>
+              <Button variant="secondary" size="sm" onClick={() => void cargar()}>
+                Recargar matriz
+              </Button>
+            </div>
+          </div>
+        </Callout>
+      ) : null}
+
       {aviso ? <Toast title={aviso} tone="success" /> : null}
 
       {contenido}
+
+      {hayCambios ? (
+        <RolesGuardado
+          cambios={cambios}
+          guardando={guardando}
+          onDescartar={() => {
+            setSeleccion(original);
+            setAviso(null);
+            setError(null);
+            setConflicto(false);
+          }}
+          onGuardar={() => void guardar()}
+        />
+      ) : null}
     </section>
   );
 }

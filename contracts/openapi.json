@@ -447,38 +447,22 @@
         ]
       }
     },
-    "/roles/{id}/permisos": {
+    "/roles/permisos": {
       "put": {
         "tags": [
           "roles"
         ],
-        "summary": "Put Permisos Rol",
-        "operationId": "put_permisos_rol_roles__id__permisos_put",
-        "security": [
-          {
-            "SessionCookie": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Id"
-            }
-          }
-        ],
+        "summary": "Put Matriz Permisos",
+        "operationId": "put_matriz_permisos_roles_permisos_put",
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/PermisosRequest"
+                "$ref": "#/components/schemas/MatrizPermisosRequest"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -499,7 +483,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
       }
     },
     "/instituciones": {
@@ -2044,6 +2033,37 @@
         ],
         "title": "LoginRequest"
       },
+      "MatrizPermisosRequest": {
+        "properties": {
+          "estado": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": "object",
+            "title": "Estado"
+          },
+          "esperado": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": "object",
+            "title": "Esperado"
+          }
+        },
+        "type": "object",
+        "required": [
+          "estado",
+          "esperado"
+        ],
+        "title": "MatrizPermisosRequest",
+        "description": "Estado deseado y estado del que partió el cliente, por id de rol."
+      },
       "ModeloOut": {
         "properties": {
           "id": {
@@ -2226,22 +2246,6 @@
         },
         "type": "object",
         "title": "PatchUsuarioRequest"
-      },
-      "PermisosRequest": {
-        "properties": {
-          "permisos": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Permisos"
-          }
-        },
-        "type": "object",
-        "required": [
-          "permisos"
-        ],
-        "title": "PermisosRequest"
       },
       "RolActivoRequest": {
         "properties": {
