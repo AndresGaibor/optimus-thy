@@ -123,7 +123,7 @@ export function InstitucionesPage() {
     <section className="mx-auto w-full max-w-(--content-max-width) space-y-6 px-4 py-6">
       <PageHeader
         title="Instituciones"
-        description="Instituciones disponibles para asignar a los usuarios."
+        description="Administra las instituciones y sus asignaciones de usuarios."
         actions={<Button onClick={abrirCrear}>Nueva institución</Button>}
       />
 
@@ -170,12 +170,19 @@ export function InstitucionesPage() {
       ) : null}
 
       {!cargando && !errorCarga && instituciones.length > 0 ? (
-        <InstitucionesTabla
-          instituciones={instituciones}
-          onEditar={abrirEditar}
-          onActivar={(institucion) => void cambiarEstado(institucion, true)}
-          onSolicitarDesactivar={setPorDesactivar}
-        />
+        <div className="flex flex-col gap-3">
+          <InstitucionesTabla
+            instituciones={instituciones}
+            onEditar={abrirEditar}
+            onActivar={(institucion) => void cambiarEstado(institucion, true)}
+            onSolicitarDesactivar={setPorDesactivar}
+          />
+          <p className="text-sm text-muted-foreground">
+            {`Mostrando ${instituciones.length} de ${instituciones.length} ${
+              instituciones.length === 1 ? 'institución' : 'instituciones'
+            }`}
+          </p>
+        </div>
       ) : null}
 
       <InstitucionFormularioDialog
