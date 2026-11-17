@@ -5,4 +5,4 @@
 - [x] Migración `0014` que consolida duplicados, normaliza códigos y cambia la restricción.
 - [x] Pruebas: alta en minúsculas y `409` con la misma caja o distinta.
 - [x] Verificar la migración en una base vacía: consolidación, índice y reversibilidad.
-- [ ] Aplicar en producción con el despliegue y comprobar que queda un solo registro de ESPOCH.
+- [x] Aplicar en producción con el despliegue y comprobar que queda un solo registro de ESPOCH.
