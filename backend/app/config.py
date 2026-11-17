@@ -56,6 +56,24 @@ class Settings(BaseSettings):
     )
     session_cookie_name: str = Field(default="optimus_session", alias="SESSION_COOKIE_NAME")
     session_cookie_secure: bool = Field(default=False, alias="SESSION_COOKIE_SECURE")
+    rate_limit_por_minuto: int = Field(
+        default=120,
+        alias="RATE_LIMIT_POR_MINUTO",
+        description=(
+            "Peticiones por minuto y por sesión o cliente (HT-082); 0 desactiva. "
+            "Es por proceso: con varios workers el límite se multiplica."
+        ),
+        ge=0,
+    )
+    inferencia_por_minuto: int = Field(
+        default=10,
+        alias="INFERENCIA_POR_MINUTO",
+        description=(
+            "Inferencias por minuto y por usuario (HT-082); 0 desactiva. "
+            "Es por proceso: con varios workers el límite se multiplica."
+        ),
+        ge=0,
+    )
     s3_endpoint: str = Field(default="http://storage:9000", alias="S3_ENDPOINT")
     s3_access_key: str = Field(default="cambiar-en-local", alias="S3_ACCESS_KEY")
     s3_secret_key: str = Field(default="cambiar-en-local", alias="S3_SECRET_KEY")
