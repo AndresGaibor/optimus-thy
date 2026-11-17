@@ -17,6 +17,7 @@ from typing import Any, cast
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.api.consentimientos import hay_consentimiento_vigente
 from app.db import get_session_factory
 from app.ia.cliente import ArtefactosNodulo, ClienteIA, decodificar_artefactos, get_cliente_ia
 from app.models.imagenes import Imagen, Inferencia, ModeloIA, Nodulo
@@ -68,6 +69,11 @@ def _procesar(
     db: Session, trabajo: Trabajo, almacenamiento: ObjectStorage, cliente: ClienteIA
 ) -> dict[str, Any]:
     imagen = _imagen_de(db, trabajo)
+    if not hay_consentimiento_vigente(db, imagen.caso_id):
+        raise ErrorInferencia(
+            "El caso no tiene consentimiento vigente de atención de salud.",
+            codigo="sin_consentimiento",
+        )
     contenido = almacenamiento.get_bytes(imagen.ruta_s3)
     inicio = time.monotonic()
     contrato = cliente.inferir(contenido, nombre=_nombre_opaco(imagen))

@@ -82,9 +82,20 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+const INFERENCIA_NORMAL = { ...INFERENCIA, resultado: 'sin_nodulo', nodulos: [] };
+const CONSENTIMIENTO = {
+  id: 'consentimiento-demo',
+  caso_id: 'caso-demo',
+  base_legal: 'atencion_de_salud',
+  version_texto: 'v1',
+  otorgado_en: '2026-05-10T09:00:00Z',
+  revocado_en: null,
+  vigente: true,
+};
+
 const handlersCaso = (
   estado: 'lista' | 'vacio' | 'error' | 'trabajo',
-  opciones: { conResultados?: boolean } = {},
+  opciones: { conResultados?: boolean; normal?: boolean; sinConsentimiento?: boolean } = {},
 ) => [
   ...crearHandlers('ok'),
   http.get(/\/casos\/[^/]+$/, () =>
@@ -97,10 +108,21 @@ const handlersCaso = (
       ? HttpResponse.json({ total: 0, items: [] })
       : HttpResponse.json({ total: 1, items: [IMAGEN] }),
   ),
-  http.get(/\/casos\/[^/]+\/inferencias$/, () =>
-    opciones.conResultados === false
-      ? HttpResponse.json({ total: 0, items: [] })
-      : HttpResponse.json({ total: 1, items: [INFERENCIA] }),
+  http.get(/\/casos\/[^/]+\/inferencias$/, () => {
+    if (opciones.conResultados === false) return HttpResponse.json({ total: 0, items: [] });
+    return HttpResponse.json({
+      total: 1,
+      items: [opciones.normal ? INFERENCIA_NORMAL : INFERENCIA],
+    });
+  }),
+  http.get(/\/casos\/[^/]+\/consentimientos$/, () =>
+    HttpResponse.json({
+      total: opciones.sinConsentimiento ? 0 : 1,
+      items: opciones.sinConsentimiento ? [] : [CONSENTIMIENTO],
+    }),
+  ),
+  http.post(/\/casos\/[^/]+\/consentimientos$/, () =>
+    HttpResponse.json(CONSENTIMIENTO, { status: 201 }),
   ),
   http.post(/\/trabajos$/, () =>
     HttpResponse.json({
@@ -129,7 +151,7 @@ export const ConResultados: Story = {
     const canvas = within(canvasElement);
     await canvas.findByText('Caso CASO-0001');
     await expect(canvas.getByText('Resultado de IA: apoyo, no diagnóstico')).toBeInTheDocument();
-    await expect(canvas.getByText('Benigno')).toBeInTheDocument();
+    await expect(canvas.getAllByText('Benigno').length).toBeGreaterThan(0);
     await expect(canvas.getByRole('button', { name: 'Analizar' })).toBeInTheDocument();
   },
 };
@@ -155,5 +177,28 @@ export const TrabajoEnCurso: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await canvas.findByRole('button', { name: 'Analizar' });
+  },
+};
+
+export const NormalSinNodulo: Story = {
+  parameters: { msw: { handlers: handlersCaso('lista', { normal: true }) } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByText('Normal: sin nódulo detectado');
+    await expect(canvas.getByText('Normal (sin nódulo)')).toBeInTheDocument();
+  },
+};
+
+export const SinConsentimiento: Story = {
+  parameters: {
+    msw: { handlers: handlersCaso('lista', { sinConsentimiento: true, conResultados: false }) },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByText('Sin consentimiento registrado');
+    await expect(canvas.getByRole('button', { name: 'Analizar' })).toBeDisabled();
+    await expect(
+      canvas.getByText('Falta un consentimiento vigente de atención de salud.'),
+    ).toBeInTheDocument();
   },
 };

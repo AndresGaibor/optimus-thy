@@ -6,11 +6,13 @@ import logging
 import time
 import uuid
 from collections.abc import Awaitable, Callable
+from typing import Final
 
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 
+from app.api.consentimientos import router as consentimientos_router
 from app.api.imagenes import router as imagenes_router
 from app.api.modelos_ia import router as modelos_ia_router
 from app.api.pacientes import router as pacientes_router
@@ -23,12 +25,48 @@ from app.auth.routes import router as auth_router
 from app.config import get_settings
 from app.logging import configure_logging
 from app.schemas import Health
+from app.security.limites import (
+    ESTADO_LIMITE_GLOBAL,
+    RUTAS_SIN_LIMITE,
+    LimiteExcedido,
+    VentanaDeslizante,
+    clave_de_peticion,
+    obtener_limite,
+)
 
 logger = logging.getLogger("optimus_thy")
+
+CABECERAS_SEGURIDAD: Final[dict[str, str]] = {
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "Referrer-Policy": "no-referrer",
+    "Content-Security-Policy": "default-src 'none'; frame-ancestors 'none'",
+}
+"""Cabeceras de toda respuesta de la API, salvo la documentación interactiva."""
+
+_RUTAS_SIN_CABECERAS_ESTRICTAS: Final[frozenset[str]] = frozenset(
+    {"/docs", "/openapi.json", "/redoc"}
+)
+"""Swagger necesita cargar su propio JavaScript; no se le impone la CSP estricta."""
 
 
 def _get_request_id(request: Request) -> str:
     return str(getattr(request.state, "request_id", "-"))
+
+
+def _respuesta_limite(request: Request, segundos_reintento: int) -> JSONResponse:
+    """429 con el sobre de error habitual y el tiempo de espera."""
+    return JSONResponse(
+        status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+        content={
+            "error": {
+                "code": "rate_limited",
+                "message": "Demasiadas peticiones. Espera unos segundos y vuelve a intentarlo.",
+            },
+            "request_id": _get_request_id(request),
+        },
+        headers={"Retry-After": str(max(1, segundos_reintento))},
+    )
 
 
 def create_app() -> FastAPI:
@@ -42,6 +80,9 @@ def create_app() -> FastAPI:
         docs_url="/docs",
         redoc_url=None,
     )
+    # El estado del límite es de esta instancia, no de un global de módulo.
+    app.state.limite_global = VentanaDeslizante(settings.rate_limit_por_minuto)
+    app.state.limite_inferencia = VentanaDeslizante(settings.inferencia_por_minuto)
 
     @app.middleware("http")
     async def origin_middleware(
@@ -63,6 +104,31 @@ def create_app() -> FastAPI:
                         },
                     )
         return await call_next(request)
+
+    @app.middleware("http")
+    async def rate_limit_middleware(
+        request: Request, call_next: Callable[[Request], Awaitable[Response]]
+    ) -> Response:
+        """Cupo global por sesión o cliente; ``0`` lo desactiva (HT-082)."""
+        if settings.rate_limit_por_minuto <= 0 or request.url.path in RUTAS_SIN_LIMITE:
+            return await call_next(request)
+        limite = obtener_limite(request.app, ESTADO_LIMITE_GLOBAL)
+        clave = clave_de_peticion(request, settings.session_cookie_name)
+        permitido, segundos = limite.permitir(clave)
+        if not permitido:
+            return _respuesta_limite(request, segundos)
+        return await call_next(request)
+
+    @app.middleware("http")
+    async def security_headers_middleware(
+        request: Request, call_next: Callable[[Request], Awaitable[Response]]
+    ) -> Response:
+        """Endurece las respuestas de la API; la documentación queda fuera."""
+        response = await call_next(request)
+        if request.url.path not in _RUTAS_SIN_CABECERAS_ESTRICTAS:
+            for nombre, valor in CABECERAS_SEGURIDAD.items():
+                response.headers.setdefault(nombre, valor)
+        return response
 
     @app.middleware("http")
     async def logging_middleware(
@@ -110,6 +176,7 @@ def create_app() -> FastAPI:
     app.include_router(usuarios_router)
     app.include_router(trabajos_router)
     app.include_router(imagenes_router)
+    app.include_router(consentimientos_router)
     app.include_router(resultados_router)
     app.include_router(modelos_ia_router)
     app.include_router(auth_router)
@@ -157,6 +224,10 @@ def create_app() -> FastAPI:
                 "request_id": _get_request_id(request),
             },
         )
+
+    @app.exception_handler(LimiteExcedido)
+    async def limite_excedido_handler(request: Request, exc: LimiteExcedido) -> JSONResponse:
+        return _respuesta_limite(request, exc.segundos_reintento)
 
     @app.exception_handler(Exception)
     async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
