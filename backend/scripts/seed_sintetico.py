@@ -242,11 +242,17 @@ def sembrar(
             )
             creadas_imagenes += 1
 
-        session.add(Consentimiento(caso_id=caso.id, base_legal="atencion_de_salud"))
+        session.add(
+            Consentimiento(caso_id=caso.id, base_legal="atencion_de_salud", version_texto="v1")
+        )
 
         if i % 3 == 0:
             session.add(
-                Consentimiento(caso_id=caso.id, base_legal="investigacion_con_anonimizacion")
+                Consentimiento(
+                    caso_id=caso.id,
+                    base_legal="investigacion_con_anonimizacion",
+                    version_texto="v1",
+                )
             )
 
         session.flush()

@@ -35,6 +35,7 @@ Registro de decisiones para el repositorio operativo `AndresGaibor/optimus-thy`.
 - [ADR-018 — Despliegue por releases con migraciones explícitas](ADR-018-despliegue-por-releases.md)
 - [ADR-019 — Respaldos cifrados y retención escalonada](ADR-019-respaldos-cifrados.md)
 - [ADR-020 — El operativo no procesa OCR](ADR-020-operativo-sin-ocr.md)
+- [ADR-021 — Límite de peticiones y cabeceras de seguridad](ADR-021-limites-y-cabeceras.md)
 
 ## Verificación del corte (2026-11-09)
 
