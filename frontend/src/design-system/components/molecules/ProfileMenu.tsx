@@ -62,12 +62,10 @@ export function ProfileMenu({
   const disparadorRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const panelId = useId();
+  const tituloId = useId();
 
   useEffect(() => {
     if (!abierto) return;
-
-    const primeraOpcion = panelRef.current?.querySelector<HTMLElement>('button');
-    primeraOpcion?.focus();
 
     const alPulsarFuera = (evento: PointerEvent) => {
       if (!contenedorRef.current?.contains(evento.target as Node)) setAbierto(false);
@@ -129,9 +127,14 @@ export function ProfileMenu({
         <div
           ref={panelRef}
           id={panelId}
-          className="absolute bottom-full left-0 z-40 mb-2 w-full rounded-control border border-border bg-surface p-2 shadow-xl"
+          role="group"
+          aria-labelledby={tituloId}
+          className="absolute bottom-full left-0 z-40 mb-2 max-h-[min(22rem,70vh)] w-full overflow-y-auto rounded-control border border-border bg-surface p-2 shadow-md"
         >
-          <p className="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          <p
+            id={tituloId}
+            className="px-2 pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+          >
             {etiquetaCambio}
           </p>
           <ul className="flex flex-col gap-1">
@@ -167,7 +170,7 @@ export function ProfileMenu({
               cerrar(false);
               void onCerrarSesion();
             }}
-            className="flex min-h-11 w-full items-center gap-2 rounded-control px-2 text-left text-sm font-medium text-danger transition-colors hover:bg-danger/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            className="flex min-h-11 w-full items-center gap-2 rounded-control px-2 text-left text-sm font-medium text-foreground transition-colors hover:bg-border-subtle hover:text-danger focus-visible:text-danger focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           >
             <LogOut aria-hidden="true" className="size-4 shrink-0" />
             Cerrar sesión
