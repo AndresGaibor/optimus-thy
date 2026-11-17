@@ -29,5 +29,16 @@ export const ConInstituciones: Story = {
     const canvas = within(canvasElement);
     await canvas.findByText('Hospital Demo');
     await expect(canvas.getByRole('button', { name: 'Nueva institución' })).toBeInTheDocument();
+    await expect(
+      canvas.getByRole('button', { name: /editar institución hosp-demo/i }),
+    ).toBeVisible();
+    await expect(
+      canvas.getByRole('button', { name: /desactivar institución hosp-demo/i }),
+    ).toBeVisible();
+    await expect(
+      canvas.getByRole('button', { name: /activar institución lab-sur/i }),
+    ).toBeVisible();
+    await expect(canvas.queryByRole('button', { name: /acciones de/i })).toBeNull();
+    await expect(canvas.getByText('Mostrando 3 de 3 instituciones')).toBeVisible();
   },
 };

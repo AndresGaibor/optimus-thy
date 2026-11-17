@@ -212,8 +212,9 @@ describe('instituciones admin', () => {
     };
     montarApp();
 
-    await user.click(await screen.findByRole('button', { name: /acciones de hosp-cen/i }));
-    await user.click(await screen.findByRole('menuitem', { name: 'Desactivar' }));
+    await user.click(
+      await screen.findByRole('button', { name: /desactivar institución hosp-cen/i }),
+    );
     const confirmacion = await screen.findByRole('dialog');
     await user.click(within(confirmacion).getByRole('button', { name: /^desactivar$/i }));
 
@@ -230,8 +231,7 @@ describe('instituciones admin', () => {
     const user = userEvent.setup();
     montarApp();
 
-    await user.click(await screen.findByRole('button', { name: /acciones de clin-sur/i }));
-    await user.click(await screen.findByRole('menuitem', { name: 'Activar' }));
+    await user.click(await screen.findByRole('button', { name: /activar institución clin-sur/i }));
 
     await waitFor(async () => {
       const llamada = fetchMock.mock.calls.find(
@@ -243,6 +243,15 @@ describe('instituciones admin', () => {
       }
     });
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('muestra cero sin usuarios activos y el total bajo la tabla', async () => {
+    montarApp();
+
+    const fila = (await screen.findByText('Clínica Sur')).closest('tr');
+    if (!fila) throw new Error('fila de Clínica Sur no encontrada');
+    expect(within(fila).getByText('0')).toBeInTheDocument();
+    expect(await screen.findByText('Mostrando 2 de 2 instituciones')).toBeInTheDocument();
   });
 
   it('el estado vacío aparece sin filas', async () => {
