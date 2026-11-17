@@ -329,6 +329,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/casos/{caso_id}/inferencias/{inferencia_id}/reporte.pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Descargar Reporte
+         * @description PDF de una inferencia del caso, con aviso de apoyo y datos mínimos.
+         */
+        get: operations["descargar_reporte_casos__caso_id__inferencias__inferencia_id__reporte_pdf_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/modelos-ia": {
         parameters: {
             query?: never;
@@ -1280,6 +1300,38 @@ export interface operations {
             header?: never;
             path: {
                 caso_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    descargar_reporte_casos__caso_id__inferencias__inferencia_id__reporte_pdf_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                caso_id: string;
+                inferencia_id: string;
             };
             cookie?: never;
         };

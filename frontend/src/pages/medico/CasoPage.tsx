@@ -184,7 +184,7 @@ export function CasoPage() {
           />
         ) : (
           resultados.map((inferencia) => (
-            <ResultadoInferencia key={inferencia.id} inferencia={inferencia} />
+            <ResultadoInferencia key={inferencia.id} inferencia={inferencia} casoId={casoId} />
           ))
         )}
       </section>

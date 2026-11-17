@@ -1074,6 +1074,61 @@
         }
       }
     },
+    "/casos/{caso_id}/inferencias/{inferencia_id}/reporte.pdf": {
+      "get": {
+        "tags": [
+          "reportes"
+        ],
+        "summary": "Descargar Reporte",
+        "description": "PDF de una inferencia del caso, con aviso de apoyo y datos mínimos.",
+        "operationId": "descargar_reporte_casos__caso_id__inferencias__inferencia_id__reporte_pdf_get",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "caso_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Caso Id"
+            }
+          },
+          {
+            "name": "inferencia_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Inferencia Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/modelos-ia": {
       "get": {
         "tags": [

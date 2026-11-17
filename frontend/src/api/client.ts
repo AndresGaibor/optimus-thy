@@ -2,6 +2,7 @@ import createClient from 'openapi-fetch';
 import type { components, paths } from './schema';
 
 const baseUrl = import.meta.env.VITE_API_URL || '/api';
+export const API_URL = baseUrl;
 
 // `fetch` se resuelve en cada llamada para poder sustituir el global en pruebas.
 export const client = createClient<paths>({

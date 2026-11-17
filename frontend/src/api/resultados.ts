@@ -1,4 +1,4 @@
-import { client } from './client';
+import { API_URL, client } from './client';
 
 export interface Artefactos {
   mascara_url: string | null;
@@ -46,4 +46,19 @@ export async function listarResultados(casoId: string): Promise<Inferencia[]> {
   });
   if (error || !data) throw new Error('No se pudieron cargar los resultados.');
   return (data as unknown as ListaInferencias).items;
+}
+
+/** Descarga el PDF de una inferencia con la sesión ya abierta (HU-080). */
+export async function descargarReporte(
+  casoId: string,
+  inferenciaId: string,
+): Promise<{ contenido: Blob; nombre: string }> {
+  const respuesta = await fetch(
+    `${API_URL}/casos/${encodeURIComponent(casoId)}/inferencias/${encodeURIComponent(inferenciaId)}/reporte.pdf`,
+    { credentials: 'include' },
+  );
+  if (!respuesta.ok) throw new Error('No se pudo generar el reporte.');
+  const disposicion = respuesta.headers.get('content-disposition') ?? '';
+  const nombre = /filename="([^"]+)"/.exec(disposicion)?.[1] ?? 'reporte.pdf';
+  return { contenido: await respuesta.blob(), nombre };
 }
