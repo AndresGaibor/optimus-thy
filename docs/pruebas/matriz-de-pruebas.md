@@ -210,7 +210,7 @@ Al cerrar un issue se actualizan las filas de los requisitos que cubre: cambiar
 | RI-03 | Respaldo y restauración documentados y probados | CP-141 | Aprobado | `infra/scripts/probar-respaldo.sh`; `docs/pruebas/evidencia-respaldo.md`; `infra/README.md` | — |
 | RI-04 | Integración con el modelo existente mediante un contrato versionado de entrada y salida | CP-142 | Pendiente | — | — |
 | RI-05 | Integración con el motor de OCR local mediante un contrato versionado | CP-143 | Pendiente | — | — |
-| RI-06 | Pruebas de integración entre API y modelo, API y OCR, API y almacenamiento | CP-144 | Pendiente | — | — |
+| RI-06 | Pruebas de integración entre API y modelo, API y OCR, API y almacenamiento | CP-144 | Aprobado | Trabajo `Integración (contenedores)` de la CI: compose real con PostgreSQL, MinIO e IA; `tests/integracion/verificar_almacenamiento.py` (alta, enlace firmado, descarga y borrado en MinIO) y `tests/integracion/verificar_ia.py` (cableado HTTP real al servicio de IA). OCR queda fuera del repo operativo por ADR-020 y se cubre en el académico | — |
 | RI-07 | Integración continua en GitHub: formato, tipos, pruebas y construcción | CP-145 | Pendiente | — | — |
 | RD-09 | Conjunto sintético emparejado: cada imagen de ejemplo recibe un paciente sintético con una ficha coherente con su… | CP-146 | En curso | `backend/tests/test_seed_sintetico.py::test_manifiesto_empareja_cada_caso_con_una_imagen_de_su_etiqueta`. Falta el manifiesto con las imágenes reales (HT-094) | ERR-017 |
 | RD-10 | Cada ficha sintética en dos versiones: PDF digital con texto y PDF escaneado con ruido e inclinación, para probar el OCR | CP-147 | Pendiente | — | — |

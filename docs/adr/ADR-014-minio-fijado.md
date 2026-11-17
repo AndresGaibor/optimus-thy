@@ -16,3 +16,4 @@ Producción usa MinIO como implementación local S3-compatible, fijada por diges
 - No se usa `:latest`; una actualización de MinIO exige cambiar el digest y verificar backup/restauración.
 - RustFS queda como alternativa evaluada, no adoptada.
 - La configuración de compose refleja el digest; la aplicación operativa del stack depende del entorno de despliegue.
+- SSE-S3 (`ServerSideEncryption=AES256`) exige KMS en MinIO: el compose define `MINIO_KMS_SECRET_KEY` con una clave de desarrollo y producción debe sustituirla. Sin ella toda subida falla con `NotImplemented`.
