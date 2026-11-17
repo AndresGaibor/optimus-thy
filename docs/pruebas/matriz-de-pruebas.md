@@ -164,10 +164,11 @@ Al cerrar un issue se actualizan las filas de los requisitos que cubre: cambiar
 | RS-CIF-04 | Descarga de archivos con enlaces firmados de corta duración; el almacenamiento nunca es público | CP-107 | Pendiente | — | — |
 | RS-CIF-05 | Respaldos cifrados, con una copia fuera del equipo principal y restauración probada | CP-108 | En curso | `infra/scripts/probar-respaldo.sh`; `docs/pruebas/evidencia-respaldo.md`. Falta la copia fuera del equipo | — |
 | RS-CIF-06 | Archivos cargados revisados: tipo real, tamaño, rechazo de ejecutables y PDF con scripts | CP-109 | Pendiente | — | — |
-| RS-APP-02 | Defensa contra inyección SQL, XSS, CSRF, SSRF y recorrido de rutas | CP-110 | Pendiente | — | — |
+| RS-APP-02 | Defensa contra inyección SQL, XSS, CSRF, SSRF y recorrido de rutas | CP-110 | En curso | `backend/tests/test_seguridad_ataques.py` (SQLi en login y en parámetros tipados, respuestas JSON sin HTML interpretable, CSRF por `Origin` y sin sesión, SSRF con transporte de captura); [ADR-021](../adr/ADR-021-limites-y-cabeceras.md). Falta el vector de archivos: el operativo no carga documentos | — |
 | RS-APP-03 | Cabeceras de seguridad (CSP, HSTS, X-Content-Type-Options, frame-ancestors) y CORS restrictivo | CP-111 | Pendiente | — | — |
 | RS-APP-04 | Errores sin detalles internos para el usuario; el detalle va solo a los logs | CP-112 | Pendiente | — | — |
-| RS-APP-05 | Validación de toda entrada en el servidor | CP-113 | Pendiente | — | — |
+| RS-APP-05 | Validación de toda entrada en el servidor | CP-113 | En curso | `backend/tests/test_seguridad_ataques.py` (parámetros tipados 422, ids y payloads inválidos); [ADR-021](../adr/ADR-021-limites-y-cabeceras.md). Falta la revisión campo por campo del catálogo | — |
+| RS-APP-10 | Límite de peticiones y de tamaño, en especial en la inferencia, que es costosa | — | Aprobado | `backend/tests/test_seguridad_ataques.py` (429 con `Retry-After` del cupo global y del de inferencia, ventana con reloj inyectado); [ADR-021](../adr/ADR-021-limites-y-cabeceras.md). Requisito S registrado aquí al cerrar HT-082 | — |
 | RS-INC-01 | Bitácora de seguridad con inicios fallidos, cambios de permisos y accesos denegados, sin editarse (ver RF-AUD) | CP-114 | En curso | `backend/app/audit/actions.py`; `backend/tests/test_audit.py::test_registra_las_acciones_del_anteproyecto` (falta que cada módulo llame al servicio) | — |
 | RS-INC-03 | Plan de respuesta a incidentes escrito: detectar, contener, evaluar, notificar y corregir | CP-115 | Pendiente | — | — |
 | RS-RET-03 | Datos de desarrollo y pruebas separados de los de uso real; nunca se copian datos reales a desarrollo | CP-116 | Pendiente | — | — |
