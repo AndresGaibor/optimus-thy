@@ -154,7 +154,8 @@ export interface paths {
         /** Listar Instituciones */
         get: operations["listar_instituciones_instituciones_get"];
         put?: never;
-        post?: never;
+        /** Crear Institucion */
+        post: operations["crear_institucion_instituciones_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -211,6 +212,23 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/instituciones/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Patch Institucion */
+        patch: operations["patch_institucion_instituciones__id__patch"];
         trace?: never;
     };
     "/trabajos": {
@@ -528,6 +546,13 @@ export interface components {
             /** Otorgado En */
             otorgado_en?: string | null;
         };
+        /** CrearInstitucionRequest */
+        CrearInstitucionRequest: {
+            /** Nombre */
+            nombre: string;
+            /** Codigo */
+            codigo: string;
+        };
         /**
          * CrearPacienteRequest
          * @description Solo los datos mínimos para identificar a la persona (RF-PAC-01).
@@ -636,6 +661,15 @@ export interface components {
             total: number;
             /** Items */
             items: components["schemas"]["PacienteOut"][];
+        };
+        /** PatchInstitucionRequest */
+        PatchInstitucionRequest: {
+            /** Nombre */
+            nombre?: string | null;
+            /** Codigo */
+            codigo?: string | null;
+            /** Activa */
+            activa?: boolean | null;
         };
         /** PatchUsuarioRequest */
         PatchUsuarioRequest: {
@@ -956,7 +990,9 @@ export interface operations {
     };
     listar_instituciones_instituciones_get: {
         parameters: {
-            query?: never;
+            query?: {
+                incluir_inactivas?: boolean;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -972,6 +1008,48 @@ export interface operations {
                     "application/json": unknown;
                 };
             };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    crear_institucion_instituciones_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CrearInstitucionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
         };
     };
     listar_usuarios_usuarios_get: {
@@ -982,6 +1060,8 @@ export interface operations {
                 q?: string | null;
                 limite?: number;
                 desplazamiento?: number;
+                orden?: "creado" | "correo" | "nombre" | "estado";
+                direccion?: "asc" | "desc";
             };
             header?: never;
             path?: never;
@@ -1089,6 +1169,41 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["RolesRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_institucion_instituciones__id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PatchInstitucionRequest"];
             };
         };
         responses: {

@@ -5,20 +5,9 @@ import { Input } from '../../design-system/components/atoms/Input';
 import { Label } from '../../design-system/components/atoms/Label';
 import { Select } from '../../design-system/components/atoms/Select';
 import { Spinner } from '../../design-system/components/atoms/Spinner';
-import { Switch } from '../../design-system/components/atoms/Switch';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '../../design-system/components/atoms/Table';
-import { Badge } from '../../design-system/components/atoms/Badge';
 import { Callout } from '../../design-system/components/molecules/Callout';
 import { EmptyState } from '../../design-system/components/molecules/EmptyState';
 import { Field } from '../../design-system/components/molecules/Field';
-import { FilterBar } from '../../design-system/components/molecules/FilterBar';
 import { PageHeader } from '../../design-system/components/molecules/PageHeader';
 import { Pagination } from '../../design-system/components/molecules/Pagination';
 import { Dialog, DialogClose } from '../../design-system/components/organisms/Dialog';
@@ -29,18 +18,20 @@ import {
   listarUsuarios,
   reemplazarRoles,
   type Institucion,
+  type OrdenUsuarios,
   type Usuario,
 } from '../../api/usuarios';
-import { mapBackendRoleToUi, ROLE_LABEL, type BackendRole } from '../../session/roles';
+import { obtenerEtiquetaRol } from './etiquetas-rol';
+import { useCambioEstadoUsuario } from './useCambioEstadoUsuario';
+import { UsuariosFiltros } from './UsuariosFiltros';
+import { UsuariosTabla } from './UsuariosTabla';
+import { type BackendRole } from '../../session/roles';
+import { useSession } from '../../session/SessionContext';
 
 const ROLES_BACKEND = ['admin', 'doctor', 'researcher'] as const;
 
 const LIMITE_POR_PAGINA = 25;
 
-function obtenerEtiquetaRol(rol: string): string {
-  const rolUi = mapBackendRoleToUi(rol);
-  return rolUi ? ROLE_LABEL[rolUi] : rol;
-}
 type RolBackend = BackendRole;
 interface FormularioCrear {
   correo: string;
@@ -63,7 +54,11 @@ export function UsuariosPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [busqueda, setBusqueda] = useState('');
+  const [busquedaAplicada, setBusquedaAplicada] = useState('');
   const [filtroInstitucion, setFiltroInstitucion] = useState('');
+  const [filtroEstado, setFiltroEstado] = useState<'' | 'activo' | 'inactivo'>('');
+  const [orden, setOrden] = useState<OrdenUsuarios>('creado');
+  const [direccion, setDireccion] = useState<'asc' | 'desc'>('asc');
   const [desplazamiento, setDesplazamiento] = useState(0);
 
   const [dialogoCrearAbierto, setDialogoCrearAbierto] = useState(false);
@@ -88,9 +83,7 @@ export function UsuariosPage() {
   const [guardandoEditar, setGuardandoEditar] = useState(false);
   const [errorEditar, setErrorEditar] = useState<string | null>(null);
 
-  const [dialogoConfirmarActivo, setDialogoConfirmarActivo] = useState(false);
-  const [usuarioParaCambiarEstado, setUsuarioParaCambiarEstado] = useState<Usuario | null>(null);
-  const [cambiandoEstado, setCambiandoEstado] = useState(false);
+  const { usuario: usuarioSesion } = useSession();
 
   const [dialogoRolesAbierto, setDialogoRolesAbierto] = useState(false);
   const [usuarioRoles, setUsuarioRoles] = useState<Usuario | null>(null);
@@ -103,8 +96,11 @@ export function UsuariosPage() {
     setError(null);
     const [resUsuarios, resInstituciones] = await Promise.all([
       listarUsuarios({
-        q: busqueda || null,
+        q: busquedaAplicada || null,
         institucionId: filtroInstitucion || null,
+        activo: filtroEstado === '' ? null : filtroEstado === 'activo',
+        orden,
+        direccion,
         limite: LIMITE_POR_PAGINA,
         desplazamiento,
       }),
@@ -129,7 +125,7 @@ export function UsuariosPage() {
     }
 
     setCargando(false);
-  }, [busqueda, filtroInstitucion, desplazamiento]);
+  }, [busquedaAplicada, filtroInstitucion, filtroEstado, orden, direccion, desplazamiento]);
 
   useEffect(() => {
     void cargarDatos();
@@ -137,17 +133,41 @@ export function UsuariosPage() {
 
   const cambiarBusqueda = useCallback((valor: string) => {
     setBusqueda(valor);
-    setDesplazamiento(0);
   }, []);
+
+  // Espera 300 ms para no pedir el listado en cada pulsación.
+  useEffect(() => {
+    const temporizador = window.setTimeout(() => {
+      setBusquedaAplicada(busqueda.trim());
+      setDesplazamiento(0);
+    }, 300);
+    return () => window.clearTimeout(temporizador);
+  }, [busqueda]);
 
   const cambiarFiltroInstitucion = useCallback((valor: string) => {
     setFiltroInstitucion(valor);
     setDesplazamiento(0);
   }, []);
 
+  const cambiarFiltroEstado = useCallback((valor: '' | 'activo' | 'inactivo') => {
+    setFiltroEstado(valor);
+    setDesplazamiento(0);
+  }, []);
+
+  const cambiarOrden = useCallback(
+    (campo: OrdenUsuarios) => {
+      setDireccion(orden === campo && direccion === 'asc' ? 'desc' : 'asc');
+      setOrden(campo);
+      setDesplazamiento(0);
+    },
+    [orden, direccion],
+  );
+
   const limpiarFiltros = useCallback(() => {
     setBusqueda('');
+    setBusquedaAplicada('');
     setFiltroInstitucion('');
+    setFiltroEstado('');
     setDesplazamiento(0);
   }, []);
 
@@ -300,9 +320,11 @@ export function UsuariosPage() {
     const resultado = await reemplazarRoles(usuarioRoles.id, rolesSeleccion);
     if (!resultado.ok) {
       setErrorRoles(
-        resultado.status === 422
-          ? 'Revisa los roles seleccionados.'
-          : 'No se pudieron guardar los roles. Reintenta la operación.',
+        resultado.status === 409
+          ? 'El sistema requiere al menos un administrador activo. Asigna el rol a otra cuenta antes de quitarlo aquí.'
+          : resultado.status === 422
+            ? 'Revisa los roles seleccionados.'
+            : 'No se pudieron guardar los roles. Reintenta la operación.',
       );
       setGuardandoRoles(false);
       return;
@@ -313,33 +335,9 @@ export function UsuariosPage() {
     void cargarDatos();
   }, [usuarioRoles, rolesSeleccion, cargarDatos]);
 
-  const solicitarCambioEstado = useCallback((usuario: Usuario) => {
-    setUsuarioParaCambiarEstado(usuario);
-    setDialogoConfirmarActivo(true);
-  }, []);
+  const estado = useCambioEstadoUsuario(cargarDatos);
 
-  const confirmarCambioEstado = useCallback(async () => {
-    if (!usuarioParaCambiarEstado) {
-      return;
-    }
-    setCambiandoEstado(true);
-    const nuevoEstado = !usuarioParaCambiarEstado.activo;
-    const resultado = await actualizarUsuario(usuarioParaCambiarEstado.id, {
-      activo: nuevoEstado,
-    });
-    if (!resultado.ok) {
-      setCambiandoEstado(false);
-      setDialogoConfirmarActivo(false);
-      setError('No se pudo cambiar el estado del usuario. Reintenta la operación.');
-      return;
-    }
-    setCambiandoEstado(false);
-    setDialogoConfirmarActivo(false);
-    setUsuarioParaCambiarEstado(null);
-    void cargarDatos();
-  }, [usuarioParaCambiarEstado, cargarDatos]);
-
-  const hayFiltrosActivos = busqueda !== '' || filtroInstitucion !== '';
+  const hayFiltrosActivos = busqueda !== '' || filtroInstitucion !== '' || filtroEstado !== '';
 
   const contenido = useMemo(() => {
     if (cargando) {
@@ -369,66 +367,40 @@ export function UsuariosPage() {
       return (
         <EmptyState
           as="h2"
-          title="Sin usuarios"
-          description="No hay usuarios que coincidan con los filtros aplicados."
+          title={hayFiltrosActivos ? 'Sin resultados' : 'Sin usuarios'}
+          description={
+            hayFiltrosActivos
+              ? 'Ningún usuario coincide con los filtros aplicados.'
+              : 'Todavía no hay usuarios registrados.'
+          }
+          {...(hayFiltrosActivos
+            ? {
+                action: (
+                  <Button variant="secondary" size="sm" onClick={limpiarFiltros}>
+                    Limpiar filtros
+                  </Button>
+                ),
+              }
+            : {})}
         />
       );
     }
 
     return (
       <div className="flex flex-col gap-4">
-        <Table caption="Listado de usuarios">
-          <TableHeader>
-            <TableRow>
-              <TableHead>Correo</TableHead>
-              <TableHead>Nombre</TableHead>
-              <TableHead>Institución</TableHead>
-              <TableHead>Roles</TableHead>
-              <TableHead>Estado</TableHead>
-              <TableHead>Acciones</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {usuarios.map((usuario) => (
-              <TableRow key={usuario.id}>
-                <TableCell>{usuario.correo}</TableCell>
-                <TableCell>{usuario.nombre || '-'}</TableCell>
-                <TableCell>{usuario.institucion?.nombre || '-'}</TableCell>
-                <TableCell>
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    {(usuario.roles || []).map((rol) => (
-                      <Badge key={rol} tone="neutral">
-                        {obtenerEtiquetaRol(rol)}
-                      </Badge>
-                    ))}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <Switch
-                      checked={usuario.activo}
-                      onCheckedChange={() => solicitarCambioEstado(usuario)}
-                      aria-label={usuario.activo ? 'Desactivar usuario' : 'Activar usuario'}
-                    />
-                    <span className="text-sm text-muted-foreground">
-                      {usuario.activo ? 'Activo' : 'Inactivo'}
-                    </span>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="sm" onClick={() => abrirEditar(usuario)}>
-                      Editar
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => abrirRoles(usuario)}>
-                      Roles
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <UsuariosTabla
+          usuarios={usuarios}
+          orden={orden}
+          direccion={direccion}
+          onOrden={cambiarOrden}
+          onCambiarEstado={estado.solicitar}
+          onEditar={abrirEditar}
+          onRoles={abrirRoles}
+          errorEstado={estado.error}
+          avisoEstado={estado.aviso}
+          correoSesion={usuarioSesion?.correo}
+          cambiandoEstadoId={estado.enCursoId}
+        />
 
         <Pagination
           total={total}
@@ -442,11 +414,20 @@ export function UsuariosPage() {
   }, [
     cargando,
     error,
+    estado.error,
+    estado.aviso,
+    estado.enCursoId,
+    estado.solicitar,
+    usuarioSesion?.correo,
+    hayFiltrosActivos,
+    limpiarFiltros,
     usuarios,
+    orden,
+    direccion,
+    cambiarOrden,
     total,
     desplazamiento,
     cargarDatos,
-    solicitarCambioEstado,
     abrirEditar,
     abrirRoles,
   ]);
@@ -455,40 +436,21 @@ export function UsuariosPage() {
     <section className="mx-auto w-full max-w-(--content-max-width) space-y-6 px-4 py-6">
       <PageHeader
         title="Usuarios"
-        description="Gestión de usuarios, roles e instituciones."
+        description="Gestión de usuarios, roles y asignación de institución."
         actions={<Button onClick={abrirCrear}>Nuevo usuario</Button>}
       />
 
-      <FilterBar
-        label="Filtros de usuarios"
-        {...(hayFiltrosActivos ? { onReset: limpiarFiltros } : {})}
-      >
-        {/* ui-excepcion: ancho mínimo de filtros sin refactor de FilterBar */}
-        <div className="flex w-full flex-col gap-2 sm:w-auto sm:min-w-[16rem]">
-          <Label htmlFor="filtro-busqueda">Buscar por correo o nombre</Label>
-          <Input
-            id="filtro-busqueda"
-            value={busqueda}
-            onChange={(evento) => cambiarBusqueda(evento.target.value)}
-            placeholder="Buscar..."
-          />
-        </div>
-        <div className="flex w-full flex-col gap-2 sm:w-auto sm:min-w-[16rem]">
-          <Label htmlFor="filtro-institucion">Institución</Label>
-          <Select
-            id="filtro-institucion"
-            value={filtroInstitucion}
-            onChange={(evento) => cambiarFiltroInstitucion(evento.target.value)}
-          >
-            <option value="">Todas las instituciones</option>
-            {(Array.isArray(instituciones) ? instituciones : []).map((institucion) => (
-              <option key={institucion.id} value={institucion.id}>
-                {institucion.nombre}
-              </option>
-            ))}
-          </Select>
-        </div>
-      </FilterBar>
+      <UsuariosFiltros
+        busqueda={busqueda}
+        onBusqueda={cambiarBusqueda}
+        filtroEstado={filtroEstado}
+        onEstado={cambiarFiltroEstado}
+        filtroInstitucion={filtroInstitucion}
+        onInstitucion={cambiarFiltroInstitucion}
+        instituciones={Array.isArray(instituciones) ? instituciones : []}
+        hayFiltrosActivos={hayFiltrosActivos}
+        onLimpiar={limpiarFiltros}
+      />
 
       {contenido}
 
@@ -656,27 +618,27 @@ export function UsuariosPage() {
       </Dialog>
 
       <Dialog
-        open={dialogoConfirmarActivo}
-        onOpenChange={setDialogoConfirmarActivo}
-        title={usuarioParaCambiarEstado?.activo ? 'Desactivar usuario' : 'Activar usuario'}
-        description={
-          usuarioParaCambiarEstado?.activo
-            ? 'Al desactivar el usuario se conservará su historial.'
-            : 'Se activará el usuario para acceder al sistema.'
-        }
+        open={estado.dialogoAbierto}
+        onOpenChange={estado.setDialogoAbierto}
+        title="Desactivar usuario"
+        description="Al desactivar el usuario se conservará su historial y no podrá iniciar sesión."
         footer={
           <div className="flex w-full flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <DialogClose asChild>
               <Button variant="secondary">Cancelar</Button>
             </DialogClose>
-            <Button onClick={() => void confirmarCambioEstado()} disabled={cambiandoEstado}>
-              {cambiandoEstado ? 'Guardando...' : 'Confirmar'}
+            <Button
+              variant="destructive"
+              onClick={() => void estado.confirmar()}
+              disabled={estado.confirmando}
+            >
+              {estado.confirmando ? 'Desactivando...' : 'Desactivar'}
             </Button>
           </div>
         }
       >
         <p className="text-sm text-foreground">
-          ¿Confirmas el cambio de estado de {usuarioParaCambiarEstado?.correo}?
+          ¿Confirmas desactivar a {estado.pendiente?.correo}?
         </p>
       </Dialog>
     </section>

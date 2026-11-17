@@ -346,3 +346,106 @@ def test_paginacion_respeta_limite_y_total(db_session, client: TestClient):
     data = r.json()
     assert data["total"] >= 5
     assert len(data["items"]) == 2
+
+
+def test_listado_ordena_por_correo_descendente(db_session, client: TestClient):
+    _skip_if_no_db()
+    from app.models.instituciones import Institucion
+    from app.models.usuarios import Rol, Usuario, UsuarioRol
+
+    inst = Institucion(nombre="Inst orden", codigo="inst_orden")
+    db_session.add(inst)
+    db_session.commit()
+    db_session.refresh(inst)
+
+    rol_admin = Rol(nombre="admin", descripcion="Admin")
+    db_session.add(rol_admin)
+    db_session.commit()
+
+    correos = ["admin_orden@test.com", "zeta@test.com", "alfa@test.com"]
+    for correo in correos:
+        usuario = Usuario(
+            institucion_id=inst.id,
+            email=correo,
+            password_hash=hash_password(correo, "pass12345"),
+            nombre=correo.split("@")[0],
+            activo=True,
+        )
+        db_session.add(usuario)
+        db_session.commit()
+        db_session.add(UsuarioRol(usuario_id=usuario.id, rol_id=rol_admin.id))
+        db_session.commit()
+
+    client.post(
+        "/auth/login",
+        json={"correo": "admin_orden@test.com", "password": "pass12345"},
+    )
+
+    r = client.get("/usuarios", params={"orden": "correo", "direccion": "desc"})
+    assert r.status_code == 200
+    devueltos = [item["correo"] for item in r.json()["items"]]
+    assert devueltos == sorted(correos, reverse=True)
+
+    r_asc = client.get("/usuarios", params={"orden": "correo", "direccion": "asc"})
+    assert [item["correo"] for item in r_asc.json()["items"]] == sorted(correos)
+
+
+def test_no_se_quita_admin_al_ultimo_administrador_activo(db_session, client: TestClient):
+    _skip_if_no_db()
+    from app.models.instituciones import Institucion
+    from app.models.usuarios import Rol, Usuario, UsuarioRol
+
+    inst = Institucion(nombre="Inst admin único", codigo="inst_admin_unico")
+    db_session.add(inst)
+    db_session.commit()
+    db_session.refresh(inst)
+
+    roles = {}
+    for nombre in ("admin", "doctor"):
+        rol = Rol(nombre=nombre, descripcion=nombre)
+        db_session.add(rol)
+        db_session.commit()
+        roles[nombre] = rol
+
+    admin = Usuario(
+        institucion_id=inst.id,
+        email="unico_admin@test.com",
+        password_hash=hash_password("unico_admin@test.com", "pass12345"),
+        nombre="Admin único",
+        activo=True,
+    )
+    db_session.add(admin)
+    db_session.commit()
+    db_session.add(UsuarioRol(usuario_id=admin.id, rol_id=roles["admin"].id))
+    db_session.commit()
+
+    client.post(
+        "/auth/login",
+        json={"correo": "unico_admin@test.com", "password": "pass12345"},
+    )
+
+    r = client.put(f"/usuarios/{admin.id}/roles", json={"roles": ["doctor"]})
+    assert r.status_code == 409
+    assert r.json().get("error", {}).get("code") == "conflict"
+    db_session.expire_all()
+    sigue_admin = (
+        db_session.query(UsuarioRol)
+        .filter(UsuarioRol.usuario_id == admin.id, UsuarioRol.rol_id == roles["admin"].id)
+        .first()
+    )
+    assert sigue_admin is not None
+
+    segundo = Usuario(
+        institucion_id=inst.id,
+        email="segundo_admin@test.com",
+        password_hash=hash_password("segundo_admin@test.com", "pass12345"),
+        nombre="Segundo admin",
+        activo=True,
+    )
+    db_session.add(segundo)
+    db_session.commit()
+    db_session.add(UsuarioRol(usuario_id=segundo.id, rol_id=roles["admin"].id))
+    db_session.commit()
+
+    r2 = client.put(f"/usuarios/{admin.id}/roles", json={"roles": ["doctor"]})
+    assert r2.status_code == 200

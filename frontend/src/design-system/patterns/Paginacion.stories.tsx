@@ -28,11 +28,6 @@ function ListaPaginada({
   const elementos = registros.slice(offset, Math.min(offset + limite, total));
   return (
     <section className="max-w-2xl space-y-4" aria-label="Listado sintético paginado">
-      <p aria-live="polite" className="text-sm text-muted-foreground">
-        {total
-          ? `Mostrando ${offset + 1}–${Math.min(offset + limite, total)} de ${total} registros`
-          : 'No hay registros'}
-      </p>
       <ul className="divide-y divide-border rounded-card border border-border">
         {elementos.map((codigo) => (
           <li key={codigo} className="p-3">

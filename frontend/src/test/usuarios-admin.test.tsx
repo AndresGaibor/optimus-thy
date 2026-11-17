@@ -37,6 +37,7 @@ function montarApp() {
 interface FetchMock {
   mock: { calls: unknown[][] };
   mockResolvedValueOnce: (value: unknown) => unknown;
+  mockImplementation: (fn: () => Promise<Response>) => unknown;
 }
 
 function responderJson(cuerpo: unknown, status = 200): Response {
@@ -44,6 +45,12 @@ function responderJson(cuerpo: unknown, status = 200): Response {
     status,
     headers: { 'Content-Type': 'application/json' },
   });
+}
+
+function urlDeLlamada(call: unknown[]): string {
+  const first = call[0];
+  if (first instanceof Request) return first.url;
+  return String(first);
 }
 
 async function extraerCuerpo(call: unknown[]): Promise<unknown> {
@@ -113,9 +120,11 @@ describe('usuarios admin', () => {
     montarApp();
 
     expect(await screen.findByText('maria@hospital.es')).toBeInTheDocument();
-    expect(screen.getByText('María')).toBeInTheDocument();
-    expect(within(screen.getByRole('table')).getByText('Hospital Central')).toBeInTheDocument();
-    expect(screen.getByText('Médico')).toBeInTheDocument();
+    expect(screen.getAllByText('María').length).toBeGreaterThan(0);
+    expect(
+      within(screen.getByRole('table')).getAllByText('Hospital Central').length,
+    ).toBeGreaterThan(0);
+    expect(screen.getAllByText('Médico').length).toBeGreaterThan(0);
   });
 
   it('el alta envía POST /usuarios con el cuerpo correcto', async () => {
@@ -210,10 +219,13 @@ describe('usuarios admin', () => {
 
     montarApp();
 
-    const switchBtn = await screen.findByRole('switch', { name: /desactivar/i });
-    await user.click(switchBtn);
+    const menu = await screen.findByRole('button', {
+      name: /acciones de maria@hospital\.es/i,
+    });
+    await user.click(menu);
+    await user.click(await screen.findByRole('menuitem', { name: 'Desactivar' }));
     const confirmDialog = await screen.findByRole('dialog');
-    await user.click(within(confirmDialog).getByRole('button', { name: /confirmar/i }));
+    await user.click(within(confirmDialog).getByRole('button', { name: /^desactivar$/i }));
 
     await waitFor(async () => {
       const calls = fetchMock.mock.calls;
@@ -294,7 +306,7 @@ describe('usuarios admin', () => {
 
     montarApp();
 
-    await user.click(await screen.findByRole('button', { name: /^roles$/i }));
+    await user.click(await screen.findByRole('button', { name: /gestionar roles de maria/i }));
     const dialog = await screen.findByRole('dialog');
     expect(within(dialog).getByText('maria@hospital.es')).toBeInTheDocument();
     expect(within(dialog).getByRole('checkbox', { name: 'Médico' })).toBeChecked();
@@ -401,5 +413,342 @@ describe('usuarios admin', () => {
 
     expect(await within(dialog).findByText(/al menos 12 caracteres/i)).toBeInTheDocument();
     expect(fetchMock.mock.calls.length).toBe(llamadasAntes);
+  });
+
+  it('el filtro de estado envía activo=false', async () => {
+    const user = userEvent.setup();
+    fetchMock.mockResolvedValueOnce(responderJson(mockSessionAdmin));
+    fetchMock.mockResolvedValueOnce(responderJson({ total: 0, items: [] }));
+    fetchMock.mockResolvedValueOnce(responderJson([]));
+
+    montarApp();
+
+    await user.selectOptions(await screen.findByLabelText('Estado'), 'inactivo');
+
+    await waitFor(() => {
+      const urls = fetchMock.mock.calls.map((llamada) => urlDeLlamada(llamada));
+      expect(urls.some((url) => url.includes('/usuarios') && url.includes('activo=false'))).toBe(
+        true,
+      );
+    });
+  });
+
+  it('limpiar filtros descarta búsqueda, estado e institución', async () => {
+    const user = userEvent.setup();
+    fetchMock.mockResolvedValueOnce(responderJson(mockSessionAdmin));
+    fetchMock.mockImplementation(() => Promise.resolve(responderJson({ total: 0, items: [] })));
+
+    montarApp();
+
+    await user.type(await screen.findByLabelText('Buscar por correo o nombre'), 'maria');
+    await user.selectOptions(screen.getByLabelText('Estado'), 'activo');
+    const barra = screen.getByRole('group', { name: 'Filtros de usuarios' });
+    await user.click(within(barra).getByRole('button', { name: /limpiar filtros/i }));
+
+    await waitFor(() => {
+      const ultima = fetchMock.mock.calls
+        .map((llamada) => urlDeLlamada(llamada))
+        .filter((url) => url.includes('/usuarios'))
+        .at(-1);
+      expect(ultima).toBeDefined();
+      expect(ultima).not.toContain('q=');
+      expect(ultima).not.toContain('activo=');
+      expect(ultima).not.toContain('institucion_id=');
+    });
+  });
+
+  it('ordenar por nombre alterna la dirección y lo refleja en aria-sort', async () => {
+    const user = userEvent.setup();
+    fetchMock.mockResolvedValueOnce(responderJson(mockSessionAdmin));
+    fetchMock.mockImplementation(() =>
+      Promise.resolve(
+        responderJson({
+          total: 1,
+          items: [
+            {
+              id: 'u1',
+              correo: 'maria@hospital.es',
+              nombre: 'María',
+              activo: true,
+              institucion: { id: 'i1', nombre: 'Hospital Central' },
+              roles: ['doctor'],
+            },
+          ],
+        }),
+      ),
+    );
+
+    montarApp();
+
+    const botonCorreo = await screen.findByRole('button', { name: /ordenar por usuario/i });
+    const cabecera = botonCorreo.closest('th');
+    expect(cabecera).not.toBeNull();
+    await user.click(botonCorreo);
+
+    await waitFor(() => {
+      const urls = fetchMock.mock.calls.map((llamada) => urlDeLlamada(llamada));
+      expect(
+        urls.some((url) => url.includes('orden=nombre') && url.includes('direccion=asc')),
+      ).toBe(true);
+    });
+    expect(cabecera).toHaveAttribute('aria-sort', 'ascending');
+
+    const botonCorreo2 = screen.getByRole('button', { name: /ordenar por usuario/i });
+    await user.click(botonCorreo2);
+    await waitFor(() => {
+      const urls = fetchMock.mock.calls.map((llamada) => urlDeLlamada(llamada));
+      expect(
+        urls.some((url) => url.includes('orden=nombre') && url.includes('direccion=desc')),
+      ).toBe(true);
+    });
+    expect(botonCorreo2.closest('th')).toHaveAttribute('aria-sort', 'descending');
+  });
+
+  it('un cambio de estado fallido conserva el listado y muestra el aviso', async () => {
+    const user = userEvent.setup();
+    fetchMock.mockResolvedValueOnce(responderJson(mockSessionAdmin));
+    fetchMock.mockResolvedValueOnce(
+      responderJson({
+        total: 1,
+        items: [
+          {
+            id: 'u1',
+            correo: 'maria@hospital.es',
+            nombre: 'María',
+            activo: true,
+            institucion: { id: 'i1', nombre: 'Hospital Central' },
+            roles: ['doctor'],
+          },
+        ],
+      }),
+    );
+    fetchMock.mockResolvedValueOnce(responderJson([{ id: 'i1', nombre: 'Hospital Central' }]));
+    fetchMock.mockResolvedValueOnce(responderJson({ detail: 'boom' }, 500));
+
+    montarApp();
+
+    await user.click(
+      await screen.findByRole('button', { name: /acciones de maria@hospital\.es/i }),
+    );
+    await user.click(await screen.findByRole('menuitem', { name: 'Desactivar' }));
+    const dialog = await screen.findByRole('dialog');
+    await user.click(within(dialog).getByRole('button', { name: /^desactivar$/i }));
+
+    expect(await screen.findByText(/no se pudo cambiar el estado/i)).toBeInTheDocument();
+    expect(screen.getByText('maria@hospital.es')).toBeInTheDocument();
+  });
+
+  it('activar no pide confirmación y aplica el estado que devuelve el servidor', async () => {
+    const user = userEvent.setup();
+    const usuario = {
+      id: 'u1',
+      correo: 'maria@hospital.es',
+      nombre: 'María',
+      activo: false,
+      institucion: { id: 'i1', nombre: 'Hospital Central' },
+      roles: ['doctor'],
+    };
+    fetchMock.mockResolvedValueOnce(responderJson(mockSessionAdmin));
+    fetchMock.mockResolvedValueOnce(responderJson({ total: 1, items: [usuario] }));
+    fetchMock.mockResolvedValueOnce(responderJson([{ id: 'i1', nombre: 'Hospital Central' }]));
+    fetchMock.mockResolvedValueOnce(responderJson({ ...usuario, activo: true }));
+    fetchMock.mockResolvedValueOnce(
+      responderJson({ total: 1, items: [{ ...usuario, activo: true }] }),
+    );
+    fetchMock.mockResolvedValueOnce(responderJson([{ id: 'i1', nombre: 'Hospital Central' }]));
+
+    montarApp();
+
+    await user.click(
+      await screen.findByRole('button', { name: /acciones de maria@hospital\.es/i }),
+    );
+    await user.click(await screen.findByRole('menuitem', { name: 'Activar' }));
+
+    expect(await screen.findByText(/maria@hospital\.es activado/i)).toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    const patch = fetchMock.mock.calls.find((call) => {
+      const req = call[0];
+      const url = req instanceof Request ? req.url : String(req);
+      const method =
+        req instanceof Request ? req.method : (call[1] as RequestInit | undefined)?.method;
+      return url.includes('/usuarios/u1') && method === 'PATCH';
+    });
+    expect(patch).toBeDefined();
+    if (patch) {
+      expect(await extraerCuerpo(patch)).toEqual({ activo: true });
+    }
+  });
+
+  it('une nombre y correo en la misma celda de la columna Usuario', async () => {
+    fetchMock.mockResolvedValueOnce(responderJson(mockSessionAdmin));
+    fetchMock.mockResolvedValueOnce(
+      responderJson({
+        total: 1,
+        items: [
+          {
+            id: 'u1',
+            correo: 'maria@hospital.es',
+            nombre: 'María',
+            activo: true,
+            institucion: { id: 'i1', nombre: 'Hospital Central' },
+            roles: ['doctor'],
+          },
+        ],
+      }),
+    );
+    fetchMock.mockResolvedValueOnce(responderJson([{ id: 'i1', nombre: 'Hospital Central' }]));
+
+    montarApp();
+
+    const correo = await screen.findByText('maria@hospital.es');
+    const celda = correo.closest('td');
+    expect(celda).not.toBeNull();
+    expect(celda?.textContent).toContain('María');
+    expect(screen.getByRole('button', { name: /ordenar por usuario/i })).toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^correo$/i })).toBeNull();
+  });
+
+  it('un usuario con varios roles conserva todas sus etiquetas', async () => {
+    fetchMock.mockResolvedValueOnce(responderJson(mockSessionAdmin));
+    fetchMock.mockResolvedValueOnce(
+      responderJson({
+        total: 1,
+        items: [
+          {
+            id: 'u1',
+            correo: 'multi@hospital.es',
+            nombre: 'Multi Rol',
+            activo: true,
+            institucion: { id: 'i1', nombre: 'Hospital Central' },
+            roles: ['admin', 'doctor', 'researcher'],
+          },
+        ],
+      }),
+    );
+    fetchMock.mockResolvedValueOnce(responderJson([{ id: 'i1', nombre: 'Hospital Central' }]));
+
+    montarApp();
+
+    await screen.findByText('multi@hospital.es');
+    expect(screen.getAllByText('Administrador · Médico · Investigador').length).toBeGreaterThan(0);
+  });
+
+  it('la propia cuenta no ofrece desactivarse', async () => {
+    const user = userEvent.setup();
+    fetchMock.mockResolvedValueOnce(responderJson(mockSessionAdmin));
+    fetchMock.mockResolvedValueOnce(
+      responderJson({
+        total: 1,
+        items: [
+          {
+            id: 'u1',
+            correo: 'admin@t.com',
+            nombre: 'Admin',
+            activo: true,
+            institucion: { id: 'i1', nombre: 'Hospital Central' },
+            roles: ['admin'],
+          },
+        ],
+      }),
+    );
+    fetchMock.mockResolvedValueOnce(responderJson([{ id: 'i1', nombre: 'Hospital Central' }]));
+
+    montarApp();
+
+    await user.click(await screen.findByRole('button', { name: /acciones de admin@t\.com/i }));
+    const item = await screen.findByRole('menuitem', { name: 'Desactivar' });
+    expect(item).toBeDisabled();
+    expect(item).toHaveAttribute('title', 'No puedes desactivar tu propia cuenta');
+  });
+
+  it('el menú de acciones se abre y cierra con teclado', async () => {
+    const user = userEvent.setup();
+    fetchMock.mockResolvedValueOnce(responderJson(mockSessionAdmin));
+    fetchMock.mockResolvedValueOnce(
+      responderJson({
+        total: 1,
+        items: [
+          {
+            id: 'u1',
+            correo: 'maria@hospital.es',
+            nombre: 'María',
+            activo: true,
+            institucion: { id: 'i1', nombre: 'Hospital Central' },
+            roles: ['doctor'],
+          },
+        ],
+      }),
+    );
+    fetchMock.mockResolvedValueOnce(responderJson([{ id: 'i1', nombre: 'Hospital Central' }]));
+
+    montarApp();
+
+    const disparador = await screen.findByRole('button', {
+      name: /acciones de maria@hospital\.es/i,
+    });
+    disparador.focus();
+    await user.keyboard('{Enter}');
+    const menu = await screen.findByRole('menu');
+    expect(within(menu).getByRole('menuitem', { name: 'Desactivar' })).toHaveFocus();
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+    expect(disparador).toHaveFocus();
+  });
+
+  it('combina búsqueda, institución y estado en la misma consulta', async () => {
+    const user = userEvent.setup();
+    const fetchLocal = vi.fn((input: unknown) => {
+      const url = input instanceof Request ? input.url : String(input);
+      if (url.includes('/auth/me')) return Promise.resolve(responderJson(mockSessionAdmin));
+      if (url.includes('/instituciones')) {
+        return Promise.resolve(
+          responderJson([
+            { id: 'i1', nombre: 'ESPOCH', codigo: 'ESPOCH' },
+            { id: 'i2', nombre: 'SOLCA', codigo: 'SOLCA' },
+          ]),
+        );
+      }
+      return Promise.resolve(responderJson({ total: 0, items: [] }));
+    });
+    (globalThis as unknown as { fetch: typeof fetch }).fetch =
+      fetchLocal as unknown as typeof fetch;
+
+    montarApp();
+
+    await user.type(await screen.findByLabelText('Buscar por correo o nombre'), 'maria');
+    await user.selectOptions(
+      screen.getByLabelText('Institución', { selector: '#filtro-institucion' }),
+      'i2',
+    );
+    await user.selectOptions(screen.getByLabelText('Estado'), 'activo');
+
+    await waitFor(
+      () => {
+        const urls = fetchLocal.mock.calls
+          .map((llamada) => urlDeLlamada(llamada))
+          .filter((url) => url.includes('/usuarios'));
+        const ultima = urls.at(-1);
+        expect(ultima).toContain('q=maria');
+        expect(ultima).toContain('institucion_id=i2');
+        expect(ultima).toContain('activo=true');
+      },
+      { timeout: 2000 },
+    );
+  });
+
+  it('limpiar filtros solo aparece cuando hay filtros aplicados', async () => {
+    const user = userEvent.setup();
+    fetchMock.mockResolvedValueOnce(responderJson(mockSessionAdmin));
+    fetchMock.mockImplementation(() => Promise.resolve(responderJson({ total: 0, items: [] })));
+
+    montarApp();
+
+    await screen.findByText(/sin usuarios/i);
+    const barra = screen.getByRole('group', { name: 'Filtros de usuarios' });
+    expect(within(barra).queryByRole('button', { name: /limpiar filtros/i })).toBeNull();
+    await user.type(await screen.findByLabelText('Buscar por correo o nombre'), 'ana');
+    expect(
+      await within(barra).findByRole('button', { name: /limpiar filtros/i }),
+    ).toBeInTheDocument();
   });
 });
