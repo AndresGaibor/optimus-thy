@@ -4,14 +4,17 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
+import { instanteDeExpiracion, RENOVAR_CADA_MS, sesionPorExpirar } from './expiry';
 import {
   login as loginApi,
   logout as logoutApi,
   me as meApi,
   setRolActivo as setRolActivoApi,
+  type MeResult,
 } from '../api/auth';
 import { homePathFor, mapBackendRoleToUi, mapUiRoleToBackend, type Role } from './roles';
 
@@ -32,6 +35,10 @@ interface SessionValue {
   ) => Promise<{ ok: true; rol: Role } | { ok: false; mensaje: string }>;
   logout: () => Promise<void>;
   cambiarRolActivo: (rol: Role) => Promise<void>;
+  /** Aviso de HU-005: la sesión está por expirar por inactividad. */
+  sesionPorExpirar: boolean;
+  /** Renueva la actividad de la sesión; si ya expiró, pasa a anónimo. */
+  renovarSesion: () => Promise<void>;
 }
 
 const SessionContext = createContext<SessionValue | null>(null);
@@ -41,11 +48,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [usuario, setUsuario] = useState<SessionUsuario | null>(null);
   const [roles, setRoles] = useState<Role[]>([]);
   const [rolActivo, setRolActivo] = useState<Role | null>(null);
+  const [expiraEn, setExpiraEn] = useState<number | null>(null);
+  const [avisoExpirar, setAvisoExpirar] = useState(false);
+  const ultimaRenovacion = useRef(0);
 
   useEffect(() => {
     let cancelado = false;
     (async () => {
-      let res: Awaited<ReturnType<typeof meApi>>;
+      let res: MeResult;
       try {
         res = await meApi();
       } catch {
@@ -80,6 +90,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       setRoles(rolesUi);
       setRolActivo(rolActivoUi);
       setEstado('autenticado');
+      setExpiraEn(instanteDeExpiracion(session.segundos_para_expirar));
+      ultimaRenovacion.current = Date.now();
     })();
     return () => {
       cancelado = true;
@@ -111,6 +123,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       setRoles(rolesUi);
       setRolActivo(rolActivoUi);
       setEstado('autenticado');
+      setExpiraEn(instanteDeExpiracion(session.segundos_para_expirar));
+      ultimaRenovacion.current = Date.now();
       return { ok: true, rol: rolActivoUi };
     },
     [],
@@ -125,8 +139,52 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     setUsuario(null);
     setRoles([]);
     setRolActivo(null);
+    setExpiraEn(null);
+    setAvisoExpirar(false);
     setEstado('anonimo');
   }, []);
+  const renovarSesion = useCallback(async () => {
+    let res: MeResult;
+    try {
+      res = await meApi();
+    } catch {
+      res = { ok: false, status: 0 };
+    }
+    if (!res.ok) {
+      setUsuario(null);
+      setRoles([]);
+      setRolActivo(null);
+      setExpiraEn(null);
+      setAvisoExpirar(false);
+      setEstado('anonimo');
+      return;
+    }
+    setExpiraEn(instanteDeExpiracion(res.session.segundos_para_expirar));
+    ultimaRenovacion.current = Date.now();
+    setAvisoExpirar(false);
+  }, []);
+
+  // HU-005: solo la actividad real del usuario mantiene viva la sesión; si se aleja, expira.
+  useEffect(() => {
+    if (estado !== 'autenticado') return;
+    const alUsar = () => {
+      if (Date.now() - ultimaRenovacion.current < RENOVAR_CADA_MS) return;
+      void renovarSesion();
+    };
+    window.addEventListener('pointerdown', alUsar);
+    window.addEventListener('keydown', alUsar);
+    return () => {
+      window.removeEventListener('pointerdown', alUsar);
+      window.removeEventListener('keydown', alUsar);
+    };
+  }, [estado, renovarSesion]);
+
+  useEffect(() => {
+    setAvisoExpirar(sesionPorExpirar(expiraEn));
+    if (expiraEn === null) return;
+    const id = window.setInterval(() => setAvisoExpirar(sesionPorExpirar(expiraEn)), 5000);
+    return () => window.clearInterval(id);
+  }, [expiraEn]);
 
   const cambiarRolActivo = useCallback(async (rol: Role) => {
     const res = await setRolActivoApi(mapUiRoleToBackend(rol));
@@ -146,8 +204,28 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ estado, usuario, roles, rolActivo, login, logout, cambiarRolActivo }),
-    [estado, usuario, roles, rolActivo, login, logout, cambiarRolActivo],
+    () => ({
+      estado,
+      usuario,
+      roles,
+      rolActivo,
+      login,
+      logout,
+      cambiarRolActivo,
+      sesionPorExpirar: avisoExpirar,
+      renovarSesion,
+    }),
+    [
+      estado,
+      usuario,
+      roles,
+      rolActivo,
+      login,
+      logout,
+      cambiarRolActivo,
+      avisoExpirar,
+      renovarSesion,
+    ],
   );
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;

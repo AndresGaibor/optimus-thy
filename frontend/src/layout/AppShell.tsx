@@ -9,6 +9,7 @@ import {
   Users,
 } from 'lucide-react';
 import { Outlet, useNavigate } from 'react-router-dom';
+import { Dialog } from '../design-system';
 import { Button } from '../design-system/components/atoms/Button';
 import { RoleBadge } from '../design-system/components/molecules/RoleBadge';
 import {
@@ -38,7 +39,8 @@ const NAV_BY_ROLE: Record<Role, SidebarNavItem[]> = {
 };
 
 export function AppShell() {
-  const { usuario, roles, rolActivo, logout, cambiarRolActivo } = useSession();
+  const { usuario, roles, rolActivo, logout, cambiarRolActivo, sesionPorExpirar, renovarSesion } =
+    useSession();
   const navigate = useNavigate();
 
   if (!rolActivo || !usuario) return null;
@@ -91,6 +93,26 @@ export function AppShell() {
         </Button>
       }
     >
+      <Dialog
+        open={sesionPorExpirar}
+        onOpenChange={() => undefined}
+        title="Tu sesión está por expirar"
+        description="Por inactividad, la sesión se cerrará en menos de un minuto. Continúa si sigues trabajando."
+        footer={
+          <>
+            <Button
+              variant="outline"
+              onClick={async () => {
+                await logout();
+                navigate('/login');
+              }}
+            >
+              Cerrar sesión
+            </Button>
+            <Button onClick={() => void renovarSesion()}>Continuar sesión</Button>
+          </>
+        }
+      />
       <Outlet />
     </SidebarLayout>
   );

@@ -8,6 +8,7 @@ export interface AuthSession {
   usuario: AuthUsuario;
   roles: string[];
   rol_activo: string;
+  segundos_para_expirar?: number | null;
 }
 
 export type LoginResult = { ok: true; session: AuthSession } | { ok: false; status: number };
