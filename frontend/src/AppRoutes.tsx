@@ -1,7 +1,7 @@
 import { Route, Routes } from 'react-router-dom';
 import { AppShell } from './layout/AppShell';
 import { LoginPage } from './pages/LoginPage';
-import { PasswordRecoveryPage } from './pages/PasswordRecoveryPage';
+import { RecuperacionPage } from './pages/RecuperacionPage';
 import { PlaceholderPage } from './pages/PlaceholderPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { RolesPage } from './pages/admin/RolesPage';
@@ -9,6 +9,7 @@ import { AuditoriaPage } from './pages/admin/AuditoriaPage';
 import { UsuariosPage } from './pages/admin/UsuariosPage';
 import { InstitucionesPage } from './pages/admin/InstitucionesPage';
 import { ModelosPage } from './pages/admin/ModelosPage';
+import { CorreoPage } from './pages/admin/CorreoPage';
 import { PacientesPage } from './pages/medico/PacientesPage';
 import { ResultadosPage } from './pages/medico/ResultadosPage';
 import { CasoPage } from './pages/medico/CasoPage';
@@ -19,7 +20,8 @@ export function AppRoutes() {
     <Routes>
       <Route path="/" element={<RootRedirect />} />
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/login/recuperar" element={<PasswordRecoveryPage />} />
+      <Route path="/login/recuperar" element={<RecuperacionPage />} />
+      <Route path="/restablecer/:token" element={<RecuperacionPage />} />
 
       <Route
         path="/medico"
@@ -62,6 +64,7 @@ export function AppRoutes() {
         <Route path="instituciones" element={<InstitucionesPage />} />
         <Route path="roles" element={<RolesPage />} />
         <Route path="modelos" element={<ModelosPage />} />
+        <Route path="correo" element={<CorreoPage />} />
         <Route path="auditoria" element={<AuditoriaPage />} />
       </Route>
       <Route path="*" element={<NotFoundPage />} />

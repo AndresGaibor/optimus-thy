@@ -14,6 +14,7 @@ from fastapi.responses import JSONResponse, Response
 
 from app.api.auditoria import router as auditoria_router
 from app.api.consentimientos import router as consentimientos_router
+from app.api.correo import router as correo_router
 from app.api.imagenes import router as imagenes_router
 from app.api.instituciones import router as instituciones_router
 from app.api.modelos_ia import router as modelos_ia_router
@@ -186,6 +187,7 @@ def create_app() -> FastAPI:
     app.include_router(reportes_router)
     app.include_router(modelos_ia_router)
     app.include_router(auth_router)
+    app.include_router(correo_router)
 
     @app.exception_handler(RequestValidationError)
     async def validation_exception_handler(

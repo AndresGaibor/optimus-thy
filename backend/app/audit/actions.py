@@ -58,6 +58,9 @@ class AuditAction(StrEnum):
     PII_REVEAL = "PII_REVEAL"
     AUDIT_READ = "AUDIT_READ"
 
+    # Recuperación de contraseña (TES-377)
+    PASSWORD_RESET = "PASSWORD_RESET"
+
 
 class AuditModule(StrEnum):
     """Módulo que originó el evento."""

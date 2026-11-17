@@ -2,12 +2,17 @@
 
 from __future__ import annotations
 
+import hashlib
+import logging
+import secrets
 from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Request, Response, status
+import sqlalchemy as sa
+from fastapi import APIRouter, BackgroundTasks, Depends, Request, Response, status
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.audit.actions import AuditAction, AuditModule
@@ -20,10 +25,12 @@ from app.auth.sessions import (
     segundos_para_expirar,
 )
 from app.config import get_settings
+from app.correo.servicio import CorreoNoConfigurado, EnvioError, enviar_recuperacion, mostrar_ttl
 from app.db import session_dep
+from app.models.correo import TokenRecuperacion
 from app.models.sesiones import Sesion
 from app.models.usuarios import Rol, Usuario, UsuarioRol
-from app.security.passwords import verify_dummy, verify_password
+from app.security.passwords import hash_password, verify_dummy, verify_password
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -301,3 +308,170 @@ def put_rol_activo(
         rol.nombre,
         actual.segundos_para_expirar,
     )
+
+
+class RecuperacionRequest(BaseModel):
+    correo: str = Field(min_length=3, max_length=255)
+
+
+class RecuperacionConfirmarRequest(BaseModel):
+    token: str = Field(min_length=20, max_length=128)
+    password: str = Field(min_length=12, max_length=128)
+
+
+def _hash_token(token: str) -> str:
+    """En la base solo vive el hash: quien la lea no puede usar el enlace."""
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
+def _ip_de(request: Request) -> str | None:
+    import ipaddress
+
+    host = request.client.host if request.client else None
+    if host is None:
+        return None
+    try:
+        return str(ipaddress.ip_address(host))
+    except ValueError:
+        return None
+
+
+def _enlace_invalido(request: Request) -> JSONResponse:
+    return JSONResponse(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        content={
+            "error": {
+                "code": "token_invalido",
+                "message": "El enlace no es válido o ya caducó. Solicita uno nuevo.",
+            },
+            "request_id": getattr(request.state, "request_id", "-"),
+        },
+    )
+
+
+def _enviar_enlace(
+    usuario_id: str, destinatario: str, nombre: str, enlace: str, expira_en: str
+) -> None:
+    """Fuera de la petición: el tiempo de respuesta no delata si el correo existe."""
+    from app.db import get_session_factory
+
+    sesion = get_session_factory()()
+    try:
+        enviar_recuperacion(
+            sesion,
+            destinatario=destinatario,
+            nombre=nombre,
+            enlace=enlace,
+            expira_en=expira_en,
+        )
+    except (CorreoNoConfigurado, EnvioError, SQLAlchemyError):
+        # Sin correo configurado no se puede avisar al usuario; queda en el log
+        # del servidor, sin dirección ni datos personales. Un fallo aquí nunca
+        # debe cambiar la respuesta de la petición.
+        logging.getLogger("optimus_thy.auth").warning(
+            "recuperación: no se pudo enviar el correo (usuario %s)", usuario_id
+        )
+    finally:
+        sesion.close()
+
+
+@router.post("/recuperacion", status_code=status.HTTP_202_ACCEPTED)
+def solicitar_recuperacion(
+    request: Request,
+    background: BackgroundTasks,
+    body: RecuperacionRequest,
+    db: Annotated[Session, Depends(session_dep)],
+) -> Response:
+    """Responde siempre lo mismo: nunca revela si el correo está registrado."""
+    settings = get_settings()
+    ahora = datetime.now(UTC)
+    usuario = (
+        db.query(Usuario)
+        .filter(sa.func.lower(Usuario.email) == body.correo.strip().lower())
+        .first()
+    )
+    if usuario is not None and usuario.activo and usuario.password_hash is not None:
+        desde = ahora - timedelta(minutes=settings.recuperacion_ventana_minutos)
+        recientes = (
+            db.query(TokenRecuperacion)
+            .filter(
+                TokenRecuperacion.usuario_id == usuario.id,
+                TokenRecuperacion.creado_en >= desde,
+            )
+            .count()
+        )
+        if recientes < settings.recuperacion_max_solicitudes:
+            db.query(TokenRecuperacion).filter(
+                TokenRecuperacion.usuario_id == usuario.id,
+                TokenRecuperacion.usado_en.is_(None),
+            ).update({TokenRecuperacion.usado_en: ahora}, synchronize_session=False)
+            token = secrets.token_urlsafe(32)
+            db.add(
+                TokenRecuperacion(
+                    usuario_id=usuario.id,
+                    token_hash=_hash_token(token),
+                    expira_en=ahora + timedelta(minutes=settings.recuperacion_ttl_minutos),
+                    ip_origen=_ip_de(request),
+                )
+            )
+            db.commit()
+            background.add_task(
+                _enviar_enlace,
+                str(usuario.id),
+                usuario.email,
+                usuario.nombre or "",
+                f"{settings.public_url_base}/restablecer/{token}",
+                mostrar_ttl(settings.recuperacion_ttl_minutos),
+            )
+    return JSONResponse(status_code=status.HTTP_202_ACCEPTED, content={"ok": True})
+
+
+@router.post("/recuperacion/confirmar", status_code=status.HTTP_204_NO_CONTENT)
+def confirmar_recuperacion(
+    request: Request,
+    body: RecuperacionConfirmarRequest,
+    db: Annotated[Session, Depends(session_dep)],
+) -> Response:
+    """Cambia la contraseña, quema el token y cierra todas las sesiones."""
+    ahora = datetime.now(UTC)
+    fila = (
+        db.query(TokenRecuperacion)
+        .filter(TokenRecuperacion.token_hash == _hash_token(body.token))
+        .first()
+    )
+    if fila is None or fila.usado_en is not None or _aware(fila.expira_en) <= ahora:
+        return _enlace_invalido(request)
+    usuario = db.query(Usuario).filter(Usuario.id == fila.usuario_id).first()
+    if usuario is None or not usuario.activo:
+        return _enlace_invalido(request)
+
+    # Solo uno gana el token, aunque lleguen dos confirmaciones a la vez.
+    marcado = (
+        db.query(TokenRecuperacion)
+        .filter(TokenRecuperacion.id == fila.id, TokenRecuperacion.usado_en.is_(None))
+        .update({TokenRecuperacion.usado_en: ahora}, synchronize_session=False)
+    )
+    if marcado != 1:
+        return _enlace_invalido(request)
+
+    db.query(TokenRecuperacion).filter(
+        TokenRecuperacion.usuario_id == usuario.id,
+        TokenRecuperacion.usado_en.is_(None),
+    ).update({TokenRecuperacion.usado_en: ahora}, synchronize_session=False)
+    usuario.password_hash = hash_password(usuario.email, body.password)
+    usuario.intentos_fallidos = 0
+    usuario.bloqueado_hasta = None
+    db.query(Sesion).filter(Sesion.usuario_id == usuario.id, Sesion.revocada_en.is_(None)).update(
+        {Sesion.revocada_en: ahora}, synchronize_session=False
+    )
+    db.add(usuario)
+    db.commit()
+    registrar(
+        db,
+        request,
+        AuditAction.PASSWORD_RESET,
+        AuditModule.AUTH,
+        usuario=usuario,
+        detalles={"reason_code": "token"},
+    )
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

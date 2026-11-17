@@ -510,6 +510,125 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/recuperacion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Solicitar Recuperacion
+         * @description Responde siempre lo mismo: nunca revela si el correo está registrado.
+         */
+        post: operations["solicitar_recuperacion_auth_recuperacion_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/recuperacion/confirmar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Confirmar Recuperacion
+         * @description Cambia la contraseña, quema el token y cierra todas las sesiones.
+         */
+        post: operations["confirmar_recuperacion_auth_recuperacion_confirmar_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/configuracion-correo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Leer Configuracion
+         * @description Devuelve el servidor configurado; nunca la contraseña.
+         */
+        get: operations["leer_configuracion_configuracion_correo_get"];
+        /** Guardar Configuracion */
+        put: operations["guardar_configuracion_configuracion_correo_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/configuracion-correo/probar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Probar Configuracion
+         * @description Envía un correo de prueba a la cuenta del administrador que lo pide.
+         */
+        post: operations["probar_configuracion_configuracion_correo_probar_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/plantillas-correo/{clave}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Leer Plantilla */
+        get: operations["leer_plantilla_plantillas_correo__clave__get"];
+        /** Guardar Plantilla */
+        put: operations["guardar_plantilla_plantillas_correo__clave__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/plantillas-correo/{clave}/restaurar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Restaurar Plantilla
+         * @description Vuelve a la plantilla de fábrica borrando la guardada.
+         */
+        post: operations["restaurar_plantilla_plantillas_correo__clave__restaurar_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -530,6 +649,53 @@ export interface components {
             nombre: string;
             /** Version */
             version: string;
+        };
+        /** ConfiguracionIn */
+        ConfiguracionIn: {
+            /** Host */
+            host: string;
+            /** Puerto */
+            puerto: number;
+            /**
+             * Seguridad
+             * @enum {string}
+             */
+            seguridad: "starttls" | "ssl";
+            /** Usuario */
+            usuario: string;
+            /** Remitente */
+            remitente: string;
+            /** Remitente Nombre */
+            remitente_nombre?: string | null;
+            /**
+             * Activo
+             * @default true
+             */
+            activo: boolean;
+            /** Password */
+            password?: string | null;
+        };
+        /** ConfiguracionOut */
+        ConfiguracionOut: {
+            /** Host */
+            host: string;
+            /** Puerto */
+            puerto: number;
+            /**
+             * Seguridad
+             * @enum {string}
+             */
+            seguridad: "starttls" | "ssl";
+            /** Usuario */
+            usuario: string;
+            /** Remitente */
+            remitente: string;
+            /** Remitente Nombre */
+            remitente_nombre: string | null;
+            /** Activo */
+            activo: boolean;
+            /** Tiene Password */
+            tiene_password: boolean;
         };
         /**
          * CrearConsentimientoRequest
@@ -693,6 +859,43 @@ export interface components {
             activo?: boolean | null;
             /** Institucion Id */
             institucion_id?: string | null;
+        };
+        /** PlantillaIn */
+        PlantillaIn: {
+            /** Asunto */
+            asunto: string;
+            /** Html */
+            html: string;
+        };
+        /** PlantillaOut */
+        PlantillaOut: {
+            /** Clave */
+            clave: string;
+            /** Asunto */
+            asunto: string;
+            /** Html */
+            html: string;
+            /** Variables */
+            variables: string[];
+            /** De Fabrica */
+            de_fabrica: boolean;
+        };
+        /** PruebaOut */
+        PruebaOut: {
+            /** Destinatario */
+            destinatario: string;
+        };
+        /** RecuperacionConfirmarRequest */
+        RecuperacionConfirmarRequest: {
+            /** Token */
+            token: string;
+            /** Password */
+            password: string;
+        };
+        /** RecuperacionRequest */
+        RecuperacionRequest: {
+            /** Correo */
+            correo: string;
         };
         /** RolActivoRequest */
         RolActivoRequest: {
@@ -1767,6 +1970,240 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    solicitar_recuperacion_auth_recuperacion_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecuperacionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    confirmar_recuperacion_auth_recuperacion_confirmar_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecuperacionConfirmarRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    leer_configuracion_configuracion_correo_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConfiguracionOut"];
+                };
+            };
+        };
+    };
+    guardar_configuracion_configuracion_correo_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfiguracionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConfiguracionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    probar_configuracion_configuracion_correo_probar_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PruebaOut"];
+                };
+            };
+        };
+    };
+    leer_plantilla_plantillas_correo__clave__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                clave: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlantillaOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    guardar_plantilla_plantillas_correo__clave__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                clave: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlantillaIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlantillaOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    restaurar_plantilla_plantillas_correo__clave__restaurar_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                clave: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlantillaOut"];
                 };
             };
             /** @description Validation Error */

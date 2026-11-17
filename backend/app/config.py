@@ -99,6 +99,39 @@ class Settings(BaseSettings):
         description="Tope de espera del servicio de IA por inferencia (RNF-REN-02).",
         gt=0,
     )
+    public_url: str = Field(
+        default="https://tiroides2.andresgaibor.com",
+        alias="APP_PUBLIC_URL",
+        description="URL pública de la aplicación, para los enlaces de los correos.",
+    )
+    correo_timeout_segundos: float = Field(
+        default=10.0,
+        alias="CORREO_TIMEOUT_SEGUNDOS",
+        description="Tope de espera al servidor SMTP; evita colgar la petición.",
+        gt=0,
+        le=60,
+    )
+    recuperacion_ttl_minutos: int = Field(
+        default=30,
+        alias="RECUPERACION_TTL_MINUTOS",
+        description="Vigencia del enlace de recuperación de contraseña.",
+        ge=5,
+        le=1440,
+    )
+    recuperacion_max_solicitudes: int = Field(
+        default=3,
+        alias="RECUPERACION_MAX_SOLICITUDES",
+        description="Solicitudes de recuperación por cuenta dentro de la ventana.",
+        ge=1,
+        le=20,
+    )
+    recuperacion_ventana_minutos: int = Field(
+        default=15,
+        alias="RECUPERACION_VENTANA_MINUTOS",
+        description="Ventana en minutos del límite de solicitudes de recuperación.",
+        ge=1,
+        le=1440,
+    )
 
     def model_post_init(self, __context: object) -> None:
         if "session_cookie_secure" not in self.model_fields_set:
@@ -124,6 +157,11 @@ class Settings(BaseSettings):
             for origin in self.allowed_origins.split(",")
             if origin.strip()
         )
+
+    @property
+    def public_url_base(self) -> str:
+        """URL pública sin barra final, para componer enlaces."""
+        return self.public_url.strip().rstrip("/")
 
 
 @lru_cache(maxsize=1)
