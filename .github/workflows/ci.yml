@@ -212,6 +212,34 @@ jobs:
             -v "$PWD/infra/nginx/certs:/etc/nginx/certs:ro" \
             nginx:1.27-alpine nginx -t
 
+  integracion:
+    name: Integración (contenedores)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+      - name: Preparar entorno
+        run: cp .env.example .env
+      - name: Levantar backend, almacenamiento e IA
+        run: docker compose up -d --build postgres storage backend ia
+      - name: Esperar salud del backend
+        run: |
+          for intento in $(seq 1 90); do
+            if curl -fsS http://127.0.0.1:8000/health >/dev/null 2>&1; then exit 0; fi
+            if [[ $intento == 90 ]]; then docker compose logs --tail=100; exit 1; fi
+            sleep 2
+          done
+      - name: Integración API ↔ almacenamiento
+        run: docker compose exec -T backend python - < tests/integracion/verificar_almacenamiento.py
+      - name: Integración API ↔ modelo
+        run: docker compose exec -T backend python - < tests/integracion/verificar_ia.py
+      - name: Registros si falla
+        if: failure()
+        run: docker compose logs --tail=100
+      - name: Bajar servicios
+        if: always()
+        run: docker compose down -v
+
   secrets:
     name: Secretos (gitleaks)
     runs-on: ubuntu-latest

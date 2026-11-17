@@ -131,8 +131,15 @@ class ObjectStorage:
                 self._client.create_bucket(Bucket=self._bucket)
             except Exception as exc:
                 raise StorageError("No se pudo preparar el bucket") from exc
+        # boto3 1.44 renombró el método; MinIO responde MalformedXML/NotImplemented.
+        # En MinIO el acceso anónimo ya está denegado salvo política explícita.
+        bloquear = getattr(self._client, "put_bucket_public_access_block", None) or getattr(
+            self._client, "put_public_access_block", None
+        )
+        if bloquear is None:
+            return
         try:
-            self._client.put_bucket_public_access_block(
+            bloquear(
                 Bucket=self._bucket,
                 PublicAccessBlockConfiguration={
                     "BlockPublicAcls": True,
@@ -142,7 +149,9 @@ class ObjectStorage:
                 },
             )
         except Exception as exc:
-            raise StorageError("No se pudo asegurar el bucket") from exc
+            codigo = getattr(exc, "response", {}).get("Error", {}).get("Code")
+            if codigo not in {"NotImplemented", "MethodNotAllowed", "MalformedXML"}:
+                raise StorageError("No se pudo asegurar el bucket") from exc
 
     def put_object(
         self,

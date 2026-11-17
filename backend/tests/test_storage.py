@@ -213,6 +213,58 @@ def test_un_bucket_nuevo_se_crea(
     assert cliente.buckets_creados == ["optimus"]
 
 
+class ErrorCliente(Exception):
+    """Error de cliente con la forma mínima que lee el adaptador."""
+
+    def __init__(self, codigo: str) -> None:
+        super().__init__(codigo)
+        self.response = {"Error": {"Code": codigo}}
+
+
+class ClienteSoloPabNuevo:
+    """Cliente como boto3 1.44: solo existe el nombre nuevo del bloqueo."""
+
+    def __init__(self) -> None:
+        self.bloqueos: list[dict[str, Any]] = []
+
+    def head_bucket(self, **kwargs: Any) -> dict[str, Any]:
+        return {}
+
+    def put_public_access_block(self, **kwargs: Any) -> dict[str, Any]:
+        self.bloqueos.append(kwargs["PublicAccessBlockConfiguration"])
+        return {}
+
+
+def test_el_bloqueo_usa_el_nombre_nuevo_de_boto3() -> None:
+    """boto3 1.44 quitó `put_bucket_public_access_block` del cliente."""
+    cliente = ClienteSoloPabNuevo()
+
+    ObjectStorage(cliente, bucket="optimus").ensure_bucket()
+
+    assert len(cliente.bloqueos) == 1
+
+
+def test_minio_sin_bloqueo_publico_no_rompe_el_bucket() -> None:
+    """MinIO rechaza el bloqueo con MalformedXML; el bucket ya niega anónimos."""
+
+    class ClienteMinIO(ClienteFalso):
+        def put_bucket_public_access_block(self, **kwargs: Any) -> dict[str, Any]:
+            raise ErrorCliente("MalformedXML")
+
+    ObjectStorage(ClienteMinIO(), bucket="optimus").ensure_bucket()
+
+
+def test_un_error_real_del_bloqueo_se_informa() -> None:
+    """Un fallo que no es de compatibilidad sigue siendo un error."""
+
+    class ClienteRoto(ClienteFalso):
+        def put_bucket_public_access_block(self, **kwargs: Any) -> dict[str, Any]:
+            raise ErrorCliente("AccessDenied")
+
+    with pytest.raises(StorageError):
+        ObjectStorage(ClienteRoto(), bucket="optimus").ensure_bucket()
+
+
 def test_los_fallos_del_cliente_no_filtran_detalles(
     almacenamiento: tuple[ObjectStorage, ClienteFalso],
 ) -> None:
