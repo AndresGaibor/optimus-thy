@@ -13,6 +13,7 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from app.db import get_session_factory
+from app.jobs.manejadores import manejar_inferencia
 from app.jobs.queue import (
     marcar_completado,
     marcar_error,
@@ -25,8 +26,8 @@ logger = logging.getLogger("optimus_thy.jobs")
 
 Manejadores = dict[str, Callable[[Trabajo], dict[str, Any]]]
 
-#: Manejadores por tipo. Se registran aquí cuando exista la inferencia (HT-063).
-MANEJADORES: Manejadores = {}
+#: Manejadores por tipo de trabajo.
+MANEJADORES: Manejadores = {"inferencia": manejar_inferencia}
 
 
 def procesar_una(db: Session, manejadores: Manejadores) -> Trabajo | None:
@@ -40,9 +41,14 @@ def procesar_una(db: Session, manejadores: Manejadores) -> Trabajo | None:
         return marcar_error(db, trabajo, "sin_manejador")
     try:
         resultado = manejador(trabajo)
-    except Exception:
-        # El detalle técnico va al log; al cliente solo llega el código.
+    except Exception as exc:
+        # Los errores tipados no se arreglan al reintentar; agota intentos y
+        # conserva el código estable para que el trabajo quede en error.
         logger.exception("fallo_manejador", extra={"trabajo_id": str(trabajo.id)})
+        codigo = getattr(exc, "codigo", None)
+        if isinstance(codigo, str) and codigo:
+            trabajo.intentos = max((trabajo.max_intentos or 3) - 1, trabajo.intentos or 0)
+            return marcar_error(db, trabajo, codigo)
         return marcar_error(db, trabajo, "fallo_manejador")
     return marcar_completado(db, trabajo, resultado)
 

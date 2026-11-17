@@ -11,7 +11,7 @@ Entorno de desarrollo de un solo comando (`make up`) para laptop sin GPU.
 | `backend`  | `./backend`           | —                      | 8000           | interna          | FastAPI + Alembic (migraciones al arrancar) |
 | `frontend` | `./frontend`          | —                      | 8080           | interna          | Nginx con proxy `/api/ → backend:8000` |
 | `edge`     | `nginx:1.27-alpine`   | `${HTTP_PORT:-8080}` (HTTP) / `${HTTPS_PORT:-18443}` (HTTPS) | 8080 / 8443 | interna | Borde TLS: redirige HTTP→HTTPS y añade cabeceras de seguridad |
-| `ia`       | `./ia`                | —                      | 8002           | interna          | FastAPI, sin modelos todavía |
+| `ia`       | `./ia`                | —                      | 8002           | interna          | Cadena de inferencia real; pesos en `${IA_MODELOS_DIR}` montado de solo lectura |
 
 IA y la base de datos no exponen puertos al host: solo son accesibles dentro de la red `optimus-thy-net`.
 

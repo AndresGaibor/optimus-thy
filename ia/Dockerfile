@@ -1,5 +1,10 @@
 FROM python:3.12-slim
 
+# El stack de inferencia (torch, tensorflow, ultralytics, timm) pesa ~2 GB:
+# solo entra en la imagen cuando se pide, para que el build por defecto y el CI
+# sigan siendo ligeros. Los pesos nunca se copian aquí: se montan en /modelos.
+ARG INSTALAR_MODELOS=false
+
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1
@@ -7,10 +12,12 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 
 COPY pyproject.toml ./
-RUN pip install --upgrade pip \
- && pip install fastapi 'uvicorn[standard]'
-
 COPY app ./app
+COPY requirements-modelos.txt ./
+
+RUN pip install --upgrade pip \
+ && pip install . \
+ && if [ "$INSTALAR_MODELOS" = "true" ]; then pip install -r requirements-modelos.txt; fi
 
 # Usuario no root.
 RUN useradd --create-home --uid 1000 app

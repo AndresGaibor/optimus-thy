@@ -775,6 +775,427 @@
         }
       }
     },
+    "/casos/{caso_id}/imagenes": {
+      "post": {
+        "tags": [
+          "imagenes"
+        ],
+        "summary": "Cargar Imagen",
+        "description": "Carga una ecografía del caso y guarda una copia sin metadatos.",
+        "operationId": "cargar_imagen_casos__caso_id__imagenes_post",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "caso_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Caso Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_cargar_imagen_casos__caso_id__imagenes_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "imagenes"
+        ],
+        "summary": "Listar Imagenes",
+        "description": "Lista las ecografías del caso, cada una con su enlace firmado.",
+        "operationId": "listar_imagenes_casos__caso_id__imagenes_get",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "caso_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Caso Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/casos/{caso_id}/consentimientos": {
+      "get": {
+        "tags": [
+          "consentimientos"
+        ],
+        "summary": "Listar Consentimientos",
+        "operationId": "listar_consentimientos_casos__caso_id__consentimientos_get",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "caso_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Caso Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "consentimientos"
+        ],
+        "summary": "Crear Consentimiento",
+        "operationId": "crear_consentimiento_casos__caso_id__consentimientos_post",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "caso_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Caso Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CrearConsentimientoRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/casos/{caso_id}/consentimientos/{consentimiento_id}/revocar": {
+      "post": {
+        "tags": [
+          "consentimientos"
+        ],
+        "summary": "Revocar Consentimiento",
+        "description": "Retiro del consentimiento: efecto inmediato, sin paso de aprobación.",
+        "operationId": "revocar_consentimiento_casos__caso_id__consentimientos__consentimiento_id__revocar_post",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "caso_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Caso Id"
+            }
+          },
+          {
+            "name": "consentimiento_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Consentimiento Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/casos/{caso_id}/inferencias": {
+      "get": {
+        "tags": [
+          "resultados"
+        ],
+        "summary": "Listar Inferencias",
+        "description": "Inferencias del caso, de la más reciente a la más antigua.",
+        "operationId": "listar_inferencias_casos__caso_id__inferencias_get",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "caso_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Caso Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/modelos-ia": {
+      "get": {
+        "tags": [
+          "modelos-ia"
+        ],
+        "summary": "Listar Modelos",
+        "operationId": "listar_modelos_modelos_ia_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ModeloOut"
+                  },
+                  "type": "array",
+                  "title": "Response Listar Modelos Modelos Ia Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "modelos-ia"
+        ],
+        "summary": "Cargar Modelo",
+        "operationId": "cargar_modelo_modelos_ia_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_cargar_modelo_modelos_ia_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModeloOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
+      }
+    },
+    "/modelos-ia/{id}/activar": {
+      "post": {
+        "tags": [
+          "modelos-ia"
+        ],
+        "summary": "Activar Modelo",
+        "operationId": "activar_modelo_modelos_ia__id__activar_post",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModeloOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/auth/login": {
       "post": {
         "tags": [
@@ -899,6 +1320,84 @@
   },
   "components": {
     "schemas": {
+      "Body_cargar_imagen_casos__caso_id__imagenes_post": {
+        "properties": {
+          "archivo": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "Archivo",
+            "description": "Ecografía en PNG o JPEG"
+          }
+        },
+        "type": "object",
+        "required": [
+          "archivo"
+        ],
+        "title": "Body_cargar_imagen_casos__caso_id__imagenes_post"
+      },
+      "Body_cargar_modelo_modelos_ia_post": {
+        "properties": {
+          "archivo": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "Archivo"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          }
+        },
+        "type": "object",
+        "required": [
+          "archivo",
+          "nombre",
+          "version"
+        ],
+        "title": "Body_cargar_modelo_modelos_ia_post"
+      },
+      "CrearConsentimientoRequest": {
+        "properties": {
+          "base_legal": {
+            "type": "string",
+            "enum": [
+              "consentimiento",
+              "atencion_de_salud",
+              "investigacion_con_anonimizacion"
+            ],
+            "title": "Base Legal"
+          },
+          "version_texto": {
+            "type": "string",
+            "maxLength": 32,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9._-]+$",
+            "title": "Version Texto"
+          },
+          "otorgado_en": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Otorgado En"
+          }
+        },
+        "type": "object",
+        "required": [
+          "base_legal",
+          "version_texto"
+        ],
+        "title": "CrearConsentimientoRequest",
+        "description": "Finalidad y versión del texto firmado; nunca contenido clínico."
+      },
       "CrearPacienteRequest": {
         "properties": {
           "nombres": {
@@ -1048,6 +1547,58 @@
           "password"
         ],
         "title": "LoginRequest"
+      },
+      "ModeloOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "hash_pesos": {
+            "type": "string",
+            "title": "Hash Pesos"
+          },
+          "ruta_pesos": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ruta Pesos"
+          },
+          "activo": {
+            "type": "boolean",
+            "title": "Activo"
+          },
+          "creado_en": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Creado En"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "nombre",
+          "version",
+          "hash_pesos",
+          "ruta_pesos",
+          "activo",
+          "creado_en"
+        ],
+        "title": "ModeloOut"
       },
       "PacienteOut": {
         "properties": {

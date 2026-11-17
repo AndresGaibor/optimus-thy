@@ -59,6 +59,9 @@ services:
       S3_BUCKET: ${S3_BUCKET:-optimus}
       PII_ENCRYPTION_KEY: ${PII_ENCRYPTION_KEY:-cambiar-en-local-no-usar-fuera-de-desarrollo}
       IA_URL: ${IA_URL:-http://ia:8002}
+      MODELOS_DIR: /modelos
+    volumes:
+      - ${IA_MODELOS_DIR:-./var/modelos}:/modelos
     ports:
       - "127.0.0.1:8000:8000"
     expose:
@@ -91,10 +94,15 @@ services:
   ia:
     build:
       context: ./ia
+      args:
+        INSTALAR_MODELOS: ${IA_INSTALAR_MODELOS:-false}
     restart: unless-stopped
     environment:
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       ENVIRONMENT: ${ENVIRONMENT:-development}
+      IA_MODELOS_DIR: /modelos
+    volumes:
+      - ${IA_MODELOS_DIR:-./var/modelos}:/modelos:ro
     expose:
       - "8002"
     depends_on:

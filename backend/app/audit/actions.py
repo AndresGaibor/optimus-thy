@@ -19,6 +19,7 @@ class AuditAction(StrEnum):
     RECORD_READ = "RECORD_READ"
     DOCUMENT_READ = "DOCUMENT_READ"
     IMAGE_READ = "IMAGE_READ"
+    INFERENCE_READ = "INFERENCE_READ"
 
     # Altas del registro clínico
     PATIENT_CREATE = "PATIENT_CREATE"
@@ -27,6 +28,10 @@ class AuditAction(StrEnum):
     # Cargas (RF-AUD-03)
     DOCUMENT_UPLOAD = "DOCUMENT_UPLOAD"
     IMAGE_UPLOAD = "IMAGE_UPLOAD"
+
+    # Consentimiento (HU-034)
+    CONSENT_CREATE = "CONSENT_CREATE"
+    CONSENT_REVOKE = "CONSENT_REVOKE"
 
     # Procesamiento (RF-AUD-04)
     INFERENCE_REQUEST = "INFERENCE_REQUEST"
@@ -71,6 +76,7 @@ class AuditObjectType(StrEnum):
     DOCUMENT = "DOCUMENT"
     IMAGE = "IMAGE"
     INFERENCE = "INFERENCE"
+    CONSENT = "CONSENT"
     USER = "USER"
     ROLE = "ROLE"
     SYSTEM = "SYSTEM"
