@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { within } from 'storybook/test';
+import { expect, userEvent, within } from 'storybook/test';
 import { crearHandlers } from '../../mocks/handlers';
 import { AuditoriaPage } from './AuditoriaPage';
 
@@ -19,7 +19,24 @@ export const ConEventos: Story = {
   parameters: { msw: { handlers: crearHandlers('ok') } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await canvas.findByText('AUTH.SESSION_START');
+    await canvas.findByRole('table', { name: 'Eventos de auditoría' }, { timeout: 8000 });
+    await expect(canvas.getAllByText('AUTH.SESSION_START').length).toBeGreaterThan(0);
+    await expect(canvas.getAllByText('Sesión iniciada').length).toBeGreaterThan(0);
+    await expect(canvas.getByRole('columnheader', { name: /fecha y hora/i })).toBeInTheDocument();
+    await expect(canvas.getByText(/en UTC/i)).toBeInTheDocument();
+  },
+};
+
+export const ConDetalleAbierto: Story = {
+  parameters: { msw: { handlers: crearHandlers('ok') } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByRole('table', { name: 'Eventos de auditoría' }, { timeout: 8000 });
+    const [primero] = canvas.getAllByRole('button', { name: /ver detalle/i });
+    if (!primero) throw new Error('sin eventos');
+    await userEvent.click(primero);
+    await expect(canvas.getByText('role_code')).toBeVisible();
+    await expect(canvas.getByRole('button', { name: /ocultar/i })).toBeVisible();
   },
 };
 
