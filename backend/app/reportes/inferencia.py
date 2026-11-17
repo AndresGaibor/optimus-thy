@@ -29,6 +29,17 @@ AVISO = (
     "La decisión clínica es del profesional tratante."
 )
 LEYENDA_NORMAL = "«Normal» significa «sin nódulo detectado»."
+ETIQUETAS = {
+    "maligno": "Maligno",
+    "benigno": "Benigno",
+    "sin_nodulo": "Normal (sin nódulo detectado)",
+}
+
+
+def _etiqueta(valor: str | None) -> str:
+    if valor is None:
+        return "Sin clasificar"
+    return ETIQUETAS.get(valor, valor)
 
 
 def _estilos() -> dict[str, ParagraphStyle]:
@@ -160,7 +171,7 @@ def construir_reporte(
         Paragraph("Resultado", estilos["seccion"]),
         _tabla(
             [
-                ["Resultado", _texto(inferencia.resultado)],
+                ["Resultado", _etiqueta(inferencia.resultado)],
                 ["Confianza", _porcentaje(inferencia.confianza)],
                 ["Nódulos", str(len(inferencia.nodulos))],
                 ["Huella de modelos", _texto(inferencia.huella_modelos)],
@@ -179,7 +190,7 @@ def construir_reporte(
             )
             return [
                 str(nodulo.indice),
-                _texto(nodulo.clase),
+                _etiqueta(nodulo.clase),
                 _porcentaje(nodulo.confianza),
                 _porcentaje(nodulo.probabilidad_benigno),
                 _porcentaje(nodulo.probabilidad_maligno),
