@@ -88,7 +88,7 @@ curl -sS -o /dev/null -w '%{http_code}\n' https://tiroides2.andresgaibor.com/log
 - Lo ejecuta `optimus-thy-deploy.timer` (systemd de usuario, cada 3 minutos, `Persistent=true`).
 - Si `HEAD` ya es `origin/main`, no hace nada; solo despliega merges.
 - Aborta sin tocar nada si hay archivos modificados que no coincidan con `main`: no pisa trabajo local.
-- Reconstruye el frontend solo si cambió `frontend/` y el backend solo si cambió `backend/` o `docker-compose.yml`.
+- Reconstruye el frontend solo si cambió `frontend/` y el backend solo si cambió `backend/` o `docker-compose.yml`; antes de arrancar el backend nuevo aplica `alembic upgrade head`.
 - Verifica `/health` en `127.0.0.1:8000`, `/` = `200` y `/api/auth/me` = `401` antes de dar el despliegue por bueno.
 
 ```bash

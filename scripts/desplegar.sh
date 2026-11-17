@@ -39,7 +39,10 @@ fi
 
 if printf '%s\n' "$cambiados" | grep -qE '^(backend/|docker-compose\.yml)'; then
   log "reconstruyendo el backend"
-  COMPOSE_NETWORK="$COMPOSE_NETWORK" docker compose up -d --build --no-deps backend
+  COMPOSE_NETWORK="$COMPOSE_NETWORK" docker compose build backend
+  log "aplicando migraciones"
+  COMPOSE_NETWORK="$COMPOSE_NETWORK" docker compose run --rm --no-deps backend alembic upgrade head
+  COMPOSE_NETWORK="$COMPOSE_NETWORK" docker compose up -d --no-deps backend
 fi
 
 for _ in $(seq 1 30); do
