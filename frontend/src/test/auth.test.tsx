@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { describe, expect, it, beforeEach, vi } from 'vitest';
@@ -129,5 +129,35 @@ describe('auth', () => {
     });
     montarApp('/administrador');
     expect(await screen.findByRole('heading', { name: 'Acceso denegado' })).toBeInTheDocument();
+  });
+
+  it('avisa antes de que la sesión expire y permite continuar', async () => {
+    const user = userEvent.setup();
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: async () => ({ ...mockSessionMedico, segundos_para_expirar: 30 }),
+    });
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: async () => ({ ...mockSessionMedico, segundos_para_expirar: 900 }),
+    });
+    montarApp('/medico');
+    expect(
+      await screen.findByRole('dialog', { name: 'Tu sesión está por expirar' }),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /continuar sesión/i }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(fetchMock.mock.calls[1]?.[0]).toBe('/api/auth/me');
+    expect(await screen.findByRole('heading', { name: 'Pacientes' })).toBeInTheDocument();
+  });
+
+  it('con la sesión expirada pide iniciar sesión', async () => {
+    fetchMock.mockResolvedValueOnce({ ok: false, status: 401 });
+    montarApp('/medico');
+    expect(await screen.findByRole('heading', { name: 'Iniciar sesión' })).toBeInTheDocument();
   });
 });
