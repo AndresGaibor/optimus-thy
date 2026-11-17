@@ -17,7 +17,7 @@ import {
 import { matrizRolesOk } from '../../mocks/handlers';
 const permisoFaltante = matrizRolesOk.permisos.find(
   (permiso) =>
-    !matrizRolesOk.roles.find((rol) => rol.nombre === 'medico')?.permisos.includes(permiso.codigo),
+    !matrizRolesOk.roles.find((rol) => rol.nombre === 'doctor')?.permisos.includes(permiso.codigo),
 );
 
 function Pagina({ descripcion, children }: { descripcion: string; children: ReactNode }) {
@@ -77,7 +77,9 @@ export const MatrizDePermisos: Story = {
     await expect(
       canvas.getByRole('region', { name: 'Matriz de permisos de demostración' }),
     ).toBeVisible();
-    await expect(canvas.getByText('admin')).toBeVisible();
+    await expect(canvas.getByText('doctor')).toBeVisible();
+    await expect(canvas.getByText('researcher')).toBeVisible();
+    await expect(canvas.queryByText('admin')).toBeNull();
   },
 };
 
