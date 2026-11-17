@@ -16,6 +16,7 @@ from app.db import session_dep
 from app.jobs.queue import encolar, reintentar
 from app.models.imagenes import Imagen
 from app.models.trabajos import Trabajo
+from app.security.limites import limitar_inferencia
 
 router = APIRouter(tags=["trabajos"])
 
@@ -108,8 +109,10 @@ def crear_trabajo(
     db: Annotated[Session, Depends(session_dep)],
     actual: Annotated[SesionActual, Depends(requiere_permiso("inferencia.ejecutar"))],
 ) -> dict[str, Any] | JSONResponse:
-    if body.tipo == "inferencia" and _consentimiento_del_payload(db, body.payload) is False:
-        return _sin_consentimiento(request)
+    if body.tipo == "inferencia":
+        limitar_inferencia(request, actual)
+        if _consentimiento_del_payload(db, body.payload) is False:
+            return _sin_consentimiento(request)
     trabajo = encolar(db, body.tipo, body.payload, creado_por=actual.usuario.id)
     return {"id": str(trabajo.id), "estado": trabajo.estado}
 
