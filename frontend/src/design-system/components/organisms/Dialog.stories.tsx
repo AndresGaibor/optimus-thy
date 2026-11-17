@@ -62,3 +62,13 @@ export const SinDescripcion: Story = {
   args: { defaultOpen: true, title: 'Confirmación visual' },
 };
 export const Playground: Story = {};
+
+export const PanelLateral: Story = {
+  render: (args) => <StatefulDialog {...args} />,
+  args: {
+    defaultOpen: true,
+    side: 'right',
+    title: 'Detalle del evento',
+    description: 'Panel lateral para inspeccionar un registro sin dejar la lista.',
+  },
+};

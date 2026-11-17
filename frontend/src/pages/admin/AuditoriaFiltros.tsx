@@ -1,7 +1,7 @@
-import { Button } from '../../design-system/components/atoms/Button';
 import { Input } from '../../design-system/components/atoms/Input';
 import { Label } from '../../design-system/components/atoms/Label';
 import { Select } from '../../design-system/components/atoms/Select';
+import { FilterBar } from '../../design-system/components/molecules/FilterBar';
 import { OPCIONES_EVENTO } from './etiquetas-evento';
 import { RECURSOS_AUDITORIA } from '../../api/auditoria';
 
@@ -39,8 +39,11 @@ export function AuditoriaFiltros({
   const cambiar = (parcial: Partial<FiltrosAuditoria>) => onCambio({ ...filtros, ...parcial });
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+    <FilterBar
+      label="Filtros de la bitácora"
+      {...(hayFiltros ? { onReset: () => onCambio(FILTROS_VACIOS) } : {})}
+    >
+      <div className="grid min-w-0 flex-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
         <div className="flex flex-col gap-1">
           <Label htmlFor="bitacora-usuario">Usuario</Label>
           <Select
@@ -107,16 +110,6 @@ export function AuditoriaFiltros({
           />
         </div>
       </div>
-      <div className="flex flex-wrap items-center gap-3">
-        <p className="text-xs text-muted-foreground">
-          Fechas y horas en UTC. El rango incluye el día final completo.
-        </p>
-        {hayFiltros ? (
-          <Button variant="ghost" size="sm" onClick={() => onCambio(FILTROS_VACIOS)}>
-            Limpiar filtros
-          </Button>
-        ) : null}
-      </div>
-    </div>
+    </FilterBar>
   );
 }

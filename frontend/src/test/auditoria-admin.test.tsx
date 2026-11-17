@@ -1,9 +1,9 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuditoriaPage } from '../pages/admin/AuditoriaPage';
-import { eventosOk, eventosVacios } from '../mocks/auditoria';
+import { eventosOk } from '../mocks/auditoria';
 
 interface FetchMock {
   mock: { calls: unknown[][] };
@@ -26,6 +26,11 @@ function montarApp() {
   );
 }
 
+async function montarConEventos() {
+  montarApp();
+  await screen.findByRole('table', { name: 'Eventos de auditoría' });
+}
+
 describe('auditoría admin', () => {
   let fetchMock: FetchMock;
 
@@ -33,79 +38,66 @@ describe('auditoría admin', () => {
     vi.restoreAllMocks();
     fetchMock = vi.fn(() => Promise.resolve(responderJson(eventosOk))) as unknown as FetchMock;
     (globalThis as unknown as { fetch: typeof fetch }).fetch = fetchMock as unknown as typeof fetch;
-  });
-
-  it('traduce el evento, conserva el código y muestra la hora en una línea', async () => {
     fetchMock.mockResolvedValueOnce(
       responderJson({
-        total: 2,
-        items: [
-          { id: 'u-ana', correo: 'ana@example.test' },
-          { id: 'u-luis', correo: 'luis@example.test' },
-        ],
+        total: 1,
+        items: [{ id: 'u-ana', correo: 'ana@example.test', nombre: 'Ana', activo: true }],
       }),
     );
-    fetchMock.mockResolvedValueOnce(responderJson(eventosOk));
+  });
 
-    montarApp();
+  it('muestra el evento traducido y deja el código técnico para el detalle', async () => {
+    await montarConEventos();
 
-    expect(await screen.findByText('Sesión iniciada')).toBeInTheDocument();
-    expect(screen.getAllByText('AUTH.SESSION_START').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Sesión iniciada').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Consultó una inferencia').length).toBeGreaterThan(0);
+    expect(screen.queryByText('AUTH.SESSION_START')).toBeNull();
 
-    const fechas = await screen.findAllByText(/10 jun 2026/);
+    const fechas = screen.getAllByText(/10 jun 2026/);
     expect(fechas[0]?.closest('td')?.textContent).toContain('14:32:00');
   });
 
-  it('abre el detalle técnico de un evento y lo vuelve a cerrar', async () => {
-    const user = userEvent.setup();
-    fetchMock.mockResolvedValueOnce(responderJson({ total: 0, items: [] }));
-    fetchMock.mockResolvedValueOnce(responderJson(eventosOk));
+  it('abre el detalle en un panel lateral, conserva los filtros y lo cierra con Escape', async () => {
+    const usuario = userEvent.setup();
+    await montarConEventos();
 
-    montarApp();
+    await usuario.selectOptions(screen.getByLabelText('Usuario'), 'u-ana');
 
-    const [primero] = await screen.findAllByRole('button', { name: /ver detalle/i });
-    if (!primero) throw new Error('sin detalle');
-    await user.click(primero);
+    const [primero] = screen.getAllByRole('button', { name: /ver detalle de «sesión iniciada»/i });
+    if (!primero) throw new Error('sin eventos');
+    await usuario.click(primero);
 
-    expect(await screen.findByText('role_code')).toBeInTheDocument();
-    expect(screen.getByText('admin')).toBeInTheDocument();
+    const panel = await screen.findByRole('dialog', { name: /detalle del evento/i });
+    expect(panel).toHaveTextContent('AUTH.SESSION_START');
+    expect(panel).toHaveTextContent('ana@example.test');
+    expect(panel).toHaveTextContent('Rol');
+    expect(screen.getByLabelText('Usuario')).toHaveValue('u-ana');
 
-    await user.click(screen.getByRole('button', { name: /ocultar/i }));
-    expect(screen.queryByText('role_code')).not.toBeInTheDocument();
+    await usuario.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(screen.getByLabelText('Usuario')).toHaveValue('u-ana');
   });
 
-  it('avisa cuando la fecha inicial es posterior a la final y no consulta', async () => {
-    const user = userEvent.setup();
-    fetchMock.mockResolvedValueOnce(responderJson({ total: 0, items: [] }));
+  it('avisa y no muestra la tabla cuando la fecha inicial es posterior a la final', async () => {
+    const usuario = userEvent.setup();
+    await montarConEventos();
 
-    montarApp();
+    await usuario.type(screen.getByLabelText('Desde'), '2026-06-11');
+    await usuario.type(screen.getByLabelText('Hasta'), '2026-06-10');
 
-    await user.type(await screen.findByLabelText('Desde'), '2026-06-11');
-    await user.type(await screen.findByLabelText('Hasta'), '2026-06-10');
-
-    expect(
-      await screen.findByText('La fecha inicial no puede ser posterior a la final.'),
-    ).toBeInTheDocument();
-    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(await screen.findByText(/la fecha inicial no puede ser posterior/i)).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole('table')).toBeNull());
+    expect(screen.getByLabelText('Desde')).toHaveAttribute('aria-invalid', 'true');
   });
 
   it('permite limpiar los filtros aplicados', async () => {
-    const user = userEvent.setup();
-    fetchMock.mockResolvedValueOnce(
-      responderJson({ total: 1, items: [{ id: 'u-ana', correo: 'ana@example.test' }] }),
-    );
-    fetchMock.mockResolvedValue(responderJson(eventosVacios));
+    const usuario = userEvent.setup();
+    await montarConEventos();
 
-    montarApp();
+    await usuario.selectOptions(screen.getByLabelText('Usuario'), 'u-ana');
+    await usuario.click(screen.getByRole('button', { name: /limpiar filtros/i }));
 
-    const usuario = await screen.findByLabelText('Usuario');
-    await screen.findByRole('option', { name: 'ana@example.test' });
-    await user.selectOptions(usuario, 'u-ana');
-
-    const limpiar = await screen.findByRole('button', { name: /limpiar filtros/i });
-    await user.click(limpiar);
-
+    expect(screen.getByLabelText('Usuario')).toHaveValue('');
     expect(screen.queryByRole('button', { name: /limpiar filtros/i })).toBeNull();
   });
 });

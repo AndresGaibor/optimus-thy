@@ -5,7 +5,7 @@ import { useRef, type ReactElement, type ReactNode } from 'react';
 import { cn } from '../../lib/cn';
 
 const dialogContentVariants = cva(
-  'fixed left-1/2 top-1/2 z-50 flex max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 flex-col rounded-panel border border-border bg-surface text-foreground shadow-xl focus:outline-none',
+  'fixed z-50 flex flex-col border border-border bg-surface text-foreground shadow-xl focus:outline-none',
   {
     variants: {
       size: {
@@ -14,8 +14,13 @@ const dialogContentVariants = cva(
         lg: 'max-w-2xl',
         wide: 'max-w-5xl',
       },
+      side: {
+        center:
+          'left-1/2 top-1/2 max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 rounded-panel',
+        right: 'inset-y-0 right-0 h-dvh w-full border-y-0 border-r-0 sm:max-w-md',
+      },
     },
-    defaultVariants: { size: 'default' },
+    defaultVariants: { size: 'default', side: 'center' },
   },
 );
 
@@ -40,8 +45,13 @@ export interface DialogProps extends VariantProps<typeof dialogContentVariants> 
   closeLabel?: string;
   /** Clases adicionales para el contenedor del diálogo. */
   className?: string;
-  /** Ancho del diálogo; por defecto, `default`. */
+  /** Ancho del diálogo; por defecto, `default`. No se aplica con `side="right"`. */
   size?: 'sm' | 'default' | 'lg' | 'wide' | null;
+  /**
+   * Posición del panel: centrado (por defecto) o anclado al lateral derecho a
+   * toda la altura, para inspeccionar un registro sin salir de la página.
+   */
+  side?: 'center' | 'right' | null;
 }
 
 /** Cierra el diálogo; úselo con `asChild` sobre un `Button`. */
@@ -50,6 +60,7 @@ export const DialogClose = DialogPrimitive.Close;
 /**
  * ## Cuándo usarlo
  * Para presentar contenido y acciones que requieren atención antes de volver a la página.
+ * Con `side="right"`, para inspeccionar el detalle de un registro sin perder la tabla, sus filtros y su posición.
  * ## Cuándo no usarlo
  * No lo uses para avisos breves ni para contenido que deba permanecer siempre visible.
  * ## Anatomía
@@ -57,7 +68,7 @@ export const DialogClose = DialogPrimitive.Close;
  * ## Accesibilidad
  * Radix administra el diálogo modal y su nombre mediante el título; el botón de cierre usa `aria-label`. Conserva/restaura el foco y Escape cierra.
  * ## Responsive
- * El ancho es `calc(100% - 2rem)` con máximo dependiente de `size`; la altura se limita al viewport. Se adapta a 360, 768 y 1366 px.
+ * Centrado: ancho `calc(100% - 2rem)` con máximo según `size`. Lateral: a toda la altura, ancho completo hasta `sm` y `max-w-md` desde ahí. Se adapta a 360, 768 y 1366 px.
  */
 export function Dialog({
   open,
@@ -68,6 +79,7 @@ export function Dialog({
 
   description,
   size,
+  side,
 
   children,
   footer,
@@ -98,7 +110,10 @@ export function Dialog({
             event.preventDefault();
             if (restoreFocusRef.current?.isConnected) restoreFocusRef.current.focus();
           }}
-          className={cn(dialogContentVariants({ size }), className)}
+          className={cn(
+            dialogContentVariants({ size: side === 'right' ? null : size, side }),
+            className,
+          )}
           {...(description ? {} : { 'aria-describedby': undefined })}
         >
           <div className="flex items-start justify-between gap-4 border-b border-border px-6 py-4">

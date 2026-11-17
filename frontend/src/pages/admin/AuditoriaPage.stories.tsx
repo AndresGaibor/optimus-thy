@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, userEvent, within } from 'storybook/test';
+import { expect, screen, userEvent, within } from 'storybook/test';
 import { crearHandlers } from '../../mocks/handlers';
 import { AuditoriaPage } from './AuditoriaPage';
 
@@ -20,10 +20,11 @@ export const ConEventos: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await canvas.findByRole('table', { name: 'Eventos de auditoría' }, { timeout: 8000 });
-    await expect(canvas.getAllByText('AUTH.SESSION_START').length).toBeGreaterThan(0);
     await expect(canvas.getAllByText('Sesión iniciada').length).toBeGreaterThan(0);
     await expect(canvas.getByRole('columnheader', { name: /fecha y hora/i })).toBeInTheDocument();
-    await expect(canvas.getByText(/en UTC/i)).toBeInTheDocument();
+    await expect(canvas.getByRole('columnheader', { name: /acciones/i })).toBeInTheDocument();
+    await expect(canvas.getByText(/más reciente primero/i)).toBeInTheDocument();
+    await expect(canvas.queryAllByText('AUTH.SESSION_START')).toHaveLength(0);
   },
 };
 
@@ -32,11 +33,13 @@ export const ConDetalleAbierto: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await canvas.findByRole('table', { name: 'Eventos de auditoría' }, { timeout: 8000 });
-    const [primero] = canvas.getAllByRole('button', { name: /ver detalle/i });
+    const [primero] = canvas.getAllByRole('button', { name: /ver detalle de «sesión iniciada»/i });
     if (!primero) throw new Error('sin eventos');
     await userEvent.click(primero);
-    await expect(canvas.getByText('role_code')).toBeVisible();
-    await expect(canvas.getByRole('button', { name: /ocultar/i })).toBeVisible();
+    const panel = await screen.findByRole('dialog', { name: /detalle del evento/i });
+    await expect(within(panel).getByText('AUTH.SESSION_START')).toBeVisible();
+    await expect(within(panel).getByText('Rol')).toBeVisible();
+    await expect(within(panel).getByText('10 jun 2026, 14:32:00')).toBeVisible();
   },
 };
 

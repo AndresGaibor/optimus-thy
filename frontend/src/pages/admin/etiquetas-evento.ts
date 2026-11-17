@@ -79,11 +79,7 @@ const CAMPOS: Record<string, string> = {
   destino: 'Destino',
 };
 
-/** Resumen legible de los detalles: `role_code=admin` → «Rol: admin». */
-export function resumenDetalles(detalles: Record<string, unknown> | null): string | null {
-  if (!detalles) return null;
-  const partes = Object.entries(detalles).map(
-    ([clave, valor]) => `${CAMPOS[clave] ?? clave}: ${String(valor)}`,
-  );
-  return partes.length > 0 ? partes.join(' · ') : null;
+/** Nombre legible de un metadato; si no está en el catálogo, la clave tal cual. */
+export function nombreCampo(clave: string): string {
+  return CAMPOS[clave] ?? clave;
 }

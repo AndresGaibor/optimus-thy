@@ -4,10 +4,12 @@ import { Callout } from '../../design-system/components/molecules/Callout';
 import { EmptyState } from '../../design-system/components/molecules/EmptyState';
 import { PageHeader } from '../../design-system/components/molecules/PageHeader';
 import { Pagination } from '../../design-system/components/molecules/Pagination';
+import { Dialog } from '../../design-system/components/organisms/Dialog';
 import { listarBitacora, type EventoAuditoria } from '../../api/auditoria';
 import { listarUsuarios, type Usuario } from '../../api/usuarios';
 import { AuditoriaFiltros, FILTROS_VACIOS, type FiltrosAuditoria } from './AuditoriaFiltros';
-import { AuditoriaTabla } from './AuditoriaTabla';
+import { AuditoriaTabla, FORMATO_FECHA } from './AuditoriaTabla';
+import { etiquetaEvento, nombreCampo } from './etiquetas-evento';
 
 const LIMITE_POR_PAGINA = 50;
 
@@ -17,7 +19,7 @@ export function AuditoriaPage() {
   const [desplazamiento, setDesplazamiento] = useState(0);
   const [eventos, setEventos] = useState<EventoAuditoria[]>([]);
   const [total, setTotal] = useState(0);
-  const [expandido, setExpandido] = useState<number | null>(null);
+  const [detalle, setDetalle] = useState<EventoAuditoria | null>(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -66,7 +68,7 @@ export function AuditoriaPage() {
   const cambiarFiltros = useCallback((siguientes: FiltrosAuditoria) => {
     setFiltros(siguientes);
     setDesplazamiento(0);
-    setExpandido(null);
+    setDetalle(null);
   }, []);
 
   const correos = new Map(usuarios.map((fila) => [fila.id, fila.correo]));
@@ -106,12 +108,10 @@ export function AuditoriaPage() {
           description="Ajusta los filtros para consultar otro período o usuario."
         />
       ) : !rangoInvalido ? (
-        <AuditoriaTabla
-          eventos={eventos}
-          correos={correos}
-          expandido={expandido}
-          onExpandir={(id) => setExpandido((actual) => (actual === id ? null : id))}
-        />
+        <>
+          <p className="text-sm text-muted-foreground">Más reciente primero · Horas en UTC</p>
+          <AuditoriaTabla eventos={eventos} correos={correos} onVerDetalle={setDetalle} />
+        </>
       ) : null}
 
       {!rangoInvalido ? (
@@ -127,6 +127,50 @@ export function AuditoriaPage() {
       <p className="text-xs text-muted-foreground">
         La bitácora no se edita ni se borra desde la aplicación; cada consulta queda registrada.
       </p>
+
+      <Dialog
+        open={detalle !== null}
+        onOpenChange={(abierto) => {
+          if (!abierto) setDetalle(null);
+        }}
+        side="right"
+        title="Detalle del evento"
+        {...(detalle ? { description: etiquetaEvento(detalle.accion).titulo } : {})}
+      >
+        {detalle ? <DetalleEvento evento={detalle} correos={correos} /> : null}
+      </Dialog>
     </section>
+  );
+}
+
+interface DetalleEventoProps {
+  evento: EventoAuditoria;
+  correos: Map<string, string>;
+}
+
+function DetalleEvento({ evento, correos }: DetalleEventoProps) {
+  const etiqueta = etiquetaEvento(evento.accion);
+  const usuario = evento.usuario_id ? (correos.get(evento.usuario_id) ?? evento.usuario_id) : '—';
+  const campos: [string, string][] = [
+    ['Fecha y hora (UTC)', FORMATO_FECHA.format(new Date(evento.ocurrido_en))],
+    ['Usuario', usuario],
+    ['Código', etiqueta.codigo],
+    ['Módulo', etiqueta.modulo ?? '—'],
+    ['Recurso', `${evento.entidad}${evento.entidad_id ? ` · ${evento.entidad_id}` : ''}`],
+    ['Origen registrado', evento.direccion_ip ?? '—'],
+    ...Object.entries(evento.detalles ?? {}).map(
+      ([clave, valor]) => [nombreCampo(clave), String(valor)] as [string, string],
+    ),
+  ];
+
+  return (
+    <dl className="divide-y divide-border text-sm">
+      {campos.map(([nombre, valor], indice) => (
+        <div key={indice} className="flex flex-col gap-1 py-2 sm:flex-row sm:gap-3">
+          <dt className="text-muted-foreground sm:w-40 sm:shrink-0">{nombre}</dt>
+          <dd className="break-all text-foreground">{valor}</dd>
+        </div>
+      ))}
+    </dl>
   );
 }
