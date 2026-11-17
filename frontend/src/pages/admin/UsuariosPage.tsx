@@ -368,6 +368,7 @@ export function UsuariosPage() {
     if (usuarios.length === 0) {
       return (
         <EmptyState
+          as="h2"
           title="Sin usuarios"
           description="No hay usuarios que coincidan con los filtros aplicados."
         />

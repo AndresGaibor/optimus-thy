@@ -52,7 +52,7 @@ const preview: Preview = {
   },
   tags: ['autodocs'],
   parameters: {
-    a11y: { test: 'todo' },
+    a11y: { test: 'error' },
     layout: 'fullscreen',
     viewport: {
       options: {

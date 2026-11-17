@@ -152,6 +152,7 @@ export function AuditoriaPage() {
         <Spinner size="lg" label="Cargando bitácora" />
       ) : eventos.length === 0 ? (
         <EmptyState
+          as="h2"
           title="Sin eventos"
           description="Ajusta los filtros para consultar otro período o usuario."
         />

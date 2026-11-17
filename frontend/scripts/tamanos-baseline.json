@@ -1,8 +1,8 @@
 {
   "src/design-system/components/organisms/SidebarLayout.tsx": 275,
-  "src/pages/admin/RolesPage.tsx": 246,
-  "src/pages/admin/UsuariosPage.tsx": 684,
-  "src/pages/medico/PacientesPage.tsx": 464,
+  "src/pages/admin/RolesPage.tsx": 250,
+  "src/pages/admin/UsuariosPage.tsx": 685,
+  "src/pages/medico/PacientesPage.tsx": 467,
   "src/screens/doctor/ClinicalRecordsScreen.tsx": 353,
   "src/screens/doctor/PatientDetailScreen.tsx": 335,
   "src/screens/researcher/Datasets.tsx": 276,

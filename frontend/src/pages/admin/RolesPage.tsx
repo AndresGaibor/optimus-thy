@@ -149,7 +149,11 @@ export function RolesPage() {
 
     if (!matriz || matriz.roles.length === 0) {
       return (
-        <EmptyState title="Sin roles" description="No hay roles configurados en el sistema." />
+        <EmptyState
+          as="h2"
+          title="Sin roles"
+          description="No hay roles configurados en el sistema."
+        />
       );
     }
 

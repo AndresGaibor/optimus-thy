@@ -4,7 +4,7 @@ import { SidebarLayout } from '../design-system/components/organisms/SidebarLayo
 
 function ShellGuia() {
   return (
-    <main className="min-h-screen bg-background p-6 text-foreground sm:p-8">
+    <div className="min-h-screen bg-background p-6 text-foreground sm:p-8">
       <div className="mx-auto max-w-(--content-max-width) space-y-8">
         <header className="space-y-2">
           <p className="text-sm font-semibold uppercase tracking-wide text-brand">Shell</p>
@@ -45,7 +45,7 @@ function ShellGuia() {
           </div>
         </section>
       </div>
-    </main>
+    </div>
   );
 }
 
