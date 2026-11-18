@@ -2056,6 +2056,64 @@
         }
       }
     },
+    "/plantillas-correo/{clave}/preview": {
+      "post": {
+        "tags": [
+          "correo"
+        ],
+        "summary": "Previsualizar Plantilla",
+        "description": "Muestra el correo como llegará, con datos sintéticos; no guarda ni envía.",
+        "operationId": "previsualizar_plantilla_plantillas_correo__clave__preview_post",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "clave",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Clave"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlantillaIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrevisualizacionOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/plantillas-correo/{clave}/restaurar": {
       "post": {
         "tags": [
@@ -2711,17 +2769,45 @@
             "minLength": 1,
             "title": "Asunto"
           },
-          "html": {
+          "modo": {
             "type": "string",
-            "maxLength": 20000,
-            "minLength": 1,
+            "enum": [
+              "visual",
+              "html"
+            ],
+            "title": "Modo",
+            "default": "html"
+          },
+          "campos": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Campos"
+          },
+          "html": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20000
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Html"
           }
         },
         "type": "object",
         "required": [
-          "asunto",
-          "html"
+          "asunto"
         ],
         "title": "PlantillaIn"
       },
@@ -2738,6 +2824,21 @@
           "html": {
             "type": "string",
             "title": "Html"
+          },
+          "modo": {
+            "type": "string",
+            "enum": [
+              "visual",
+              "html"
+            ],
+            "title": "Modo"
+          },
+          "campos": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Campos"
           },
           "variables": {
             "items": {
@@ -2756,10 +2857,30 @@
           "clave",
           "asunto",
           "html",
+          "modo",
+          "campos",
           "variables",
           "de_fabrica"
         ],
         "title": "PlantillaOut"
+      },
+      "PrevisualizacionOut": {
+        "properties": {
+          "asunto": {
+            "type": "string",
+            "title": "Asunto"
+          },
+          "html": {
+            "type": "string",
+            "title": "Html"
+          }
+        },
+        "type": "object",
+        "required": [
+          "asunto",
+          "html"
+        ],
+        "title": "PrevisualizacionOut"
       },
       "PruebaOut": {
         "properties": {

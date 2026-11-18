@@ -62,3 +62,15 @@ export async function restaurarPlantilla(): Promise<PlantillaCorreo> {
   if (error || !data) throw fallo(error, 'No se pudo restaurar la plantilla.');
   return data;
 }
+
+/** Correo tal como llegará, con datos de ejemplo; no guarda ni envía. */
+export async function previsualizarPlantilla(
+  entrada: EntradaPlantilla,
+): Promise<{ asunto: string; html: string }> {
+  const { data, error } = await client.POST('/plantillas-correo/{clave}/preview', {
+    params: { path: { clave: 'recuperacion' } },
+    body: entrada,
+  });
+  if (error || !data) throw fallo(error, 'No se pudo generar la vista previa.');
+  return data;
+}

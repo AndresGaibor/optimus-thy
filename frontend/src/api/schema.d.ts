@@ -609,6 +609,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/plantillas-correo/{clave}/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Previsualizar Plantilla
+         * @description Muestra el correo como llegará, con datos sintéticos; no guarda ni envía.
+         */
+        post: operations["previsualizar_plantilla_plantillas_correo__clave__preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/plantillas-correo/{clave}/restaurar": {
         parameters: {
             query?: never;
@@ -864,8 +884,18 @@ export interface components {
         PlantillaIn: {
             /** Asunto */
             asunto: string;
+            /**
+             * Modo
+             * @default html
+             * @enum {string}
+             */
+            modo: "visual" | "html";
+            /** Campos */
+            campos?: {
+                [key: string]: string;
+            } | null;
             /** Html */
-            html: string;
+            html?: string | null;
         };
         /** PlantillaOut */
         PlantillaOut: {
@@ -875,10 +905,26 @@ export interface components {
             asunto: string;
             /** Html */
             html: string;
+            /**
+             * Modo
+             * @enum {string}
+             */
+            modo: "visual" | "html";
+            /** Campos */
+            campos: {
+                [key: string]: string;
+            };
             /** Variables */
             variables: string[];
             /** De Fabrica */
             de_fabrica: boolean;
+        };
+        /** PrevisualizacionOut */
+        PrevisualizacionOut: {
+            /** Asunto */
+            asunto: string;
+            /** Html */
+            html: string;
         };
         /** PruebaOut */
         PruebaOut: {
@@ -2173,6 +2219,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PlantillaOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    previsualizar_plantilla_plantillas_correo__clave__preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                clave: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlantillaIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PrevisualizacionOut"];
                 };
             };
             /** @description Validation Error */
