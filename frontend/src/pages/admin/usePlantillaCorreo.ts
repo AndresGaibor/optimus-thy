@@ -1,11 +1,13 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   guardarPlantilla,
   previsualizarPlantilla,
+  leerPlantilla,
   restaurarPlantilla,
   type PlantillaCorreo,
 } from '../../api/correo';
 import type { MensajeCorreo } from './CorreoServidorForm';
+import { CAMPOS } from './plantilla-marcadores';
 
 /** Espera antes de pedir la vista previa mientras se escribe, en milisegundos. */
 const REBOTE_VISTA = 350;
@@ -38,6 +40,10 @@ export function usePlantillaCorreo() {
     setIniciado(true);
   }, []);
 
+  const cargarPlantilla = useCallback(async () => {
+    aplicar(await leerPlantilla());
+  }, [aplicar]);
+
   // La vista previa la compone el servidor: es el mismo HTML que se envía.
   useEffect(() => {
     if (!iniciado) return;
@@ -59,6 +65,16 @@ export function usePlantillaCorreo() {
       clearTimeout(temporizador);
     };
   }, [iniciado, asunto, modo, campos, html]);
+
+  /** Hay cambios sin guardar si el borrador difiere de lo que está en el servidor. */
+  const sinGuardar = useMemo(() => {
+    if (!plantilla) return false;
+    if (plantilla.asunto !== asunto || plantilla.modo !== modo) return true;
+    if (modo === 'html') return plantilla.html !== html;
+    return CAMPOS.some(
+      (campo) => (plantilla.campos?.[campo.clave] ?? '') !== (campos[campo.clave] ?? ''),
+    );
+  }, [plantilla, asunto, modo, html, campos]);
 
   const editarCampo = (clave: string, valor: string) => {
     setCampos((actual) => ({ ...actual, [clave]: valor }));
@@ -95,6 +111,7 @@ export function usePlantillaCorreo() {
 
   return {
     plantilla,
+    sinGuardar,
     asunto,
     modo,
     campos,
@@ -104,6 +121,7 @@ export function usePlantillaCorreo() {
     mensaje,
     guardando,
     aplicar,
+    cargarPlantilla,
     setAsunto,
     setModo,
     setHtml,

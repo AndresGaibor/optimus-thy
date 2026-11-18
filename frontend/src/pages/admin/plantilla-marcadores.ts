@@ -12,14 +12,32 @@ export const VARIABLES = [
 
 export const VARIABLES_HTML = VARIABLES.map((fila) => fila.clave);
 
+/** Un campo del correo: qué dice y qué marcadores admite. */
+export interface CampoPlantilla {
+  clave: string;
+  etiqueta: string;
+  ayuda: string;
+  filas: number;
+  variables: string[];
+}
+
+/** El asunto se edita como un campo más, y admite el nombre de quien lo recibe. */
+export const ASUNTO_CAMPO: CampoPlantilla = {
+  clave: 'asunto',
+  etiqueta: 'Asunto',
+  ayuda: 'Lo que se lee en la bandeja antes de abrir el correo.',
+  filas: 0,
+  variables: ['nombre'],
+};
+
 /** Campos que componen el correo, en el orden en que se leen. */
-export const CAMPOS = [
+export const CAMPOS: CampoPlantilla[] = [
   {
     clave: 'titulo',
     etiqueta: 'Encabezado',
     ayuda: 'El título grande del correo.',
     filas: 0,
-    variables: [] as string[],
+    variables: [],
   },
   {
     clave: 'mensaje',

@@ -1933,7 +1933,7 @@
           "correo"
         ],
         "summary": "Probar Configuracion",
-        "description": "Envía un correo de prueba a la cuenta del administrador que lo pide.",
+        "description": "Envía a la cuenta del administrador la plantilla vigente, con su diseño.",
         "operationId": "probar_configuracion_configuracion_correo_probar_post",
         "responses": {
           "200": {
@@ -2322,6 +2322,29 @@
           "tiene_password": {
             "type": "boolean",
             "title": "Tiene Password"
+          },
+          "ultima_prueba_en": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ultima Prueba En"
+          },
+          "ultima_prueba_ok": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ultima Prueba Ok"
           }
         },
         "type": "object",
@@ -2333,7 +2356,9 @@
           "remitente",
           "remitente_nombre",
           "activo",
-          "tiene_password"
+          "tiene_password",
+          "ultima_prueba_en",
+          "ultima_prueba_ok"
         ],
         "title": "ConfiguracionOut"
       },

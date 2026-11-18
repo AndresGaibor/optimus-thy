@@ -1,15 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
-import {
-  guardarConfiguracion,
-  leerConfiguracion,
-  leerPlantilla,
-  probarEnvio,
-  type ConfiguracionCorreo,
-} from '../../api/correo';
-import type { MensajeCorreo } from './CorreoServidorForm';
+import { probarEnvio } from '../../api/correo';
 import { usePlantillaCorreo } from './usePlantillaCorreo';
-
-const PRESET_GMAIL = { host: 'smtp.gmail.com', puerto: 587, seguridad: 'starttls' as const };
+import { useServidorCorreo } from './useServidorCorreo';
 
 function textoDe(fallo: unknown, porDefecto: string): string {
   return fallo instanceof Error ? fallo.message : porDefecto;
@@ -17,104 +9,64 @@ function textoDe(fallo: unknown, porDefecto: string): string {
 
 /** Estado y acciones de la administración del correo: servidor y plantilla. */
 export function useCorreo() {
+  const servidor = useServidorCorreo();
   const plantilla = usePlantillaCorreo();
-  const [configuracion, setConfiguracion] = useState<ConfiguracionCorreo | null>(null);
-  const [preset, setPreset] = useState<'gmail' | 'otro'>('gmail');
-  const [password, setPassword] = useState('');
-  const [mensaje, setMensaje] = useState<MensajeCorreo | null>(null);
   const [cargando, setCargando] = useState(true);
   const [errorCarga, setErrorCarga] = useState<string | null>(null);
-  const [guardando, setGuardando] = useState(false);
-  const [probando, setProbando] = useState(false);
-
-  const { aplicar } = plantilla;
 
   const cargar = useCallback(async () => {
     setCargando(true);
     setErrorCarga(null);
     try {
-      const [servidor, correo] = await Promise.all([leerConfiguracion(), leerPlantilla()]);
-      setConfiguracion(servidor);
-      aplicar(correo);
-      setPreset(servidor.host === PRESET_GMAIL.host ? 'gmail' : 'otro');
+      await Promise.all([servidor.cargarServidor(), plantilla.cargarPlantilla()]);
     } catch (fallo) {
       setErrorCarga(textoDe(fallo, 'No se pudo cargar la configuración.'));
     } finally {
       setCargando(false);
     }
-  }, [aplicar]);
+  }, [servidor.cargarServidor, plantilla.cargarPlantilla]);
 
   useEffect(() => {
     void cargar();
   }, [cargar]);
 
-  const cambiar = (parcial: Partial<ConfiguracionCorreo>) => {
-    setConfiguracion((actual) => (actual ? { ...actual, ...parcial } : actual));
-  };
-
-  const elegirPreset = (valor: 'gmail' | 'otro') => {
-    setPreset(valor);
-    if (valor === 'gmail') {
-      cambiar({
-        ...PRESET_GMAIL,
-        remitente: configuracion?.remitente || configuracion?.usuario || '',
-      });
-    }
-  };
-
-  const guardarServidor = async () => {
-    if (!configuracion) return;
-    setGuardando(true);
-    setMensaje(null);
-    try {
-      const guardada = await guardarConfiguracion({
-        host: configuracion.host,
-        puerto: configuracion.puerto,
-        seguridad: configuracion.seguridad,
-        usuario: configuracion.usuario,
-        remitente: configuracion.remitente,
-        remitente_nombre: configuracion.remitente_nombre ?? null,
-        activo: configuracion.activo,
-        ...(password ? { password } : {}),
-      });
-      setConfiguracion(guardada);
-      setPassword('');
-      setMensaje({ tipo: 'ok', texto: 'Configuración guardada.' });
-    } catch (fallo) {
-      setMensaje({ tipo: 'error', texto: textoDe(fallo, 'No se pudo guardar.') });
-    } finally {
-      setGuardando(false);
-    }
-  };
-
-  const enviarPrueba = async () => {
-    setProbando(true);
-    setMensaje(null);
+  /** La misma prueba, pero con el aviso en la pestaña de la plantilla. */
+  const enviarPruebaPlantilla = async () => {
+    servidor.setProbando(true);
+    plantilla.setMensaje(null);
     try {
       const { destinatario } = await probarEnvio();
-      setMensaje({ tipo: 'ok', texto: `Correo de prueba enviado a ${destinatario}.` });
+      plantilla.setMensaje({
+        tipo: 'ok',
+        texto: `Correo de prueba con la plantilla actual enviado a ${destinatario}.`,
+      });
     } catch (fallo) {
-      setMensaje({ tipo: 'error', texto: textoDe(fallo, 'No se pudo enviar la prueba.') });
+      plantilla.setMensaje({
+        tipo: 'error',
+        texto: textoDe(fallo, 'No se pudo enviar la prueba.'),
+      });
     } finally {
-      setProbando(false);
+      servidor.setProbando(false);
+      await servidor.refrescarEstado();
     }
   };
 
   return {
-    configuracion,
-    preset,
-    password,
-    mensaje,
+    configuracion: servidor.configuracion,
+    preset: servidor.preset,
+    password: servidor.password,
+    mensaje: servidor.mensaje,
     cargando,
     errorCarga,
-    guardando,
-    probando,
+    guardando: servidor.guardando,
+    probando: servidor.probando,
     cargar,
-    cambiar,
-    elegirPreset,
-    setPassword,
-    guardarServidor,
-    enviarPrueba,
+    cambiar: servidor.cambiar,
+    elegirPreset: servidor.elegirPreset,
+    setPassword: servidor.setPassword,
+    guardarServidor: servidor.guardarServidor,
+    enviarPrueba: servidor.enviarPrueba,
+    enviarPruebaPlantilla,
     plantillaGuardada: plantilla.plantilla,
     asunto: plantilla.asunto,
     modo: plantilla.modo,
@@ -122,6 +74,7 @@ export function useCorreo() {
     html: plantilla.html,
     vista: plantilla.vista,
     vistaCargando: plantilla.vistaCargando,
+    sinGuardar: plantilla.sinGuardar,
     mensajePlantilla: plantilla.mensaje,
     guardandoPlantilla: plantilla.guardando,
     setMensajePlantilla: plantilla.setMensaje,

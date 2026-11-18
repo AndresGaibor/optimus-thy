@@ -582,7 +582,7 @@ export interface paths {
         put?: never;
         /**
          * Probar Configuracion
-         * @description Envía un correo de prueba a la cuenta del administrador que lo pide.
+         * @description Envía a la cuenta del administrador la plantilla vigente, con su diseño.
          */
         post: operations["probar_configuracion_configuracion_correo_probar_post"];
         delete?: never;
@@ -716,6 +716,10 @@ export interface components {
             activo: boolean;
             /** Tiene Password */
             tiene_password: boolean;
+            /** Ultima Prueba En */
+            ultima_prueba_en: string | null;
+            /** Ultima Prueba Ok */
+            ultima_prueba_ok: boolean | null;
         };
         /**
          * CrearConsentimientoRequest

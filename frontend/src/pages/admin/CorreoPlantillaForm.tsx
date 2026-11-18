@@ -1,9 +1,8 @@
-import { RotateCcw, Save } from 'lucide-react';
+import { RotateCcw, Save, Send } from 'lucide-react';
 import {
   Button,
   Callout,
   Field,
-  Input,
   Tabs,
   TabsContent,
   TabsList,
@@ -14,7 +13,7 @@ import type { MensajeCorreo } from './CorreoServidorForm';
 import type { ModoPlantilla } from './usePlantillaCorreo';
 import { CorreoCampoPlantilla } from './CorreoCampoPlantilla';
 import { CorreoVistaPrevia } from './CorreoVistaPrevia';
-import { CAMPOS, VARIABLES } from './plantilla-marcadores';
+import { ASUNTO_CAMPO, CAMPOS, VARIABLES } from './plantilla-marcadores';
 
 export interface CorreoPlantillaFormProps {
   asunto: string;
@@ -25,12 +24,15 @@ export interface CorreoPlantillaFormProps {
   vistaCargando: boolean;
   mensaje: MensajeCorreo | null;
   guardando: boolean;
+  probando: boolean;
   deFabrica: boolean;
+  sinGuardar: boolean;
   onAsunto: (asunto: string) => void;
   onModo: (modo: ModoPlantilla) => void;
   onCampo: (clave: string, valor: string) => void;
   onHtml: (html: string) => void;
   onGuardar: () => void;
+  onProbar: () => void;
   onRestaurar: () => void;
 }
 
@@ -59,20 +61,21 @@ export function CorreoPlantillaForm({
   vistaCargando,
   mensaje,
   guardando,
+  probando,
   deFabrica,
+  sinGuardar,
   onAsunto,
   onModo,
   onCampo,
   onHtml,
   onGuardar,
+  onProbar,
   onRestaurar,
 }: CorreoPlantillaFormProps) {
   return (
     <div className="grid gap-6 lg:grid-cols-2">
       <div className="grid gap-4">
-        <Field label="Asunto" hint="Lo que se lee en la bandeja antes de abrir el correo.">
-          <Input value={asunto} onChange={(evento) => onAsunto(evento.target.value)} />
-        </Field>
+        <CorreoCampoPlantilla campo={ASUNTO_CAMPO} valor={asunto} onCambio={onAsunto} />
 
         <Tabs value={modo} onValueChange={(valor) => onModo(valor as ModoPlantilla)}>
           <TabsList>
@@ -118,9 +121,16 @@ export function CorreoPlantillaForm({
         ) : null}
 
         <div className="flex flex-wrap items-center gap-2">
-          <Button onClick={onGuardar} disabled={guardando}>
+          {sinGuardar ? (
+            <span className="text-sm text-muted-foreground">Cambios sin guardar</span>
+          ) : null}
+          <Button onClick={onGuardar} disabled={guardando || !sinGuardar}>
             <Save aria-hidden="true" className="size-4" />
             Guardar plantilla
+          </Button>
+          <Button variant="outline" onClick={onProbar} disabled={probando}>
+            <Send aria-hidden="true" className="size-4" />
+            Enviar prueba con esta plantilla
           </Button>
           <Button variant="outline" onClick={onRestaurar} disabled={guardando || deFabrica}>
             <RotateCcw aria-hidden="true" className="size-4" />

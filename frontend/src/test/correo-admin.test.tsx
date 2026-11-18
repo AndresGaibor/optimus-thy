@@ -19,6 +19,8 @@ const configuracion = {
   remitente_nombre: 'OPTIMUS-THY',
   activo: true,
   tiene_password: true,
+  ultima_prueba_en: null as string | null,
+  ultima_prueba_ok: null as boolean | null,
 };
 
 const campos = {
@@ -184,6 +186,50 @@ describe('configuración del correo', () => {
     expect(await screen.findByText('Plantilla guardada.')).toBeInTheDocument();
   });
 
+  it('avisa de los cambios sin guardar y bloquea guardar cuando no hay', async () => {
+    const usuario = userEvent.setup();
+    montar();
+
+    expect(await screen.findByRole('button', { name: /guardar plantilla/i })).toBeDisabled();
+    expect(screen.queryByText(/cambios sin guardar/i)).not.toBeInTheDocument();
+
+    const mensaje = await screen.findByLabelText('Mensaje');
+    await usuario.clear(mensaje);
+    await usuario.type(mensaje, 'Otro texto.');
+
+    expect(await screen.findByText(/cambios sin guardar/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /guardar plantilla/i })).toBeEnabled();
+  });
+
+  it('envía la prueba con la plantilla actual', async () => {
+    const usuario = userEvent.setup();
+    montar();
+
+    await usuario.click(
+      await screen.findByRole('button', { name: /enviar prueba con esta plantilla/i }),
+    );
+
+    const prueba = peticiones.find((peticion) =>
+      peticion.url.includes('/configuracion-correo/probar'),
+    );
+    expect(prueba?.metodo).toBe('POST');
+    expect(
+      await screen.findByText(/correo de prueba con la plantilla actual enviado a/i),
+    ).toBeInTheDocument();
+  });
+
+  it('muestra el estado del correo y el ancho del correo se puede cambiar', async () => {
+    const usuario = userEvent.setup();
+    montar();
+
+    expect(await screen.findByText(/correo activo/i)).toBeInTheDocument();
+    expect(screen.getByText(/aún no se ha enviado ninguna prueba/i)).toBeInTheDocument();
+
+    await usuario.click(screen.getByRole('button', { name: /^móvil$/i }));
+    const marco = await screen.findByTitle('Vista previa del correo');
+    expect(marco.parentElement?.className).toContain('w-80');
+  });
+
   it('inserta el marcador sin escribirlo a mano', async () => {
     const usuario = userEvent.setup();
     montar();
@@ -192,7 +238,7 @@ describe('configuración del correo', () => {
     await usuario.clear(mensaje);
     await usuario.type(mensaje, 'Te saluda el equipo. ');
 
-    await usuario.click(screen.getByRole('button', { name: /añadir nombre/i }));
+    await usuario.click(screen.getByRole('button', { name: /añadir nombre en mensaje/i }));
 
     expect(mensaje).toHaveValue('Te saluda el equipo. {{nombre}}');
     expect(screen.getByText(/así se verá: te saluda el equipo\. ana pérez/i)).toBeInTheDocument();
@@ -227,6 +273,9 @@ describe('configuración del correo', () => {
     montar();
     await usuario.click(await screen.findByRole('tab', { name: 'Plantilla' }));
 
+    const mensaje = await screen.findByLabelText('Mensaje');
+    await usuario.clear(mensaje);
+    await usuario.type(mensaje, 'Texto de prueba.');
     await usuario.click(screen.getByRole('button', { name: /guardar plantilla/i }));
     await screen.findByText('Plantilla guardada.');
 
