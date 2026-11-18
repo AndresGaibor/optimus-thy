@@ -184,6 +184,33 @@ describe('configuración del correo', () => {
     expect(await screen.findByText('Plantilla guardada.')).toBeInTheDocument();
   });
 
+  it('inserta el marcador sin escribirlo a mano', async () => {
+    const usuario = userEvent.setup();
+    montar();
+
+    const mensaje = await screen.findByLabelText('Mensaje');
+    await usuario.clear(mensaje);
+    await usuario.type(mensaje, 'Te saluda el equipo. ');
+
+    await usuario.click(screen.getByRole('button', { name: /añadir nombre/i }));
+
+    expect(mensaje).toHaveValue('Te saluda el equipo. {{nombre}}');
+    expect(screen.getByText(/así se verá: te saluda el equipo\. ana pérez/i)).toBeInTheDocument();
+  });
+
+  it('avisa cuando el marcador está mal escrito', async () => {
+    const usuario = userEvent.setup();
+    montar();
+
+    const mensaje = await screen.findByLabelText('Mensaje');
+    await usuario.clear(mensaje);
+    await usuario.type(mensaje, 'Hola {{nombre}');
+
+    expect(
+      await screen.findByText(/los marcadores se escriben con dos llaves/i),
+    ).toBeInTheDocument();
+  });
+
   it('muestra la vista previa que compone el servidor', async () => {
     const usuario = userEvent.setup();
     montar();
