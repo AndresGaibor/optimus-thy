@@ -183,6 +183,77 @@ def test_plantilla_guarda_variables_y_se_puede_restaurar(client, mundo):
     assert restaurada.json()["de_fabrica"] is True
 
 
+def test_plantilla_por_campos_compone_el_html_y_escapa(client, mundo):
+    _skip_if_no_db()
+    _entrar(client)
+
+    fabrica = client.get("/plantillas-correo/recuperacion").json()
+    assert fabrica["modo"] == "visual"
+    assert set(fabrica["campos"]) == {"titulo", "mensaje", "boton", "nota", "pie"}
+
+    respuesta = client.put(
+        "/plantillas-correo/recuperacion",
+        json={
+            "asunto": "Hola {{nombre}}",
+            "modo": "visual",
+            "campos": {
+                "titulo": "Hola <mundo>",
+                "mensaje": "Pulsa el botón & listo.",
+                "boton": "Cambiar clave",
+                "nota": "Caduca en {{expira_en}}.",
+                "pie": "Si no fuiste tú, ignóralo.",
+            },
+        },
+    )
+    assert respuesta.status_code == 200, respuesta.text
+    cuerpo = respuesta.json()
+    assert cuerpo["modo"] == "visual"
+    assert cuerpo["campos"]["boton"] == "Cambiar clave"
+    assert "Hola &lt;mundo&gt;" in cuerpo["html"]
+    assert "<mundo>" not in cuerpo["html"]
+    assert "{{enlace}}" in cuerpo["html"]
+
+    faltan = client.put(
+        "/plantillas-correo/recuperacion",
+        json={"asunto": "Hola", "modo": "visual", "campos": {"titulo": "Solo esto"}},
+    )
+    assert faltan.status_code == 422
+    assert faltan.json()["error"]["code"] == "campos_incompletos"
+
+    sin_html = client.put("/plantillas-correo/recuperacion", json={"asunto": "Hola"})
+    assert sin_html.status_code == 422
+    assert sin_html.json()["error"]["code"] == "html_requerido"
+
+
+def test_previsualizacion_usa_datos_de_ejemplo_y_no_guarda(client, mundo):
+    _skip_if_no_db()
+    _entrar(client)
+    antes = client.get("/plantillas-correo/recuperacion").json()
+
+    vista = client.post(
+        "/plantillas-correo/recuperacion/preview",
+        json={
+            "asunto": "Hola {{nombre}}",
+            "modo": "visual",
+            "campos": {
+                "titulo": "Restablece tu contraseña",
+                "mensaje": "Te enviamos un enlace.",
+                "boton": "Elegir una contraseña nueva",
+                "nota": "Caduca en {{expira_en}}.",
+                "pie": "Si no fuiste tú, ignóralo.",
+            },
+        },
+    )
+    assert vista.status_code == 200, vista.text
+    assert vista.json()["asunto"] == "Hola Ana Pérez"
+    assert "Ana Pérez" in vista.json()["html"]
+    assert "{{" not in vista.json()["html"]
+    assert "restablecer/ejemplo" in vista.json()["html"]
+
+    despues = client.get("/plantillas-correo/recuperacion").json()
+    assert antes == despues
+
+
 def test_solicitud_de_recuperacion_no_revela_si_el_correo_existe(
     db_session, client, mundo, monkeypatch
 ):

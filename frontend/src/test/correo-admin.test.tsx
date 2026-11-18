@@ -21,10 +21,20 @@ const configuracion = {
   tiene_password: true,
 };
 
+const campos = {
+  titulo: 'Restablece tu contraseña',
+  mensaje: 'Recibimos una solicitud para restablecer la contraseña de tu cuenta.',
+  boton: 'Elige una contraseña nueva',
+  nota: 'El enlace caduca en {{expira_en}}.',
+  pie: 'Si no fuiste tú, ignora este mensaje.',
+};
+
 const plantilla = {
   clave: 'recuperacion',
   asunto: 'Restablece tu contraseña',
   html: '<p>Hola {{nombre}}</p>',
+  modo: 'visual',
+  campos,
   variables: ['enlace', 'expira_en', 'nombre'],
   de_fabrica: true,
 };
@@ -62,6 +72,9 @@ describe('configuración del correo', () => {
               .catch(() => undefined);
       peticiones.push({ url: entrada.url, metodo: entrada.method, cuerpo });
       if (entrada.url.includes('/plantillas-correo')) {
+        if (entrada.url.endsWith('/preview')) {
+          return responder({ asunto: 'Restablece tu contraseña', html: '<p>Hola Ana Pérez</p>' });
+        }
         if (entrada.url.endsWith('/restaurar')) return responder(plantilla);
         if (entrada.method === 'PUT') {
           const datos = cuerpo as { asunto: string; html: string };
@@ -87,7 +100,9 @@ describe('configuración del correo', () => {
   });
 
   it('muestra que hay contraseña guardada sin revelarla', async () => {
+    const usuario = userEvent.setup();
     montar();
+    await usuario.click(await screen.findByRole('tab', { name: 'Servidor' }));
     expect(await screen.findByLabelText('Contraseña')).toHaveValue('');
     expect(screen.getByText(/ya hay una contraseña guardada/i)).toBeInTheDocument();
   });
@@ -95,6 +110,7 @@ describe('configuración del correo', () => {
   it('guarda sin enviar la contraseña cuando no se escribe una nueva', async () => {
     const usuario = userEvent.setup();
     montar();
+    await usuario.click(await screen.findByRole('tab', { name: 'Servidor' }));
     await screen.findByLabelText('Usuario');
 
     await usuario.click(screen.getByRole('button', { name: /^guardar$/i }));
@@ -110,6 +126,7 @@ describe('configuración del correo', () => {
   it('envía la contraseña nueva cuando se escribe', async () => {
     const usuario = userEvent.setup();
     montar();
+    await usuario.click(await screen.findByRole('tab', { name: 'Servidor' }));
     await screen.findByLabelText('Contraseña');
 
     await usuario.type(screen.getByLabelText('Contraseña'), 'abcd efgh ijkl mnop');
@@ -125,6 +142,7 @@ describe('configuración del correo', () => {
     fallarGuardado = true;
     const usuario = userEvent.setup();
     montar();
+    await usuario.click(await screen.findByRole('tab', { name: 'Servidor' }));
     await screen.findByLabelText('Usuario');
 
     await usuario.click(screen.getByRole('button', { name: /^guardar$/i }));
@@ -135,6 +153,7 @@ describe('configuración del correo', () => {
   it('envía una prueba e indica el destinatario', async () => {
     const usuario = userEvent.setup();
     montar();
+    await usuario.click(await screen.findByRole('tab', { name: 'Servidor' }));
     await screen.findByLabelText('Usuario');
 
     await usuario.click(screen.getByRole('button', { name: /enviar prueba/i }));
@@ -142,6 +161,38 @@ describe('configuración del correo', () => {
     expect(
       await screen.findByText(/correo de prueba enviado a ana\.garcia@example\.test/i),
     ).toBeInTheDocument();
+  });
+
+  it('guarda el modo Diseño con sus campos', async () => {
+    const usuario = userEvent.setup();
+    montar();
+    await usuario.click(await screen.findByRole('tab', { name: 'Plantilla' }));
+
+    const mensaje = await screen.findByLabelText('Mensaje');
+    await usuario.clear(mensaje);
+    await usuario.type(mensaje, 'Te enviamos un enlace para elegir otra contraseña.');
+
+    await usuario.click(screen.getByRole('button', { name: /guardar plantilla/i }));
+
+    const guardado = peticiones.find(
+      (peticion) => peticion.metodo === 'PUT' && peticion.url.includes('/plantillas-correo'),
+    );
+    expect(guardado?.cuerpo).toMatchObject({
+      modo: 'visual',
+      campos: { mensaje: 'Te enviamos un enlace para elegir otra contraseña.' },
+    });
+    expect(await screen.findByText('Plantilla guardada.')).toBeInTheDocument();
+  });
+
+  it('muestra la vista previa que compone el servidor', async () => {
+    const usuario = userEvent.setup();
+    montar();
+    await usuario.click(await screen.findByRole('tab', { name: 'Plantilla' }));
+
+    const marco = await screen.findByTitle('Vista previa del correo');
+    await vi.waitFor(() => expect(marco.getAttribute('srcdoc')).toContain('Hola Ana Pérez'));
+    const previa = peticiones.find((peticion) => peticion.url.includes('/preview'));
+    expect((previa?.cuerpo as { modo?: string }).modo).toBe('visual');
   });
 
   it('pide confirmación antes de restaurar la plantilla', async () => {

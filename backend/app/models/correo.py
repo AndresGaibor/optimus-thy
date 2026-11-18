@@ -6,7 +6,7 @@ import uuid
 from datetime import datetime
 
 import sqlalchemy as sa
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db import Base
@@ -50,6 +50,8 @@ class PlantillaCorreo(Base):
     clave: Mapped[str] = mapped_column(sa.String(40), primary_key=True)
     asunto: Mapped[str] = mapped_column(sa.String(200), nullable=False)
     html: Mapped[str] = mapped_column(sa.Text, nullable=False)
+    modo: Mapped[str] = mapped_column(sa.String(10), nullable=False, server_default="visual")
+    campos: Mapped[dict[str, str] | None] = mapped_column(JSONB, nullable=True)
     actualizado_en: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.func.now()
     )

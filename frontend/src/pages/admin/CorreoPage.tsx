@@ -52,6 +52,10 @@ export function CorreoPage() {
   }
 
   const guardarPlantilla = () => {
+    if (correo.modo !== 'html') {
+      void correo.guardarLaPlantilla();
+      return;
+    }
     const problema = verificarVariables(correo.asunto) ?? verificarVariables(correo.html);
     if (problema) {
       correo.setMensajePlantilla({ tipo: 'error', texto: problema });
@@ -67,7 +71,7 @@ export function CorreoPage() {
         description="Servidor SMTP y plantillas de los envíos, incluida la recuperación de contraseña."
       />
 
-      <Tabs defaultValue="servidor">
+      <Tabs defaultValue="plantilla">
         <TabsList>
           <TabsTrigger value="servidor">Servidor</TabsTrigger>
           <TabsTrigger value="plantilla">Plantilla</TabsTrigger>
@@ -92,11 +96,17 @@ export function CorreoPage() {
         <TabsContent value="plantilla" className="grid gap-4">
           <CorreoPlantillaForm
             asunto={correo.asunto}
+            modo={correo.modo}
+            campos={correo.campos}
             html={correo.html}
+            vista={correo.vista}
+            vistaCargando={correo.vistaCargando}
             mensaje={correo.mensajePlantilla}
-            guardando={correo.guardando}
-            deFabrica={correo.plantilla?.de_fabrica === true}
+            guardando={correo.guardandoPlantilla}
+            deFabrica={correo.plantillaGuardada?.de_fabrica === true}
             onAsunto={correo.setAsunto}
+            onModo={correo.setModo}
+            onCampo={correo.editarCampo}
             onHtml={correo.setHtml}
             onGuardar={guardarPlantilla}
             onRestaurar={() => setConfirmarRestaurar(true)}

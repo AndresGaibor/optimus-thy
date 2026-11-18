@@ -29,26 +29,80 @@ VARIABLES: frozenset[str] = frozenset({"nombre", "enlace", "expira_en"})
 
 _VARIABLE = re.compile(r"\{\{\s*([a-z_]+)\s*\}\}")
 
-PLANTILLA_RECUPERACION = """<div style="margin:0;padding:24px;background:#f6f7f9;color:#1f2937">
-  <div style="max-width:520px;margin:0 auto;background:#fff;padding:32px">
-    <h1 style="margin:0 0 16px;font-size:20px">Restablece tu contraseña</h1>
-    <p style="margin:0 0 12px">Hola {{nombre}},</p>
-    <p style="margin:0 0 16px">
-      Recibimos una solicitud para restablecer la contraseña de tu cuenta en OPTIMUS-THY.
-    </p>
-    <p style="margin:0 0 24px">
-      <a href="{{enlace}}" style="background:#4f46e5;color:#fff;padding:12px 20px">
-        Elegir una contraseña nueva
-      </a>
-    </p>
-    <p style="margin:0 0 12px;font-size:14px;color:#4b5563">
-      El enlace caduca en {{expira_en}} y solo puede usarse una vez.
-    </p>
-    <p style="margin:0;font-size:14px;color:#4b5563">
-      Si no fuiste tú, ignora este mensaje: tu contraseña no cambia.
-    </p>
-  </div>
-</div>"""
+CAMPOS_RECUPERACION: dict[str, str] = {
+    "titulo": "Restablece tu contraseña",
+    "mensaje": (
+        "Recibimos una solicitud para restablecer la contraseña de tu cuenta en OPTIMUS-THY."
+    ),
+    "boton": "Elegir una contraseña nueva",
+    "nota": "El enlace caduca en {{expira_en}} y solo puede usarse una vez.",
+    "pie": "Si no fuiste tú, ignora este mensaje: tu contraseña no cambia.",
+}
+"""Textos de fábrica del modo Diseño."""
+
+CAMPOS_ORDEN: tuple[str, ...] = ("titulo", "mensaje", "boton", "nota", "pie")
+"""Campos que componen el correo, en el orden en que se leen."""
+
+MODOS = ("visual", "html")
+"""Formas de editar la plantilla."""
+
+_FUENTE = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif"
+
+
+def html_desde_campos(campos: Mapping[str, str]) -> str:
+    """Compone el correo con el diseño del sistema a partir de texto plano.
+
+    Las tablas y los estilos en línea son lo único que los clientes de correo
+    respetan de forma parecida; el diseño es fijo a propósito.
+    """
+    valor = {clave: html_lib.escape(campos.get(clave, "")).strip() for clave in CAMPOS_ORDEN}
+    return f"""\
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" \
+style="margin:0;padding:24px;background:#f4f5f7">
+  <tr>
+    <td align="center">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" \
+style="max-width:520px;background:#ffffff;border-radius:12px;border:1px solid #e5e7eb;\
+font-family:{_FUENTE};color:#1f2937">
+        <tr>
+          <td style="padding:32px 32px 8px">
+            <p style="margin:0 0 20px;font-size:12px;letter-spacing:.08em;\
+text-transform:uppercase;color:#6b7280">
+              OPTIMUS-THY
+            </p>
+            <h1 style="margin:0 0 16px;font-size:21px;line-height:1.3;\
+font-weight:600;color:#111827">
+              {valor["titulo"]}
+            </h1>
+            <p style="margin:0 0 12px;font-size:15px;line-height:1.6">Hola {{{{nombre}}}},</p>
+            <p style="margin:0 0 24px;font-size:15px;line-height:1.6">{valor["mensaje"]}</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:0 32px 24px">
+            <a href="{{{{enlace}}}}" style="display:inline-block;background:#4f46e5;color:#ffffff;\
+font-size:15px;font-weight:600;text-decoration:none;padding:12px 22px;border-radius:8px">
+              {valor["boton"]}
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:0 32px 28px">
+            <p style="margin:0;font-size:13px;line-height:1.6;color:#6b7280">{valor["nota"]}</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:18px 32px 26px;border-top:1px solid #e5e7eb">
+            <p style="margin:0;font-size:13px;line-height:1.6;color:#6b7280">{valor["pie"]}</p>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>"""
+
+
+PLANTILLA_RECUPERACION = html_desde_campos(CAMPOS_RECUPERACION)
 
 ASUNTO_RECUPERACION = "Restablece tu contraseña en OPTIMUS-THY"
 
@@ -160,6 +214,32 @@ def mostrar_ttl(minutos: int) -> str:
         return f"{minutos} minutos"
     horas = minutos // 60
     return f"{horas} hora{'s' if horas != 1 else ''}"
+
+
+def campos_validos(campos: Mapping[str, str] | None) -> dict[str, str] | None:
+    """Campos recortados y completos, o ``None`` si falta alguno o es demasiado largo."""
+    if not campos:
+        return None
+    limpios: dict[str, str] = {}
+    for clave in CAMPOS_ORDEN:
+        valor = campos.get(clave, "")
+        if not isinstance(valor, str):
+            return None
+        valor = valor.strip()
+        if not valor or len(valor) > 400:
+            return None
+        limpios[clave] = valor
+    return limpios
+
+
+def contexto_ejemplo() -> dict[str, str]:
+    """Datos sintéticos de la vista previa: nunca de una persona real."""
+    settings = get_settings()
+    return {
+        "nombre": "Ana Pérez",
+        "enlace": f"{settings.public_url_base}/restablecer/ejemplo",
+        "expira_en": mostrar_ttl(settings.recuperacion_ttl_minutos),
+    }
 
 
 def enviar_recuperacion(

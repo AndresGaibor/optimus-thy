@@ -16,12 +16,17 @@ from app.audit.http import registrar
 from app.auth.deps import SesionActual, requiere_permiso
 from app.correo.servicio import (
     ASUNTO_RECUPERACION,
+    CAMPOS_RECUPERACION,
     PLANTILLA_RECUPERACION,
     VARIABLES,
     CorreoNoConfigurado,
     EnvioError,
+    campos_validos,
+    contexto_ejemplo,
     enviar,
+    html_desde_campos,
     plantilla,
+    render,
     variables_no_permitidas,
 )
 from app.db import session_dep
@@ -72,13 +77,22 @@ class PlantillaOut(BaseModel):
     clave: str
     asunto: str
     html: str
+    modo: Literal["visual", "html"]
+    campos: dict[str, str]
     variables: list[str]
     de_fabrica: bool
 
 
 class PlantillaIn(BaseModel):
     asunto: str = Field(min_length=1, max_length=200)
-    html: str = Field(min_length=1, max_length=20000)
+    modo: Literal["visual", "html"] = "html"
+    campos: dict[str, str] | None = None
+    html: str | None = Field(default=None, max_length=20000)
+
+
+class PrevisualizacionOut(BaseModel):
+    asunto: str
+    html: str
 
 
 class PruebaOut(BaseModel):
@@ -102,6 +116,44 @@ def _salida(fila: ConfiguracionCorreo | None) -> ConfiguracionOut:
         remitente_nombre=origen.remitente_nombre,
         activo=origen.activo,
         tiene_password=fila is not None and fila.password_cifrado is not None,
+    )
+
+
+def _componer(body: PlantillaIn) -> tuple[str, str, dict[str, str] | None] | JSONResponse:
+    """Asunto, HTML efectivo y campos del formulario, ya validados."""
+    campos: dict[str, str] | None = None
+    if body.modo == "visual":
+        campos = campos_validos(body.campos)
+        if campos is None:
+            return _error(
+                "campos_incompletos",
+                "El encabezado, el mensaje y el texto del botón son obligatorios.",
+                422,
+            )
+        html = html_desde_campos(campos)
+    else:
+        if not body.html or not body.html.strip():
+            return _error("html_requerido", "Escribe el contenido HTML de la plantilla.", 422)
+        html = body.html
+    desconocidas = variables_no_permitidas(body.asunto) | variables_no_permitidas(html)
+    if desconocidas:
+        return _error(
+            "variable_desconocida",
+            f"Variables no admitidas: {', '.join(sorted(desconocidas))}.",
+            422,
+        )
+    return body.asunto.strip(), html, campos
+
+
+def _salida_plantilla(fila: PlantillaCorreo, guardada: bool) -> PlantillaOut:
+    return PlantillaOut(
+        clave=fila.clave,
+        asunto=fila.asunto,
+        html=fila.html,
+        modo=fila.modo or "visual",  # type: ignore[arg-type]
+        campos=fila.campos or CAMPOS_RECUPERACION,
+        variables=sorted(VARIABLES),
+        de_fabrica=not guardada,
     )
 
 
@@ -194,14 +246,22 @@ def leer_plantilla(
     fila = plantilla(db, clave)
     if fila is None:  # pragma: no cover - la de fábrica siempre existe
         return _error("plantilla_desconocida", "No existe esa plantilla.", 404)
-    guardada = db.get(PlantillaCorreo, clave) is not None
-    return PlantillaOut(
-        clave=fila.clave,
-        asunto=fila.asunto,
-        html=fila.html,
-        variables=sorted(VARIABLES),
-        de_fabrica=not guardada,
-    )
+    return _salida_plantilla(fila, guardada=db.get(PlantillaCorreo, clave) is not None)
+
+
+@router.post("/plantillas-correo/{clave}/preview", response_model=PrevisualizacionOut)
+def previsualizar_plantilla(
+    clave: str, body: PlantillaIn, _actual: Configuracion
+) -> PrevisualizacionOut | JSONResponse:
+    """Muestra el correo como llegará, con datos sintéticos; no guarda ni envía."""
+    if not _clave_valida(clave):
+        return _error("plantilla_desconocida", "No existe esa plantilla.", 404)
+    compuesto = _componer(body)
+    if isinstance(compuesto, JSONResponse):
+        return compuesto
+    asunto, html, _campos = compuesto
+    contexto = contexto_ejemplo()
+    return PrevisualizacionOut(asunto=render(asunto, contexto), html=render(html, contexto))
 
 
 @router.put("/plantillas-correo/{clave}", response_model=PlantillaOut)
@@ -214,16 +274,15 @@ def guardar_plantilla(
 ) -> PlantillaOut | JSONResponse:
     if not _clave_valida(clave):
         return _error("plantilla_desconocida", "No existe esa plantilla.", 404)
-    desconocidas = variables_no_permitidas(body.asunto) | variables_no_permitidas(body.html)
-    if desconocidas:
-        return _error(
-            "variable_desconocida",
-            f"Variables no admitidas: {', '.join(sorted(desconocidas))}.",
-            422,
-        )
+    compuesto = _componer(body)
+    if isinstance(compuesto, JSONResponse):
+        return compuesto
+    asunto, html, campos = compuesto
     fila = db.get(PlantillaCorreo, clave) or PlantillaCorreo(clave=clave)
-    fila.asunto = body.asunto.strip()
-    fila.html = body.html
+    fila.asunto = asunto
+    fila.html = html
+    fila.modo = body.modo
+    fila.campos = campos
     fila.actualizado_en = datetime.now(UTC)
     fila.actualizado_por = actual.usuario.id
     db.add(fila)
@@ -237,13 +296,7 @@ def guardar_plantilla(
         usuario=actual.usuario,
         detalles={"setting_key": f"plantilla_{clave}"},
     )
-    return PlantillaOut(
-        clave=fila.clave,
-        asunto=fila.asunto,
-        html=fila.html,
-        variables=sorted(VARIABLES),
-        de_fabrica=False,
-    )
+    return _salida_plantilla(fila, guardada=True)
 
 
 @router.post("/plantillas-correo/{clave}/restaurar", response_model=PlantillaOut)
@@ -268,10 +321,11 @@ def restaurar_plantilla(
         usuario=actual.usuario,
         detalles={"setting_key": f"plantilla_{clave}", "to_status": "fabrica"},
     )
-    return PlantillaOut(
+    fabrica = PlantillaCorreo(
         clave=clave,
         asunto=ASUNTO_RECUPERACION,
         html=PLANTILLA_RECUPERACION,
-        variables=sorted(VARIABLES),
-        de_fabrica=True,
+        modo="visual",
+        campos=dict(CAMPOS_RECUPERACION),
     )
+    return _salida_plantilla(fabrica, guardada=False)

@@ -20,6 +20,7 @@ export const ConConfiguracion: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await canvas.findByRole('heading', { name: 'Correo' }, { timeout: 8000 });
+    await userEvent.click(canvas.getByRole('tab', { name: 'Servidor' }));
     await expect(canvas.getByLabelText('Usuario')).toHaveValue('ana.garcia@example.test');
     await expect(canvas.getByLabelText('Contraseña')).toHaveValue('');
     await expect(canvas.getByText(/ya hay una contraseña guardada/i)).toBeInTheDocument();
@@ -31,6 +32,7 @@ export const SinConfigurar: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await canvas.findByRole('heading', { name: 'Correo' }, { timeout: 8000 });
+    await userEvent.click(canvas.getByRole('tab', { name: 'Servidor' }));
     await expect(canvas.getByLabelText('Usuario')).toHaveValue('');
     await expect(
       canvas.getByText(/contraseña de aplicación de 16 caracteres/i),
@@ -43,11 +45,13 @@ export const ConPlantilla: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await canvas.findByRole('heading', { name: 'Correo' }, { timeout: 8000 });
-    await userEvent.click(canvas.getByRole('tab', { name: 'Plantilla' }));
     await expect(canvas.getByLabelText('Asunto')).toHaveValue(
       'Restablece tu contraseña en OPTIMUS-THY',
     );
-    await expect(canvas.getByTitle('Vista previa de la plantilla')).toBeInTheDocument();
+    await expect(canvas.getByLabelText('Mensaje')).toHaveValue(
+      'Recibimos una solicitud para restablecer la contraseña de tu cuenta.',
+    );
+    await expect(canvas.getByTitle('Vista previa del correo')).toBeInTheDocument();
     await expect(canvas.getByText(/usando la plantilla de fábrica/i)).toBeInTheDocument();
     await expect(canvas.getByRole('button', { name: /restaurar la de fábrica/i })).toBeDisabled();
   },

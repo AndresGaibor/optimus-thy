@@ -1,4 +1,5 @@
 import { delay, http, HttpResponse } from 'msw';
+import { crearHandlersCorreo } from './handlers-correo';
 
 import { eventosOk, eventosVacios } from './auditoria';
 import { resultadosOk, resultadosVacios } from './resultados';
@@ -238,29 +239,6 @@ const API = {
   instituciones: /\/(?:api\/)?instituciones(?:\?.*)?$/,
   resultados: /\/(?:api\/)?resultados(?:\?.*)?$/,
   auditoria: /\/(?:api\/)?auditoria(?:\?.*)?$/,
-  correoConfig: /\/configuracion-correo(?:\?.*)?$/,
-  correoPrueba: /\/configuracion-correo\/probar$/,
-  plantillaCorreo: /\/plantillas-correo\/recuperacion(?:\?.*)?$/,
-  plantillaRestaurar: /\/plantillas-correo\/recuperacion\/restaurar$/,
-};
-
-const configuracionCorreoOk = {
-  host: 'smtp.gmail.com',
-  puerto: 587,
-  seguridad: 'starttls',
-  usuario: 'ana.garcia@example.test',
-  remitente: 'ana.garcia@example.test',
-  remitente_nombre: 'OPTIMUS-THY',
-  activo: true,
-  tiene_password: true,
-};
-
-const plantillaCorreoOk = {
-  clave: 'recuperacion',
-  asunto: 'Restablece tu contraseña en OPTIMUS-THY',
-  html: '<p>Hola {{nombre}},</p><p><a href="{{enlace}}">Elige una contraseña nueva</a></p><p>Caduca en {{expira_en}}.</p>',
-  variables: ['enlace', 'expira_en', 'nombre'],
-  de_fabrica: true,
 };
 
 // Handlers de datos (sin identidad). Reutilizable por flujos con sesión propia.
@@ -344,56 +322,7 @@ export function crearHandlersDatos(escenario: EscenarioApi = 'ok') {
         return HttpResponse.json<InstitucionAdminOut[]>(lista);
       },
     ),
-    http.get(API.correoConfig, async () => {
-      const error = respuestaError(escenario, 'Permiso insuficiente');
-      if (error) return error;
-      await demorar();
-      if (escenario === 'vacio') {
-        return HttpResponse.json({
-          ...configuracionCorreoOk,
-          usuario: '',
-          remitente: '',
-          activo: false,
-          tiene_password: false,
-        });
-      }
-      return HttpResponse.json(configuracionCorreoOk);
-    }),
-    http.put(API.correoConfig, async ({ request }) => {
-      const cuerpo = (await request.json()) as Record<string, unknown>;
-      await demorar();
-      return HttpResponse.json({
-        ...configuracionCorreoOk,
-        ...cuerpo,
-        password: undefined,
-        tiene_password: Boolean(cuerpo.password) || configuracionCorreoOk.tiene_password,
-      });
-    }),
-    http.post(API.correoPrueba, async () => {
-      const error = respuestaError(escenario, 'El servidor de correo rechazó el envío');
-      if (error) return error;
-      await demorar();
-      return HttpResponse.json({ destinatario: 'ana.garcia@example.test' });
-    }),
-    http.get(API.plantillaCorreo, async () => {
-      const error = respuestaError(escenario, 'Permiso insuficiente');
-      if (error) return error;
-      await demorar();
-      return HttpResponse.json(plantillaCorreoOk);
-    }),
-    http.put(API.plantillaCorreo, async ({ request }) => {
-      const cuerpo = (await request.json()) as { asunto?: string; html?: string };
-      await demorar();
-      return HttpResponse.json({
-        ...plantillaCorreoOk,
-        ...cuerpo,
-        de_fabrica: false,
-      });
-    }),
-    http.post(API.plantillaRestaurar, async () => {
-      await demorar();
-      return HttpResponse.json(plantillaCorreoOk);
-    }),
+    ...crearHandlersCorreo(escenario, demorar, (detalle) => respuestaError(escenario, detalle)),
   ];
 }
 
