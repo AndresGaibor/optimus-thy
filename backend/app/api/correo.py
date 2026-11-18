@@ -23,6 +23,7 @@ from app.correo.servicio import (
     EnvioError,
     campos_validos,
     contexto_ejemplo,
+    contexto_prueba,
     enviar,
     html_desde_campos,
     plantilla,
@@ -60,6 +61,8 @@ class ConfiguracionOut(BaseModel):
     remitente_nombre: str | None
     activo: bool
     tiene_password: bool
+    ultima_prueba_en: datetime | None
+    ultima_prueba_ok: bool | None
 
 
 class ConfiguracionIn(BaseModel):
@@ -116,6 +119,8 @@ def _salida(fila: ConfiguracionCorreo | None) -> ConfiguracionOut:
         remitente_nombre=origen.remitente_nombre,
         activo=origen.activo,
         tiene_password=fila is not None and fila.password_cifrado is not None,
+        ultima_prueba_en=origen.ultima_prueba_en,
+        ultima_prueba_ok=origen.ultima_prueba_ok,
     )
 
 
@@ -211,25 +216,44 @@ def guardar_configuracion(
     return _salida(fila)
 
 
+def _registrar_prueba(db: Session, ok: bool) -> None:
+    """Guarda el resultado de la última prueba, si hay configuración guardada."""
+    fila = db.get(ConfiguracionCorreo, 1)
+    if fila is None:
+        return
+    fila.ultima_prueba_en = datetime.now(UTC)
+    fila.ultima_prueba_ok = ok
+    db.commit()
+
+
 @router.post("/configuracion-correo/probar", response_model=PruebaOut)
 def probar_configuracion(
     actual: Configuracion, db: Annotated[Session, Depends(session_dep)]
 ) -> PruebaOut | JSONResponse:
-    """Envía un correo de prueba a la cuenta del administrador que lo pide."""
+    """Envía a la cuenta del administrador la plantilla vigente, con su diseño."""
     destino = actual.usuario.email
+    fila = plantilla(db, CLAVE_RECUPERACION)
+    contexto = contexto_prueba(actual.usuario.nombre or destino.split("@")[0])
     try:
         enviar(
             db,
             destinatario=destino,
-            asunto="Prueba de correo de OPTIMUS-THY",
+            asunto=render(fila.asunto, contexto) if fila else "Prueba de correo de OPTIMUS-THY",
             html=(
-                "<p>Si ves este mensaje, el servidor de correo está configurado correctamente.</p>"
+                render(fila.html, contexto)
+                if fila
+                else (
+                    "<p>Si ves este mensaje, el servidor de correo está "
+                    "configurado correctamente.</p>"
+                )
             ),
         )
     except CorreoNoConfigurado as exc:
         return _error("correo_no_configurado", str(exc), status.HTTP_409_CONFLICT)
     except EnvioError as exc:
+        _registrar_prueba(db, ok=False)
         return _error("envio_fallido", str(exc), status.HTTP_502_BAD_GATEWAY)
+    _registrar_prueba(db, ok=True)
     return PruebaOut(destinatario=destino)
 
 

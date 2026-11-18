@@ -1,3 +1,6 @@
+import { useState } from 'react';
+import { Button } from '../../design-system';
+
 export interface CorreoVistaPreviaProps {
   asunto: string;
   vista: { asunto: string; html: string } | null;
@@ -19,9 +22,31 @@ export interface CorreoVistaPreviaProps {
  * Ocupa el ancho de su columna y se pega al borde superior desde `lg` (1024 px).
  */
 export function CorreoVistaPrevia({ asunto, vista, cargando }: CorreoVistaPreviaProps) {
+  const [ancho, setAncho] = useState<'escritorio' | 'movil'>('escritorio');
   return (
     <aside className="h-fit lg:sticky lg:top-4">
-      <div className="overflow-hidden rounded-card border border-border bg-surface">
+      <div className="mb-2 flex flex-wrap items-center gap-2">
+        <span className="text-xs text-muted-foreground">Ancho del correo</span>
+        <Button
+          variant={ancho === 'escritorio' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setAncho('escritorio')}
+        >
+          Escritorio
+        </Button>
+        <Button
+          variant={ancho === 'movil' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setAncho('movil')}
+        >
+          Móvil
+        </Button>
+      </div>
+      <div
+        className={`overflow-hidden rounded-card border border-border bg-surface ${
+          ancho === 'movil' ? 'mx-auto w-80' : ''
+        }`}
+      >
         <div className="grid gap-1 border-b border-border px-4 py-3">
           <p className="text-sm font-medium">OPTIMUS-THY</p>
           <p className="text-xs text-muted-foreground">Vista previa con datos de ejemplo</p>

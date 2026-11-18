@@ -34,6 +34,10 @@ class ConfiguracionCorreo(Base):
     remitente: Mapped[str] = mapped_column(sa.String(255), nullable=False)
     remitente_nombre: Mapped[str | None] = mapped_column(sa.String(120), nullable=True)
     activo: Mapped[bool] = mapped_column(sa.Boolean, nullable=False, server_default=sa.true())
+    ultima_prueba_en: Mapped[datetime | None] = mapped_column(
+        sa.TIMESTAMP(timezone=True), nullable=True
+    )
+    ultima_prueba_ok: Mapped[bool | None] = mapped_column(sa.Boolean, nullable=True)
     actualizado_en: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.func.now()
     )

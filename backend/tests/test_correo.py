@@ -160,6 +160,50 @@ def test_probar_con_servidor_caido_no_filtra_detalles(client, mundo, monkeypatch
     assert "587" not in mensaje
 
 
+def test_la_prueba_envia_la_plantilla_guardada(client, mundo, monkeypatch):
+    _skip_if_no_db()
+    _entrar(client)
+    _configurar(client)
+    client.put(
+        "/plantillas-correo/recuperacion",
+        json={
+            "asunto": "Prueba para {{nombre}}",
+            "modo": "visual",
+            "campos": {
+                "titulo": "Prueba de plantilla",
+                "mensaje": "Hola {{nombre}}, esto es una prueba.",
+                "boton": "Elegir clave",
+                "nota": "Caduca en {{expira_en}}.",
+                "pie": "Si no fuiste tú, ignora este mensaje.",
+            },
+        },
+    )
+    capturado: dict[str, str] = {}
+
+    def _captura(_db, *, destinatario, asunto, html):
+        capturado.update(destinatario=destinatario, asunto=asunto, html=html)
+
+    monkeypatch.setattr("app.api.correo.enviar", _captura)
+    respuesta = client.post("/configuracion-correo/probar")
+    assert respuesta.status_code == 200, respuesta.text
+    assert "{{nombre}}" not in capturado["html"]
+    assert "Hola" in capturado["html"]
+    assert "/login/recuperar" in capturado["html"]
+    assert "{{nombre}}" not in capturado["asunto"]
+
+
+def test_la_configuracion_guarda_el_resultado_de_la_ultima_prueba(client, mundo, monkeypatch):
+    _skip_if_no_db()
+    _entrar(client)
+    _configurar(client)
+    monkeypatch.setattr("app.api.correo.enviar", lambda *_a, **_k: None)
+
+    client.post("/configuracion-correo/probar")
+    config = client.get("/configuracion-correo").json()
+    assert config["ultima_prueba_ok"] is True
+    assert config["ultima_prueba_en"] is not None
+
+
 def test_plantilla_guarda_variables_y_se_puede_restaurar(client, mundo):
     _skip_if_no_db()
     _entrar(client)

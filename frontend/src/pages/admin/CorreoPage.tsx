@@ -1,6 +1,7 @@
 import { Mail } from 'lucide-react';
 import { useState } from 'react';
 import {
+  Badge,
   Button,
   Callout,
   Dialog,
@@ -52,6 +53,14 @@ export function CorreoPage() {
     );
   }
 
+  const ultimaPrueba = correo.configuracion.ultima_prueba_en;
+  const estadoPrueba = ultimaPrueba
+    ? `Última prueba: ${new Date(ultimaPrueba).toLocaleString('es-EC', {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+      })}`
+    : 'Aún no se ha enviado ninguna prueba';
+
   const guardarPlantilla = () => {
     if (correo.modo !== 'html') {
       void correo.guardarLaPlantilla();
@@ -71,6 +80,16 @@ export function CorreoPage() {
         title="Correo"
         description="Servidor SMTP y plantillas de los envíos, incluida la recuperación de contraseña."
       />
+
+      <div className="flex flex-wrap items-center gap-2">
+        <Badge tone={correo.configuracion.activo ? 'success' : 'neutral'}>
+          {correo.configuracion.activo ? 'Correo activo' : 'Correo inactivo'}
+        </Badge>
+        <span className="text-sm text-muted-foreground">{estadoPrueba}</span>
+        {correo.configuracion.ultima_prueba_ok === false ? (
+          <Badge tone="danger">La última prueba falló</Badge>
+        ) : null}
+      </div>
 
       <Tabs defaultValue="plantilla">
         <TabsList>
@@ -104,12 +123,15 @@ export function CorreoPage() {
             vistaCargando={correo.vistaCargando}
             mensaje={correo.mensajePlantilla}
             guardando={correo.guardandoPlantilla}
+            probando={correo.probando}
             deFabrica={correo.plantillaGuardada?.de_fabrica === true}
+            sinGuardar={correo.sinGuardar}
             onAsunto={correo.setAsunto}
             onModo={correo.setModo}
             onCampo={correo.editarCampo}
             onHtml={correo.setHtml}
             onGuardar={guardarPlantilla}
+            onProbar={() => void correo.enviarPruebaPlantilla()}
             onRestaurar={() => setConfirmarRestaurar(true)}
           />
         </TabsContent>

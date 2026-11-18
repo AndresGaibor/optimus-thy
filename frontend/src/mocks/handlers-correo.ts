@@ -24,6 +24,8 @@ export const configuracionCorreoOk = {
   remitente_nombre: 'OPTIMUS-THY',
   activo: true,
   tiene_password: true,
+  ultima_prueba_en: null as string | null,
+  ultima_prueba_ok: null as boolean | null,
 };
 
 export const camposCorreoOk = {
@@ -87,6 +89,8 @@ export function crearHandlersCorreo(
   demorar: () => Promise<void>,
   respuestaError: (detalle: string) => Response | null,
 ): HttpHandler[] {
+  let ultimaPruebaEn: string | null = null;
+  let ultimaPruebaOk: boolean | null = null;
   return [
     http.get(RUTAS.configuracion, async () => {
       const error = respuestaError('Permiso insuficiente');
@@ -101,7 +105,11 @@ export function crearHandlersCorreo(
           tiene_password: false,
         });
       }
-      return HttpResponse.json(configuracionCorreoOk);
+      return HttpResponse.json({
+        ...configuracionCorreoOk,
+        ultima_prueba_en: ultimaPruebaEn,
+        ultima_prueba_ok: ultimaPruebaOk,
+      });
     }),
     http.put(RUTAS.configuracion, async ({ request }) => {
       const cuerpo = (await request.json()) as Record<string, unknown>;
@@ -115,6 +123,8 @@ export function crearHandlersCorreo(
     }),
     http.post(RUTAS.prueba, async () => {
       const error = respuestaError('El servidor de correo rechazó el envío');
+      ultimaPruebaEn = new Date().toISOString();
+      ultimaPruebaOk = error === null;
       if (error) return error;
       await demorar();
       return HttpResponse.json({ destinatario: 'ana.garcia@example.test' });

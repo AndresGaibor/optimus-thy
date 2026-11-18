@@ -232,6 +232,16 @@ def campos_validos(campos: Mapping[str, str] | None) -> dict[str, str] | None:
     return limpios
 
 
+def contexto_prueba(nombre: str) -> dict[str, str]:
+    """Datos de la prueba de envío: la plantilla real con un enlace a la página pública."""
+    settings = get_settings()
+    return {
+        "nombre": nombre,
+        "enlace": f"{settings.public_url_base}/login/recuperar",
+        "expira_en": mostrar_ttl(settings.recuperacion_ttl_minutos),
+    }
+
+
 def contexto_ejemplo() -> dict[str, str]:
     """Datos sintéticos de la vista previa: nunca de una persona real."""
     settings = get_settings()

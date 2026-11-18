@@ -1,11 +1,9 @@
 import { useRef } from 'react';
 import { Button, Field, Input, Textarea } from '../../design-system';
-import { avisoMarcador, CAMPOS, previa, VARIABLES } from './plantilla-marcadores';
-
-type Campo = (typeof CAMPOS)[number];
+import { avisoMarcador, previa, VARIABLES, type CampoPlantilla } from './plantilla-marcadores';
 
 export interface CorreoCampoPlantillaProps {
-  campo: Campo;
+  campo: CampoPlantilla;
   valor: string;
   onCambio: (valor: string) => void;
 }
@@ -75,7 +73,13 @@ export function CorreoCampoPlantilla({ campo, valor, onCambio }: CorreoCampoPlan
           {campo.variables.map((variable) => {
             const fila = VARIABLES.find((item) => item.clave === variable);
             return (
-              <Button key={variable} variant="outline" size="sm" onClick={() => insertar(variable)}>
+              <Button
+                key={variable}
+                variant="outline"
+                size="sm"
+                aria-label={`Añadir ${fila?.etiqueta.toLowerCase() ?? variable} en ${campo.etiqueta}`}
+                onClick={() => insertar(variable)}
+              >
                 Añadir {fila?.etiqueta.toLowerCase() ?? variable}
               </Button>
             );
