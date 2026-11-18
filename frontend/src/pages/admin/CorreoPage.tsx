@@ -11,7 +11,8 @@ import {
   TabsList,
   TabsTrigger,
 } from '../../design-system';
-import { CorreoPlantillaForm, verificarVariables } from './CorreoPlantillaForm';
+import { CorreoPlantillaForm } from './CorreoPlantillaForm';
+import { verificarVariables } from './plantilla-marcadores';
 import { CorreoServidorForm } from './CorreoServidorForm';
 import { useCorreo } from './useCorreo';
 

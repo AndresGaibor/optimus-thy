@@ -12,63 +12,9 @@ import {
 } from '../../design-system';
 import type { MensajeCorreo } from './CorreoServidorForm';
 import type { ModoPlantilla } from './usePlantillaCorreo';
-
-const VARIABLES = [
-  { clave: 'nombre', ejemplo: 'Ana Pérez' },
-  { clave: 'enlace', ejemplo: '#' },
-  { clave: 'expira_en', ejemplo: '30 minutos' },
-];
-
-const VARIABLES_HTML = VARIABLES.map((fila) => fila.clave);
-
-/** Campos que componen el correo, en el orden en que se leen. */
-const CAMPOS = [
-  {
-    clave: 'titulo',
-    etiqueta: 'Encabezado',
-    ayuda: 'El título grande del correo.',
-    filas: 0,
-  },
-  {
-    clave: 'mensaje',
-    etiqueta: 'Mensaje',
-    ayuda: 'Puedes usar {{nombre}} para saludar a quien lo recibe.',
-    filas: 3,
-  },
-  {
-    clave: 'boton',
-    etiqueta: 'Texto del botón',
-    ayuda: 'El botón lleva al enlace de recuperación; no hace falta pegarlo.',
-    filas: 0,
-  },
-  {
-    clave: 'nota',
-    etiqueta: 'Nota del enlace',
-    ayuda: 'Se muestra bajo el botón. {{expira_en}} se sustituye por la vigencia.',
-    filas: 2,
-  },
-  {
-    clave: 'pie',
-    etiqueta: 'Pie',
-    ayuda: 'Cierre del mensaje, por ejemplo qué hacer si no lo solicitó.',
-    filas: 2,
-  },
-] as const;
-
-/** Sustituye los marcadores por datos de ejemplo para una vista sin servidor. */
-export function previa(texto: string): string {
-  return texto.replace(/\{\{\s*([a-z_]+)\s*\}\}/g, (_coincidencia, clave: string) => {
-    const fila = VARIABLES.find((variable) => variable.clave === clave);
-    return fila ? fila.ejemplo : '';
-  });
-}
-
-/** Devuelve el mensaje de error si la plantilla usa una variable inexistente. */
-export function verificarVariables(texto: string): string | null {
-  const usadas = [...texto.matchAll(/\{\{\s*([a-z_]+)\s*\}\}/g)].map((fila) => fila[1]);
-  const desconocida = usadas.find((clave) => !VARIABLES_HTML.includes(clave ?? ''));
-  return desconocida ? `La variable {{${desconocida}}} no existe.` : null;
-}
+import { CorreoCampoPlantilla } from './CorreoCampoPlantilla';
+import { CorreoVistaPrevia } from './CorreoVistaPrevia';
+import { CAMPOS, VARIABLES } from './plantilla-marcadores';
 
 export interface CorreoPlantillaFormProps {
   asunto: string;
@@ -96,11 +42,11 @@ export interface CorreoPlantillaFormProps {
  * ## Cuándo no usarlo
  * No sirve para cambiar el servidor SMTP ni para otras plantillas que no existan todavía.
  * ## Anatomía
- * Asunto, pestañas Diseño (cinco campos) y HTML, aviso de resultado, acciones y, a la derecha,
- * una maqueta de bandeja con la vista previa que compone el servidor.
+ * Asunto, pestañas Diseño (campos con marcadores) y HTML, aviso de resultado, acciones y, a la
+ * derecha, la maqueta de bandeja con la vista previa que compone el servidor.
  * ## Accesibilidad
- * Etiquetas visibles y ayudas asociadas a cada campo; el cambio de pestaña conserva el foco y la
- * vista previa es un iframe aislado con título.
+ * Etiquetas visibles y ayudas asociadas a cada campo; el aviso del resultado se anuncia con
+ * `role="status"`; la vista previa es un `iframe` aislado con título.
  * ## Responsive
  * Una columna en móvil; editor y vista previa lado a lado desde `lg` (1024 px).
  */
@@ -136,20 +82,12 @@ export function CorreoPlantillaForm({
 
           <TabsContent value="visual" className="grid gap-4 pt-4">
             {CAMPOS.map((campo) => (
-              <Field key={campo.clave} label={campo.etiqueta} hint={campo.ayuda}>
-                {campo.filas > 0 ? (
-                  <Textarea
-                    rows={campo.filas}
-                    value={campos[campo.clave] ?? ''}
-                    onChange={(evento) => onCampo(campo.clave, evento.target.value)}
-                  />
-                ) : (
-                  <Input
-                    value={campos[campo.clave] ?? ''}
-                    onChange={(evento) => onCampo(campo.clave, evento.target.value)}
-                  />
-                )}
-              </Field>
+              <CorreoCampoPlantilla
+                key={campo.clave}
+                campo={campo}
+                valor={campos[campo.clave] ?? ''}
+                onCambio={(valor) => onCampo(campo.clave, valor)}
+              />
             ))}
           </TabsContent>
 
@@ -194,26 +132,7 @@ export function CorreoPlantillaForm({
         </div>
       </div>
 
-      <aside className="h-fit lg:sticky lg:top-4">
-        <div className="overflow-hidden rounded-card border border-border bg-surface">
-          <div className="grid gap-1 border-b border-border px-4 py-3">
-            <p className="text-sm font-medium">OPTIMUS-THY</p>
-            <p className="text-xs text-muted-foreground">Vista previa con datos de ejemplo</p>
-            <p className="mt-1 text-sm font-semibold text-foreground">{vista?.asunto ?? asunto}</p>
-          </div>
-          <iframe
-            title="Vista previa del correo"
-            sandbox=""
-            srcDoc={vista?.html ?? ''}
-            className="h-128 w-full bg-white"
-          />
-        </div>
-        {vistaCargando ? (
-          <p role="status" className="mt-2 text-xs text-muted-foreground">
-            Actualizando la vista previa…
-          </p>
-        ) : null}
-      </aside>
+      <CorreoVistaPrevia asunto={asunto} vista={vista} cargando={vistaCargando} />
     </div>
   );
 }
