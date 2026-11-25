@@ -10,18 +10,23 @@ Reglas que el servicio garantiza:
 
 from __future__ import annotations
 
+import hashlib
+import json
 import re
 import uuid
 from collections.abc import Mapping
+from datetime import UTC, datetime
 from typing import Final
 
+from sqlalchemy import func, select, text
+from sqlalchemy.exc import UnboundExecutionError
 from sqlalchemy.orm import Session
 
 from app.audit.actions import AuditAction, AuditModule, AuditObjectType
 from app.models.auditoria import Auditoria
 from app.models.usuarios import Usuario
 
-__all__ = ["AuditError", "AuditService"]
+__all__ = ["AuditError", "AuditService", "hash_evento"]
 
 Detalle = str | int | float | bool | uuid.UUID
 
@@ -78,6 +83,37 @@ def _validar_detalles(detalles: Mapping[str, Detalle] | None) -> dict[str, Detal
     return limpios
 
 
+def hash_evento(
+    hash_anterior: str | None,
+    ocurrido_en: datetime,
+    usuario_id: uuid.UUID | None,
+    accion: str,
+    entidad: str,
+    entidad_id: str | None,
+    detalles: Mapping[str, Detalle] | None,
+) -> str:
+    """Calcula el SHA-256 con una representación JSON canónica del evento."""
+    if ocurrido_en.tzinfo is None:
+        ocurrido_en = ocurrido_en.replace(tzinfo=UTC)
+    instante = ocurrido_en.astimezone(UTC).isoformat(timespec="microseconds").replace("+00:00", "Z")
+    contenido = json.dumps(
+        [
+            hash_anterior,
+            instante,
+            str(usuario_id) if usuario_id is not None else None,
+            accion,
+            entidad,
+            entidad_id,
+            detalles,
+        ],
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+        default=str,
+    )
+    return hashlib.sha256(contenido.encode("utf-8")).hexdigest()
+
+
 class AuditService:
     """Registra eventos; no los lee, no los edita y no los borra."""
 
@@ -116,7 +152,45 @@ class AuditService:
         if rol is not None:
             contexto["role_code"] = rol
 
+        try:
+            bind = self._session.get_bind(mapper=Auditoria)
+        except UnboundExecutionError:
+            bind = None
+
+        ocurrido_en: datetime | None
+        hash_anterior: str | None
+        if bind is None:
+            hash_anterior = self._session.info.get("optimus_auditoria_hash_actual")
+            ocurrido_en = datetime.now(UTC)
+        else:
+            if bind.dialect.name == "postgresql":
+                self._session.execute(text("LOCK TABLE auditoria IN SHARE ROW EXCLUSIVE MODE"))
+                ocurrido_en = self._session.scalar(select(func.clock_timestamp()))
+            else:
+                ocurrido_en = datetime.now(UTC)
+            hash_anterior = self._session.scalar(
+                select(Auditoria.hash_actual).order_by(Auditoria.id.desc()).limit(1)
+            )
+        if ocurrido_en is None:
+            raise RuntimeError("No se pudo obtener el instante del evento de auditoría")
+
+        accion_evento = f"{modulo.value}.{accion.value}"
+        entidad_evento = tipo_objeto.value if tipo_objeto is not None else modulo.value
+        entidad_id_evento = str(objeto_id) if objeto_id is not None else None
+        detalles_evento = _validar_detalles(contexto or None)
+        hash_actual = hash_evento(
+            hash_anterior,
+            ocurrido_en,
+            usuario.id if usuario is not None else None,
+            accion_evento,
+            entidad_evento,
+            entidad_id_evento,
+            detalles_evento,
+        )
         evento = Auditoria(
+            ocurrido_en=ocurrido_en,
+            hash_anterior=hash_anterior,
+            hash_actual=hash_actual,
             usuario_id=usuario.id if usuario is not None else None,
             institucion_id=(
                 institucion_id
@@ -125,15 +199,18 @@ class AuditService:
                 if usuario is not None
                 else None
             ),
-            # Una sola cadena legible en la tabla: módulo y acción.
-            accion=f"{modulo.value}.{accion.value}",
-            entidad=tipo_objeto.value if tipo_objeto is not None else modulo.value,
-            entidad_id=str(objeto_id) if objeto_id is not None else None,
+            accion=accion_evento,
+            entidad=entidad_evento,
+            entidad_id=entidad_id_evento,
             direccion_ip=ip,
             user_agent=agente_usuario,
-            detalles=_validar_detalles(contexto or None),
+            detalles=detalles_evento,
         )
         self._session.add(evento)
+        if bind is None:
+            self._session.info["optimus_auditoria_hash_actual"] = hash_actual
+        else:
+            self._session.flush([evento])
         return evento
 
     def record_denied(

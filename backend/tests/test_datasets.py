@@ -4,11 +4,12 @@ from __future__ import annotations
 
 import json
 import uuid
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 
 import pytest
 from fastapi.testclient import TestClient
+from app.investigacion.anonimizacion import _desplazamiento_dias
 
 from app.models.auditoria import Auditoria
 from app.models.consentimientos import Consentimiento
@@ -95,18 +96,20 @@ def _caso(
     )
     db.add(caso)
     db.flush()
+    desplazamiento = timedelta(days=_desplazamiento_dias(caso.id))
+    caso.creado_en = CASO_CREADO - desplazamiento
     db.add(
         FichaClinica(
             caso_id=caso.id,
             tsh=Decimal(tsh),
             tsh_unidad="mIU/L",
-            tsh_fecha=date(2025, 3, 14),
+            tsh_fecha=date(2025, 3, 14) - desplazamiento,
             t3=Decimal("1.200"),
             t3_unidad="ng/mL",
-            t3_fecha=date(2025, 4, 2),
+            t3_fecha=date(2025, 4, 2) - desplazamiento,
             t4=Decimal("1.100"),
             t4_unidad="ng/dL",
-            t4_fecha=date(2025, 5, 9),
+            t4_fecha=date(2025, 5, 9) - desplazamiento,
             tamano_nodulo_mm=Decimal("12.50"),
             lateralidad="derecho",
             tirads="4",
@@ -158,9 +161,25 @@ def test_crear_dataset_solo_con_consentimiento_de_investigacion(client, mundo, d
 
     assert creado["total_casos"] == 5
     assert creado["k"] == 5
+    assert creado["k_efectivo"] == 5
     assert len(creado["huella"]) == 64
     assert len(creado["items"]) == 5
     assert creado["criterios"] == {}
+
+
+def test_clases_con_k_suficiente_incluyen_k_efectivo(client, mundo, db_session) -> None:
+    _entrar(client, mundo["investigador"])
+    _sembrar_casos(db_session, mundo["institucion"], 5)
+    for indice in range(6, 11):
+        _caso(db_session, mundo["institucion"], indice, tipo_diagnostico="en_estudio")
+
+    respuesta = client.post(
+        "/investigacion/datasets",
+        json={"nombre": "dos-clases", "k": 5, "filtro": {}},
+    )
+
+    assert respuesta.status_code == 201, respuesta.text
+    assert respuesta.json()["k_efectivo"] == 5
 
 
 def test_listar_datasets(client, mundo, db_session) -> None:
@@ -194,6 +213,22 @@ def test_detalle_dataset(client, mundo, db_session) -> None:
     assert client.get(f"/investigacion/datasets/{uuid.uuid4()}").status_code == 404
     assert client.get("/investigacion/datasets/no-es-uuid").status_code == 404
 
+
+def test_clase_bajo_k_es_422_sin_exponer_valores(client, mundo, db_session) -> None:
+    _entrar(client, mundo["investigador"])
+    _sembrar_casos(db_session, mundo["institucion"], 5)
+    _caso(db_session, mundo["institucion"], 6, tipo_diagnostico="en_estudio")
+
+    respuesta = client.post(
+        "/investigacion/datasets",
+        json={"nombre": "k-inefectivo", "k": 5, "filtro": {}},
+    )
+
+    assert respuesta.status_code == 422
+    error = respuesta.json()["error"]
+    assert error["code"] == "k_no_alcanzado"
+    assert "1 clase" in error["message"]
+    assert "en_estudio" not in respuesta.text
 
 def test_k_menor_que_cinco_es_422(client, mundo, db_session) -> None:
     _entrar(client, mundo["investigador"])

@@ -25,6 +25,7 @@ from sqlalchemy.orm import Session
 
 from app.audit.actions import AuditAction, AuditModule, AuditObjectType
 from app.audit.http import registrar
+from app.audit.service import hash_evento
 from app.auth.deps import SesionActual, requiere_permiso
 from app.db import session_dep
 from app.models.auditoria import Auditoria
@@ -224,6 +225,31 @@ def consultar_bitacora(
         detalles={"resource_count": len(items)},
     )
     return BitacoraOut(total=total, items=items)
+
+
+@router.get("/auditoria/integridad", response_model=None)
+def verificar_integridad(
+    db: Annotated[Session, Depends(session_dep)],
+    actual: Annotated[SesionActual, Depends(requiere_permiso("auditoria.leer"))],
+) -> dict[str, bool | int | None]:
+    """Comprueba toda la cadena y solo devuelve estado e identificador del primer fallo."""
+    hash_anterior: str | None = None
+    registros = 0
+    for evento in db.query(Auditoria).order_by(Auditoria.id.asc()).yield_per(500):
+        registros += 1
+        hash_actual = hash_evento(
+            hash_anterior,
+            evento.ocurrido_en,
+            evento.usuario_id,
+            evento.accion,
+            evento.entidad,
+            evento.entidad_id,
+            evento.detalles,
+        )
+        if evento.hash_anterior != hash_anterior or evento.hash_actual != hash_actual:
+            return {"valida": False, "registros": registros, "primer_fallo": evento.id}
+        hash_anterior = evento.hash_actual
+    return {"valida": True, "registros": registros, "primer_fallo": None}
 
 
 @router.get("/auditoria/exportar", response_model=None)
