@@ -8,6 +8,7 @@ APP_DIR="${APP_DIR:-/home/ubuntu/code/optimus-thy-operativo}"
 PUBLIC_URL="${PUBLIC_URL:-https://tiroides2.andresgaibor.com}"
 COMPOSE_NETWORK="${COMPOSE_NETWORK:-optimus-thy-net}"
 EDGE="${EDGE:-optimus-thy-edge}"
+BUN="${BUN:-$HOME/.bun/bin/bun}"
 ESTADO="$APP_DIR/.deploy/desplegado"
 
 log() { printf '[deploy-automatico] %s\n' "$*"; }
@@ -44,6 +45,7 @@ git reset --hard --quiet "$target"
 
 if printf '%s\n' "$cambiados" | grep -qE '^(frontend/|bun\.lock|package\.json)'; then
   log "reconstruyendo el frontend"
+  [[ -x "$BUN" ]] || die "no encuentro bun en $BUN"
   (cd frontend && "$BUN" install --frozen-lockfile && "$BUN" run build)
   # El sitio lo sirve el borde, que monta frontend/dist: hay que recargarlo para
   # que suelte los archivos anteriores y vea los nuevos.
