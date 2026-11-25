@@ -52,6 +52,7 @@ frontend/.vitest-attachments/
 # Releases and deployment metadata
 releases/
 deployments/
+.deploy/
 .deploy.lock
 var/
 frontend/local:/
