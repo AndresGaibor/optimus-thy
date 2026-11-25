@@ -13,6 +13,7 @@ import { CorreoPage } from './pages/admin/CorreoPage';
 import { PacientesPage } from './pages/medico/PacientesPage';
 import { ResultadosPage } from './pages/medico/ResultadosPage';
 import { CasoPage } from './pages/medico/CasoPage';
+import { InferenciaPacientePage } from './pages/medico/InferenciaPacientePage';
 import { RootRedirect, RoleRoute } from './session/RoleRoute';
 
 export function AppRoutes() {
@@ -35,7 +36,8 @@ export function AppRoutes() {
         <Route path="pacientes" element={<PacientesPage />} />
         <Route path="resultados" element={<ResultadosPage />} />
         <Route path="casos/:casoId" element={<CasoPage />} />
-        <Route path="inferencia" element={<PlaceholderPage titulo="Inferencia" />} />
+        <Route path="pacientes/:id/inferencia" element={<InferenciaPacientePage />} />
+        <Route path="inferencia" element={<InferenciaPacientePage />} />
       </Route>
 
       <Route

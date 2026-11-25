@@ -83,6 +83,12 @@ export function ResultadoNodulo({ nodulo, modelo, creadoEn }: ResultadoNoduloPro
               </dd>
             </div>
             <div>
+              <dt className="text-muted-foreground">Confianza del detector</dt>
+              <dd>
+                {nodulo.confianza === null ? '—' : FORMATO_PORCENTAJE.format(nodulo.confianza)}
+              </dd>
+            </div>
+            <div>
               <dt className="text-muted-foreground">Caja</dt>
               <dd>
                 x {nodulo.caja.x ?? '—'}, y {nodulo.caja.y ?? '—'}, w {nodulo.caja.w ?? '—'}, h{' '}
@@ -103,29 +109,35 @@ export function ResultadoNodulo({ nodulo, modelo, creadoEn }: ResultadoNoduloPro
               </div>
             ) : null}
           </dl>
-          <div className="grid gap-3 sm:grid-cols-3">
-            {derivadas.map(([etiqueta, url]) =>
-              url ? (
-                <figure key={etiqueta} className="flex flex-col gap-2">
-                  <img
-                    src={url}
-                    alt={`${etiqueta} del nódulo ${nodulo.indice}`}
-                    className="w-full rounded-md border border-border"
-                  />
-                  <figcaption className="text-xs text-muted-foreground">{etiqueta}</figcaption>
-                </figure>
-              ) : null,
-            )}
-          </div>
-          {artefactos.xml_url ? (
-            <div>
-              <Button asChild variant="outline" size="sm">
-                <a href={artefactos.xml_url} target="_blank" rel="noreferrer">
-                  Descargar XML del nódulo {nodulo.indice}
-                </a>
-              </Button>
-            </div>
-          ) : null}
+          {derivadas.some(([, url]) => url !== null) || artefactos.xml_url !== null ? (
+            <>
+              <div className="grid gap-3 sm:grid-cols-3">
+                {derivadas.map(([etiqueta, url]) =>
+                  url ? (
+                    <figure key={etiqueta} className="flex flex-col gap-2">
+                      <img
+                        src={url}
+                        alt={`${etiqueta} del nódulo ${nodulo.indice}`}
+                        className="w-full rounded-md border border-border"
+                      />
+                      <figcaption className="text-xs text-muted-foreground">{etiqueta}</figcaption>
+                    </figure>
+                  ) : null,
+                )}
+              </div>
+              {artefactos.xml_url ? (
+                <div>
+                  <Button asChild variant="outline" size="sm">
+                    <a href={artefactos.xml_url} target="_blank" rel="noreferrer">
+                      Descargar XML del nódulo {nodulo.indice}
+                    </a>
+                  </Button>
+                </div>
+              ) : null}
+            </>
+          ) : (
+            <p className="text-sm text-muted-foreground">Sin artefactos para este nódulo.</p>
+          )}
         </CardContent>
       </Card>
     </div>
