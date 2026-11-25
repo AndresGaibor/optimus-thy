@@ -14,7 +14,9 @@ import { PacientesPage } from './pages/medico/PacientesPage';
 import { ResultadosPage } from './pages/medico/ResultadosPage';
 import { CasoPage } from './pages/medico/CasoPage';
 import { HistorialInferenciasPage } from './pages/medico/HistorialInferenciasPage';
+import { ComparacionResultadosPage } from './pages/medico/ComparacionResultadosPage';
 import { AuditoriaPrediccionesPage } from './pages/investigador/AuditoriaPrediccionesPage';
+import { DatasetsPage } from './pages/investigador/DatasetsPage';
 import { InferenciaPacientePage } from './pages/medico/InferenciaPacientePage';
 import { RootRedirect, RoleRoute } from './session/RoleRoute';
 
@@ -39,6 +41,7 @@ export function AppRoutes() {
         <Route path="resultados" element={<ResultadosPage />} />
         <Route path="casos/:casoId" element={<CasoPage />} />
         <Route path="historial" element={<HistorialInferenciasPage />} />
+        <Route path="comparacion" element={<ComparacionResultadosPage />} />
         <Route path="casos/:casoId/historial" element={<HistorialInferenciasPage />} />
         <Route path="pacientes/:id/inferencia" element={<InferenciaPacientePage />} />
         <Route path="inferencia" element={<InferenciaPacientePage />} />
@@ -54,6 +57,7 @@ export function AppRoutes() {
       >
         <Route index element={<PlaceholderPage titulo="Cohortes" />} />
         <Route path="predicciones" element={<AuditoriaPrediccionesPage />} />
+        <Route path="datasets" element={<DatasetsPage />} />
         <Route path="cohortes" element={<PlaceholderPage titulo="Cohortes" />} />
         <Route path="exportaciones" element={<PlaceholderPage titulo="Exportaciones" />} />
       </Route>

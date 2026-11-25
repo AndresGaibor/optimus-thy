@@ -2,6 +2,7 @@ import {
   Activity,
   Building2,
   ClipboardList,
+  Database,
   Download,
   Cpu,
   FileText,
@@ -27,11 +28,13 @@ const NAV_BY_ROLE: Record<Role, SidebarNavItem[]> = {
     { to: '/medico/pacientes', label: 'Pacientes', icon: Users },
     { to: '/medico/resultados', label: 'Resultados', icon: FileText },
     { to: '/medico/historial', label: 'Historial', icon: ClipboardList },
+    { to: '/medico/comparacion', label: 'Comparación', icon: LayoutDashboard },
     { to: '/medico/inferencia', label: 'Inferencia', icon: Activity },
   ],
   investigador: [
     { to: '/investigador/cohortes', label: 'Cohortes', icon: LayoutDashboard },
     { to: '/investigador/predicciones', label: 'Predicciones', icon: FileText },
+    { to: '/investigador/datasets', label: 'Datasets', icon: Database },
     { to: '/investigador/exportaciones', label: 'Exportaciones', icon: Download },
   ],
   administrador: [
