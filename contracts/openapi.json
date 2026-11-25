@@ -167,6 +167,31 @@
         }
       }
     },
+    "/auditoria/integridad": {
+      "get": {
+        "tags": [
+          "auditoria"
+        ],
+        "summary": "Verificar Integridad",
+        "description": "Comprueba toda la cadena y solo devuelve estado e identificador del primer fallo.",
+        "operationId": "verificar_integridad_auditoria_integridad_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
+      }
+    },
     "/auditoria/exportar": {
       "get": {
         "tags": [
@@ -318,6 +343,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PacienteOut"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Ya existe un paciente con ese documento",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
                 }
               }
             }
@@ -3735,6 +3770,11 @@
             "type": "string",
             "format": "date",
             "title": "Fecha Nacimiento"
+          },
+          "confirmar_duplicado": {
+            "type": "boolean",
+            "title": "Confirmar Duplicado",
+            "default": false
           }
         },
         "type": "object",

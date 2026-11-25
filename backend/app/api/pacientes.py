@@ -13,7 +13,7 @@ import secrets
 import uuid
 from collections.abc import Callable
 from datetime import date, datetime
-from typing import Annotated, cast
+from typing import Annotated, Any, cast
 
 from fastapi import APIRouter, Depends, Query, Request, status
 from fastapi.responses import JSONResponse
@@ -50,6 +50,7 @@ class CrearPacienteRequest(BaseModel):
     apellidos: str = Field(min_length=1, max_length=120)
     documento: str = Field(min_length=5, max_length=20, pattern=r"^[A-Za-z0-9-]+$")
     fecha_nacimiento: date
+    confirmar_duplicado: bool = False
 
     @field_validator("fecha_nacimiento")
     @classmethod
@@ -167,16 +168,20 @@ def _total_casos(db: Session, paciente_id: uuid.UUID) -> int:
 
 
 def _documento_en_uso(
-    db: Session, institucion_id: uuid.UUID, documento: str, excluir: uuid.UUID
-) -> bool:
-    """El documento no tiene índice propio: se compara en claro dentro de la institución."""
-    filas = (
-        db.query(IdentidadPaciente.documento_cifrado)
+    db: Session, institucion_id: uuid.UUID, documento: str, excluir: uuid.UUID | None
+) -> uuid.UUID | None:
+    """Devuelve el ID de un paciente de la institución con ese documento, si existe."""
+    consulta = (
+        db.query(IdentidadPaciente.paciente_id, IdentidadPaciente.documento_cifrado)
         .join(Paciente, Paciente.id == IdentidadPaciente.paciente_id)
-        .filter(Paciente.institucion_id == institucion_id, Paciente.id != excluir)
-        .all()
+        .filter(Paciente.institucion_id == institucion_id)
     )
-    return any(fila[0] == documento for fila in filas)
+    if excluir is not None:
+        consulta = consulta.filter(Paciente.id != excluir)
+    for paciente_id, documento_guardado in consulta.all():
+        if documento_guardado == documento:
+            return paciente_id
+    return None
 
 
 def _paciente_out(db: Session, paciente: Paciente) -> PacienteOut:
@@ -198,13 +203,39 @@ def _caso_out(caso: Caso, paciente: Paciente) -> CasoOut:
     )
 
 
-@router.post("/pacientes", status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/pacientes",
+    status_code=status.HTTP_201_CREATED,
+    response_model=PacienteOut,
+    responses={
+        409: {
+            "description": "Ya existe un paciente con ese documento",
+            "content": {"application/json": {"schema": {"type": "object"}}},
+        }
+    },
+)
 def crear_paciente(
     request: Request,
     body: CrearPacienteRequest,
     db: Annotated[Session, Depends(session_dep)],
     actual: Annotated[SesionActual, Depends(requiere_permiso("paciente.escribir"))],
-) -> PacienteOut:
+) -> Any:
+    if not body.confirmar_duplicado:
+        paciente_id = _documento_en_uso(
+            db, actual.usuario.institucion_id, body.documento, excluir=None
+        )
+        if paciente_id is not None:
+            return JSONResponse(
+                status_code=status.HTTP_409_CONFLICT,
+                content={
+                    "error": {
+                        "code": "posible_duplicado",
+                        "message": "Ya existe un paciente con ese documento",
+                        "paciente_id": str(paciente_id),
+                    },
+                    "request_id": getattr(request.state, "request_id", "-"),
+                },
+            )
     codigo = _codigo_nuevo(
         "PAC",
         lambda c: db.query(Paciente.id).filter(Paciente.seudonimo == c).first() is not None,

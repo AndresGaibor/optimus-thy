@@ -20,21 +20,14 @@ import { SearchInput } from '../../design-system/components/molecules/SearchInpu
 import { Toast } from '../../design-system/components/molecules/Toast';
 import { Dialog, DialogClose } from '../../design-system/components/organisms/Dialog';
 import {
-  crearPaciente,
   listarPacientes,
   obtenerPaciente,
   type Paciente,
 } from '../../api/pacientes';
 import { CasosDelPaciente } from './CasosDelPaciente';
+import { useAltaPaciente } from './useAltaPaciente';
 
 const LIMITE_POR_PAGINA = 20;
-
-interface FormularioCrearPaciente {
-  nombres: string;
-  apellidos: string;
-  documento: string;
-  fecha_nacimiento: string;
-}
 
 function formatearFecha(fechaIso: string): string {
   try {
@@ -121,6 +114,14 @@ export function PacientesPage() {
     void cargarPacientes();
   }, [cargarPacientes]);
 
+  const alta = useAltaPaciente(
+    useCallback(() => {
+      setDesplazamiento(0);
+      setAvisoExito('Paciente creado correctamente.');
+      void cargarPacientes();
+    }, [cargarPacientes]),
+  );
+
   useEffect(() => {
     if (!avisoExito) {
       return;
@@ -189,33 +190,8 @@ export function PacientesPage() {
     return Object.keys(errores).length === 0;
   }, [formCrear]);
 
-  const guardarCrear = useCallback(async () => {
-    if (!validarCrear()) {
-      return;
-    }
-    setGuardandoCrear(true);
-    setErrorCrear(null);
-    const resultado = await crearPaciente({
-      nombres: formCrear.nombres.trim(),
-      apellidos: formCrear.apellidos.trim(),
-      documento: formCrear.documento.trim(),
-      fecha_nacimiento: formCrear.fecha_nacimiento,
-    });
-    if (!resultado.ok) {
-      if (resultado.status === 422) {
-        setErrorCrear('Revisa los datos introducidos. Hay campos con errores.');
-      } else {
-        setErrorCrear('No se pudo crear el paciente. Reintenta la operación.');
       }
       setGuardandoCrear(false);
-      return;
-    }
-    setGuardandoCrear(false);
-    setDialogoCrearAbierto(false);
-    setDesplazamiento(0);
-    setAvisoExito('Paciente creado correctamente.');
-    void cargarPacientes();
-  }, [validarCrear, formCrear, cargarPacientes]);
 
   const verDetalle = useCallback(async (paciente: Paciente) => {
     setDialogoDetalleAbierto(true);
@@ -239,7 +215,7 @@ export function PacientesPage() {
       <PageHeader
         title="Pacientes"
         description="Se muestran códigos internos, no identidad. Use el buscador para localizar pacientes."
-        actions={<Button onClick={abrirCrear}>Nuevo paciente</Button>}
+        actions={<Button onClick={alta.abrir}>Nuevo paciente</Button>}
       />
 
       {avisoExito ? <Toast title={avisoExito} tone="success" /> : null}
@@ -296,7 +272,7 @@ export function PacientesPage() {
                       as="h2"
                       title="Todavía no hay pacientes"
                       description="Registra el primer paciente para empezar."
-                      action={<Button onClick={abrirCrear}>Registrar el primero</Button>}
+                      action={<Button onClick={alta.abrir}>Registrar el primero</Button>}
                     />
                   ) : (
                     <EmptyState
@@ -348,8 +324,8 @@ export function PacientesPage() {
       ) : null}
 
       <Dialog
-        open={dialogoCrearAbierto}
-        onOpenChange={setDialogoCrearAbierto}
+        open={alta.abierto}
+        onOpenChange={alta.setAbierto}
         title="Nuevo paciente"
         description="Introduce los datos mínimos para dar de alta al paciente."
         footer={
@@ -357,49 +333,47 @@ export function PacientesPage() {
             <DialogClose asChild>
               <Button variant="secondary">Cancelar</Button>
             </DialogClose>
-            <Button onClick={() => void guardarCrear()} disabled={guardandoCrear}>
-              {guardandoCrear ? 'Guardando...' : 'Guardar'}
-            </Button>
+            {alta.duplicado ? (
+              <Button onClick={() => void alta.guardar(true)} disabled={alta.guardando}>
+                {alta.guardando ? 'Guardando...' : 'Registrar igualmente'}
+              </Button>
+            ) : (
+              <Button onClick={() => void alta.guardar()} disabled={alta.guardando}>
+                {alta.guardando ? 'Guardando...' : 'Guardar'}
+              </Button>
+            )}
           </div>
         }
       >
         <div className="flex flex-col gap-4">
-          {errorCrear ? (
+          {alta.error ? (
             <Callout tone="danger" role="alert">
-              {errorCrear}
+              {alta.error}
             </Callout>
           ) : null}
-          <Field label="Nombres" required error={erroresCrear.nombres}>
+          <Field label="Nombres" required error={alta.errores.nombres}>
             <Input
-              value={formCrear.nombres}
-              onChange={(evento) =>
-                setFormCrear((anterior) => ({ ...anterior, nombres: evento.target.value }))
-              }
+              value={alta.formulario.nombres}
+              onChange={(evento) => alta.cambiar('nombres', evento.target.value)}
             />
           </Field>
-          <Field label="Apellidos" required error={erroresCrear.apellidos}>
+          <Field label="Apellidos" required error={alta.errores.apellidos}>
             <Input
-              value={formCrear.apellidos}
-              onChange={(evento) =>
-                setFormCrear((anterior) => ({ ...anterior, apellidos: evento.target.value }))
-              }
+              value={alta.formulario.apellidos}
+              onChange={(evento) => alta.cambiar('apellidos', evento.target.value)}
             />
           </Field>
-          <Field label="Documento" required error={erroresCrear.documento}>
+          <Field label="Documento" required error={alta.errores.documento}>
             <Input
-              value={formCrear.documento}
-              onChange={(evento) =>
-                setFormCrear((anterior) => ({ ...anterior, documento: evento.target.value }))
-              }
+              value={alta.formulario.documento}
+              onChange={(evento) => alta.cambiar('documento', evento.target.value)}
             />
           </Field>
-          <Field label="Fecha de nacimiento" required error={erroresCrear.fecha_nacimiento}>
+          <Field label="Fecha de nacimiento" required error={alta.errores.fecha_nacimiento}>
             <Input
               type="date"
-              value={formCrear.fecha_nacimiento}
-              onChange={(evento) =>
-                setFormCrear((anterior) => ({ ...anterior, fecha_nacimiento: evento.target.value }))
-              }
+              value={alta.formulario.fecha_nacimiento}
+              onChange={(evento) => alta.cambiar('fecha_nacimiento', evento.target.value)}
             />
           </Field>
         </div>

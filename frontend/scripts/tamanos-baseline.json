@@ -2,7 +2,7 @@
   "src/design-system/components/organisms/SidebarLayout.tsx": 275,
   "src/mocks/handlers.ts": 347,
   "src/pages/admin/UsuariosPage.tsx": 649,
-  "src/pages/medico/PacientesPage.tsx": 467,
+  "src/pages/medico/PacientesPage.tsx": 368,
   "src/screens/doctor/ClinicalRecordsScreen.tsx": 353,
   "src/screens/doctor/PatientDetailScreen.tsx": 335,
   "src/screens/researcher/Datasets.tsx": 276,

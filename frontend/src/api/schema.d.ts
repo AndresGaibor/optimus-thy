@@ -41,6 +41,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auditoria/integridad": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Verificar Integridad
+         * @description Comprueba toda la cadena y solo devuelve estado e identificador del primer fallo.
+         */
+        get: operations["verificar_integridad_auditoria_integridad_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auditoria/exportar": {
         parameters: {
             query?: never;
@@ -1091,6 +1111,11 @@ export interface components {
              * Format: date
              */
             fecha_nacimiento: string;
+            /**
+             * Confirmar Duplicado
+             * @default false
+             */
+            confirmar_duplicado: boolean;
         };
         /** CrearTrabajoRequest */
         CrearTrabajoRequest: {
@@ -1509,6 +1534,26 @@ export interface operations {
             };
         };
     };
+    verificar_integridad_auditoria_integridad_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
     exportar_bitacora_auditoria_exportar_get: {
         parameters: {
             query?: {
@@ -1597,6 +1642,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PacienteOut"];
+                };
+            };
+            /** @description Ya existe un paciente con ese documento */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
                 };
             };
             /** @description Validation Error */

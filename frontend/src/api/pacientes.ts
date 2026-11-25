@@ -21,6 +21,18 @@ export interface PacienteDetalle extends Paciente {
   casos: CasoResumen[];
 }
 
+/** El alta responde 409 con `error.code = "posible_duplicado"` cuando el documento ya existe. */
+export function esDocumentoDuplicado(error: unknown): boolean {
+  if (!error || typeof error !== 'object') {
+    return false;
+  }
+  const detalle = (error as Record<string, unknown>).error;
+  if (!detalle || typeof detalle !== 'object') {
+    return false;
+  }
+  return (detalle as Record<string, unknown>).code === 'posible_duplicado';
+}
+
 function esPaciente(valor: unknown): valor is Paciente {
   if (typeof valor !== 'object' || valor === null) {
     return false;
@@ -97,14 +109,17 @@ export async function listarPacientes(params?: {
   return { ok: false, status: 422 };
 }
 
-export async function crearPaciente(datos: {
-  nombres: string;
-  apellidos: string;
-  documento: string;
-  fecha_nacimiento: string;
-}): Promise<ApiResult<Paciente>> {
+export async function crearPaciente(
+  datos: {
+    nombres: string;
+    apellidos: string;
+    documento: string;
+    fecha_nacimiento: string;
+  },
+  confirmarDuplicado = false,
+): Promise<ApiResult<Paciente>> {
   const { data, error, response } = await client.POST('/pacientes', {
-    body: datos,
+    body: { ...datos, confirmar_duplicado: confirmarDuplicado },
   });
 
   if (data) {
