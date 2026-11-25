@@ -26,6 +26,7 @@ const NAV_BY_ROLE: Record<Role, SidebarNavItem[]> = {
   medico: [
     { to: '/medico/pacientes', label: 'Pacientes', icon: Users },
     { to: '/medico/resultados', label: 'Resultados', icon: FileText },
+    { to: '/medico/historial', label: 'Historial', icon: ClipboardList },
     { to: '/medico/inferencia', label: 'Inferencia', icon: Activity },
   ],
   investigador: [
