@@ -7,7 +7,7 @@ set -Eeuo pipefail
 APP_DIR="${APP_DIR:-/home/ubuntu/code/optimus-thy-operativo}"
 PUBLIC_URL="${PUBLIC_URL:-https://tiroides2.andresgaibor.com}"
 COMPOSE_NETWORK="${COMPOSE_NETWORK:-optimus-thy-net}"
-BUN="${BUN:-/home/ubuntu/.bun/bin/bun}"
+ESTADO="$APP_DIR/.deploy/desplegado"
 
 log() { printf '[deploy-automatico] %s\n' "$*"; }
 die() { printf '[deploy-automatico] ERROR: %s\n' "$*" >&2; exit 1; }
@@ -16,7 +16,9 @@ cd "$APP_DIR"
 git fetch --quiet origin main
 target="$(git rev-parse origin/main)"
 
-if [[ "$(git rev-parse HEAD)" == "$target" && -f frontend/dist/index.html ]]; then
+# El estado lo marca el despliegue terminado, no el checkout: un merge hecho a
+# mano en este directorio deja HEAD en el commit nuevo sin haber desplegado.
+if [[ -f "$ESTADO" && "$(cat "$ESTADO")" == "$target" ]]; then
   log "sin cambios en $target"
   exit 0
 fi
@@ -28,16 +30,24 @@ while IFS= read -r archivo; do
     die "hay cambios locales distintos de $target en $archivo; no se despliega"
 done < <(git status --porcelain --untracked-files=no | cut -c4-)
 
-cambiados="$(git diff --name-only HEAD "$target")"
+# Qué reconstruir se mide contra el último commit desplegado, no contra HEAD:
+# un merge hecho a mano en este directorio deja HEAD en el commit nuevo.
+anterior="$(cat "$ESTADO" 2>/dev/null || true)"
+if [[ -n "$anterior" ]] && git cat-file -e "$anterior^{commit}" 2>/dev/null; then
+  cambiados="$(git diff --name-only "$anterior" "$target")"
+else
+  cambiados="$(git ls-files)"
+fi
 log "desplegando $target"
 git reset --hard --quiet "$target"
 
 if printf '%s\n' "$cambiados" | grep -qE '^(frontend/|bun\.lock|package\.json)'; then
   log "reconstruyendo el frontend"
-  (cd frontend && "$BUN" install --frozen-lockfile && "$BUN" run build)
+  COMPOSE_NETWORK="$COMPOSE_NETWORK" docker compose build frontend
+  COMPOSE_NETWORK="$COMPOSE_NETWORK" docker compose up -d --no-deps frontend
 fi
 
-if printf '%s\n' "$cambiados" | grep -qE '^(backend/|docker-compose\.yml)'; then
+if printf '%s\n' "$cambiados" | grep -qE '^(backend/|docker-compose\.yml|ai/|ia/)'; then
   log "reconstruyendo el backend"
   COMPOSE_NETWORK="$COMPOSE_NETWORK" docker compose build backend
   log "aplicando migraciones"
@@ -55,4 +65,19 @@ curl -fsS -o /dev/null http://127.0.0.1:8000/health || die "el backend no respon
 [[ "$(curl -sS -o /dev/null -w '%{http_code}' "$PUBLIC_URL/api/auth/me")" == 401 ]] ||
   die "la API no responde 401"
 
-log "desplegado $target"
+# Lo servido debe ser la imagen recién construida, no una caché ni un contenedor viejo.
+bundle_contenedor="$(docker compose exec -T frontend sh -c 'ls /usr/share/nginx/html/assets' |
+  grep -m1 -oE '^index-[A-Za-z0-9_-]+\.js$' || true)"
+[[ -n "$bundle_contenedor" ]] || die "el contenedor del frontend no tiene bundle"
+bundle_publico=""
+for _ in $(seq 1 10); do
+  bundle_publico="$(curl -fsS "$PUBLIC_URL/" | grep -m1 -oE 'assets/index-[A-Za-z0-9_-]+\.js' | cut -d/ -f2 || true)"
+  [[ "$bundle_publico" == "$bundle_contenedor" ]] && break
+  sleep 3
+done
+[[ "$bundle_publico" == "$bundle_contenedor" ]] ||
+  die "el sitio sirve $bundle_publico y la imagen construida tiene $bundle_contenedor"
+
+mkdir -p "$(dirname "$ESTADO")"
+printf '%s\n' "$target" > "$ESTADO"
+log "desplegado $target (bundle $bundle_contenedor)"
