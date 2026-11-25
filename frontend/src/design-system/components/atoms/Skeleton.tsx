@@ -18,7 +18,10 @@ export function Skeleton({ className, ...props }: SkeletonProps) {
     <div
       {...props}
       aria-hidden="true"
-      className={cn('animate-pulse motion-reduce:animate-none rounded-control bg-surface-subtle', className)}
+      className={cn(
+        'animate-pulse motion-reduce:animate-none rounded-control bg-surface-subtle',
+        className,
+      )}
     />
   );
 }

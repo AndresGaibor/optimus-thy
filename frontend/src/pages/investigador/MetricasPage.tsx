@@ -50,8 +50,8 @@ export function MetricasPage() {
       />
 
       <Callout tone="info" title="Alcance de la métrica">
-        El acuerdo refleja acepta / total, incluida la revisión pendiente. No representa sensibilidad,
-        especificidad ni una validación clínica.
+        El acuerdo refleja acepta / total, incluida la revisión pendiente. No representa
+        sensibilidad, especificidad ni una validación clínica.
       </Callout>
 
       <FiltrosMetricas

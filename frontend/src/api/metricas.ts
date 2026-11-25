@@ -13,9 +13,7 @@ export interface FiltrosMetricas {
 const ERROR_METRICAS = 'No se pudieron cargar las métricas. Reintenta la operación.';
 
 /** Agregados de acuerdo con la decisión médica de la institución investigadora. */
-export async function listarMetricas(
-  filtros: FiltrosMetricas = {},
-): Promise<MetricasModelo[]> {
+export async function listarMetricas(filtros: FiltrosMetricas = {}): Promise<MetricasModelo[]> {
   const query = {
     ...(filtros.desde ? { desde: filtros.desde } : {}),
     ...(filtros.hasta ? { hasta: filtros.hasta } : {}),

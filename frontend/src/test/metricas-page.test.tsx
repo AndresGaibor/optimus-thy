@@ -73,7 +73,9 @@ describe('métricas de acuerdo del investigador', () => {
     fetchMock.mockResolvedValueOnce(responder([]));
     render(<MetricasPage />);
 
-    expect(await screen.findByRole('heading', { name: 'Sin métricas disponibles' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: 'Sin métricas disponibles' }),
+    ).toBeInTheDocument();
   });
 
   it('expone un error genérico y vuelve a consultar al reintentar', async () => {
@@ -83,7 +85,9 @@ describe('métricas de acuerdo del investigador', () => {
       .mockResolvedValueOnce(responder([FILA]));
     render(<MetricasPage />);
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('No se pudieron cargar las métricas');
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'No se pudieron cargar las métricas',
+    );
     expect(screen.queryByText('detalle interno')).not.toBeInTheDocument();
     await usuario.click(screen.getByRole('button', { name: 'Reintentar' }));
 
