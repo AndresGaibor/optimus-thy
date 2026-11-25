@@ -72,7 +72,7 @@ truststore==0.10.5
 typing-extensions==4.16.0
 tzdata==2026.6
 ultralytics==8.4.212
-ultralytics-platform==0.1.110
+ultralytics-platform==0.1.121
 ultralytics-thop==2.2.5
 urllib3==2.8.0
 wheel==0.48.0
