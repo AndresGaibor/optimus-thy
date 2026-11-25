@@ -51,6 +51,7 @@ function montarApp(rutaInicial: string) {
 describe('auth', () => {
   let fetchMock: {
     mockResolvedValueOnce: (value: unknown) => unknown;
+    mockRejectedValueOnce: (reason: unknown) => unknown;
     mock: { calls: unknown[][] };
   };
 
@@ -60,6 +61,7 @@ describe('auth', () => {
     global.fetch = fn as unknown as typeof fetch;
     fetchMock = fn as unknown as {
       mockResolvedValueOnce: (value: unknown) => unknown;
+      mockRejectedValueOnce: (reason: unknown) => unknown;
       mock: { calls: unknown[][] };
     };
   });
@@ -89,6 +91,19 @@ describe('auth', () => {
     await user.click(screen.getByRole('button', { name: /entrar/i }));
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'No pudimos iniciar sesión. Revisa tu correo y contraseña.',
+    );
+  });
+
+  it('un fallo de conexión indica cómo volver a intentarlo', async () => {
+    const user = userEvent.setup();
+    fetchMock.mockResolvedValueOnce({ ok: false, status: 401 });
+    fetchMock.mockRejectedValueOnce(new Error('Network error'));
+    montarApp('/login');
+    await user.type(screen.getByLabelText(/correo/i), 'm@t.com');
+    await user.type(screen.getByLabelText(/contraseña/i), 'pass');
+    await user.click(screen.getByRole('button', { name: /entrar/i }));
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'No se pudo iniciar sesión. Comprueba tu conexión y vuelve a intentarlo.',
     );
   });
 

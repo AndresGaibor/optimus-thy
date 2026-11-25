@@ -25,6 +25,8 @@ export function LoginPage() {
         return;
       }
       navigate(homePathFor(res.rol));
+    } catch {
+      setError('No se pudo iniciar sesión. Comprueba tu conexión y vuelve a intentarlo.');
     } finally {
       setEnviando(false);
     }
