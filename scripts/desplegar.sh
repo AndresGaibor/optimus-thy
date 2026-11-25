@@ -7,6 +7,7 @@ set -Eeuo pipefail
 APP_DIR="${APP_DIR:-/home/ubuntu/code/optimus-thy-operativo}"
 PUBLIC_URL="${PUBLIC_URL:-https://tiroides2.andresgaibor.com}"
 COMPOSE_NETWORK="${COMPOSE_NETWORK:-optimus-thy-net}"
+EDGE="${EDGE:-optimus-thy-edge}"
 ESTADO="$APP_DIR/.deploy/desplegado"
 
 log() { printf '[deploy-automatico] %s\n' "$*"; }
@@ -43,8 +44,10 @@ git reset --hard --quiet "$target"
 
 if printf '%s\n' "$cambiados" | grep -qE '^(frontend/|bun\.lock|package\.json)'; then
   log "reconstruyendo el frontend"
-  COMPOSE_NETWORK="$COMPOSE_NETWORK" docker compose build frontend
-  COMPOSE_NETWORK="$COMPOSE_NETWORK" docker compose up -d --no-deps frontend
+  (cd frontend && "$BUN" install --frozen-lockfile && "$BUN" run build)
+  # El sitio lo sirve el borde, que monta frontend/dist: hay que recargarlo para
+  # que suelte los archivos anteriores y vea los nuevos.
+  docker exec "$EDGE" nginx -s reload
 fi
 
 if printf '%s\n' "$cambiados" | grep -qE '^(backend/|docker-compose\.yml|ai/|ia/)'; then
@@ -65,19 +68,18 @@ curl -fsS -o /dev/null http://127.0.0.1:8000/health || die "el backend no respon
 [[ "$(curl -sS -o /dev/null -w '%{http_code}' "$PUBLIC_URL/api/auth/me")" == 401 ]] ||
   die "la API no responde 401"
 
-# Lo servido debe ser la imagen recién construida, no una caché ni un contenedor viejo.
-bundle_contenedor="$(docker compose exec -T frontend sh -c 'ls /usr/share/nginx/html/assets' |
-  grep -m1 -oE '^index-[A-Za-z0-9_-]+\.js$' || true)"
-[[ -n "$bundle_contenedor" ]] || die "el contenedor del frontend no tiene bundle"
+# Lo servido debe ser el dist recién construido, no una caché ni un archivo viejo.
+bundle_dist="$(grep -m1 -oE 'assets/index-[A-Za-z0-9_-]+\.js' frontend/dist/index.html | cut -d/ -f2 || true)"
+[[ -n "$bundle_dist" ]] || die "no hay bundle en frontend/dist"
 bundle_publico=""
 for _ in $(seq 1 10); do
   bundle_publico="$(curl -fsS "$PUBLIC_URL/" | grep -m1 -oE 'assets/index-[A-Za-z0-9_-]+\.js' | cut -d/ -f2 || true)"
-  [[ "$bundle_publico" == "$bundle_contenedor" ]] && break
+  [[ "$bundle_publico" == "$bundle_dist" ]] && break
   sleep 3
 done
-[[ "$bundle_publico" == "$bundle_contenedor" ]] ||
-  die "el sitio sirve $bundle_publico y la imagen construida tiene $bundle_contenedor"
+[[ "$bundle_publico" == "$bundle_dist" ]] ||
+  die "el sitio sirve $bundle_publico y el dist construido tiene $bundle_dist"
 
 mkdir -p "$(dirname "$ESTADO")"
 printf '%s\n' "$target" > "$ESTADO"
-log "desplegado $target (bundle $bundle_contenedor)"
+log "desplegado $target (bundle $bundle_dist)"
