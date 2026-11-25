@@ -19,7 +19,8 @@ import { listarResultados, type Inferencia } from '../../api/resultados';
 import { consultarTrabajo, encolarInferencia } from '../../api/trabajos';
 import { GaleriaImagenes } from './GaleriaImagenes';
 import { ConsentimientosCaso } from './ConsentimientosCaso';
-import { ResultadoInferencia } from './ResultadoInferencia';
+import { ResultadosDelCaso } from './ResultadosDelCaso';
+import { AbrirVisor } from './visor/AbrirVisor';
 
 const INTERVALO_MS = 3000;
 
@@ -173,21 +174,10 @@ export function CasoPage() {
             onAnalizar={(imagen) => void analizar(imagen)}
           />
         )}
+        {imagenes.length > 0 ? <AbrirVisor imagenes={imagenes} /> : null}
       </section>
 
-      <section className="flex flex-col gap-4">
-        <h2 className="text-lg font-semibold">Resultados</h2>
-        {resultados.length === 0 ? (
-          <EmptyState
-            title="Sin inferencias"
-            description="Analiza una ecografía para ver el resultado por nódulo."
-          />
-        ) : (
-          resultados.map((inferencia) => (
-            <ResultadoInferencia key={inferencia.id} inferencia={inferencia} casoId={casoId} />
-          ))
-        )}
-      </section>
+      <ResultadosDelCaso resultados={resultados} casoId={casoId} />
 
       <Dialog
         open={subidaAbierta}
