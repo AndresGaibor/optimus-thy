@@ -17,6 +17,7 @@ import { HistorialInferenciasPage } from './pages/medico/HistorialInferenciasPag
 import { ComparacionResultadosPage } from './pages/medico/ComparacionResultadosPage';
 import { AuditoriaPrediccionesPage } from './pages/investigador/AuditoriaPrediccionesPage';
 import { DatasetsPage } from './pages/investigador/DatasetsPage';
+import { MetricasPage } from './pages/investigador/MetricasPage';
 import { InferenciaPacientePage } from './pages/medico/InferenciaPacientePage';
 import { ExplicacionModeloPage } from './pages/medico/ExplicacionModeloPage';
 import { PerfilPage } from './pages/PerfilPage';
@@ -61,6 +62,7 @@ export function AppRoutes() {
         <Route index element={<PlaceholderPage titulo="Cohortes" />} />
         <Route path="predicciones" element={<AuditoriaPrediccionesPage />} />
         <Route path="datasets" element={<DatasetsPage />} />
+        <Route path="metricas" element={<MetricasPage />} />
         <Route path="cohortes" element={<PlaceholderPage titulo="Cohortes" />} />
         <Route path="exportaciones" element={<PlaceholderPage titulo="Exportaciones" />} />
       </Route>
