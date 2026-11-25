@@ -16,7 +16,7 @@ gast==0.7.0
 google-pasta==0.2.0
 grpcio==1.85.1
 h11==0.16.0
-h5py==3.16.0
+h5py==3.14.0
 hf-xet==1.8.0
 httpcore==1.0.9
 httpcore2==2.16.0
@@ -35,12 +35,11 @@ markupsafe==3.0.4
 matplotlib==3.11.2
 mdurl==0.1.2
 ml-dtypes==0.6.0
-mpmath==1.4.1
+mpmath==1.3.0
 namex==0.1.0
 networkx==3.7
 numpy==2.5.4
 nvidia-ml-py==13.615.71
-opencv-python==5.0.0.93
 opencv-python-headless==5.0.0.93
 opt-einsum==3.4.0
 optree==0.20.0

@@ -14,7 +14,7 @@ from pathlib import Path, PurePosixPath
 from typing import Annotated
 
 import httpx
-from fastapi import APIRouter, Depends, File, Form, Request, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, Request, Response, UploadFile, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy.orm import Session
@@ -28,6 +28,10 @@ from app.models.imagenes import ModeloIA
 
 router = APIRouter(tags=["modelos-ia"])
 _MAX_ARCHIVO = 600 * 1024 * 1024
+# Los paquetes superan el límite de Cloudflare (100 MB) y el del borde nginx:
+# el cliente los envía en trozos de 25 MB para poder ensamblarlos aquí.
+_MAX_TROZO = 32 * 1024 * 1024
+_MAX_TROZOS = 64
 _MAX_ENTRADAS = 10
 _PESOS = {"best_yolo.pt", "best_bgaunet.keras", "best_swin.pth"}
 
@@ -77,6 +81,9 @@ def _extraer(paquete: zipfile.ZipFile, staging: Path) -> tuple[dict[str, str], s
     seleccionadas: dict[str, zipfile.ZipInfo] = {}
     for entrada in entradas:
         nombre = entrada.filename.replace("\\", "/")
+        # Finder añade __MACOSX/ y .DS_Store al comprimir: son metadatos, no pesos.
+        if nombre.startswith("__MACOSX/") or nombre.rsplit("/", 1)[-1] == ".DS_Store":
+            continue
         if entrada.is_dir():
             if nombre != "models/":
                 raise ValueError
@@ -118,42 +125,22 @@ def listar_modelos(
     return db.query(ModeloIA).order_by(ModeloIA.creado_en.desc()).all()
 
 
-@router.post("/modelos-ia", status_code=status.HTTP_201_CREATED, response_model=ModeloOut)
-def cargar_modelo(
-    request: Request,
-    archivo: Annotated[UploadFile, File()],
-    nombre: Annotated[str, Form()],
-    version: Annotated[str, Form()],
-    actual: Annotated[SesionActual, Depends(requiere_permiso("ajustes.gestionar"))],
-    db: Annotated[Session, Depends(session_dep)],
-) -> ModeloIA | JSONResponse:
-    if Path(archivo.filename or "").suffix.lower() != ".zip":
-        return _error("paquete_invalido", "El archivo debe ser un paquete ZIP válido.", 422)
-    try:
-        nombre_slug, version_slug = _slug(nombre), _slug(version)
-    except ValueError:
-        return _error("identificador_invalido", "El nombre y la versión no son válidos.", 422)
-
-    settings = get_settings()
-    root = Path(settings.modelos_dir)
-    try:
-        root.mkdir(parents=True, exist_ok=True)
-        archivo.file.seek(0, 2)
-        size = archivo.file.tell()
-        archivo.file.seek(0)
-    except OSError:
-        return _error("paquete_invalido", "No se pudo leer el paquete.", 422)
-    if size > _MAX_ARCHIVO:
-        return _error("archivo_demasiado_grande", "El paquete supera el límite de 600 MB.", 413)
-
-    staging: Path | None = None
+def _instalar(
+    paquete: zipfile.ZipFile,
+    nombre_slug: str,
+    version_slug: str,
+    db: Session,
+) -> ModeloIA:
+    """Extrae los tres pesos del paquete y registra la versión; limpia si falla."""
+    root = Path(get_settings().modelos_dir)
+    root.mkdir(parents=True, exist_ok=True)
     destino = root / nombre_slug / version_slug
+    staging: Path | None = None
     instalado = False
     registrado = False
     try:
-        with zipfile.ZipFile(archivo.file) as paquete:
-            staging = Path(tempfile.mkdtemp(dir=root))
-            hashes, huella = _extraer(paquete, staging)
+        staging = Path(tempfile.mkdtemp(dir=root))
+        hashes, huella = _extraer(paquete, staging)
         if destino.exists():
             raise FileExistsError
         destino.parent.mkdir(parents=True, exist_ok=True)
@@ -172,15 +159,160 @@ def cargar_modelo(
         registrado = True
         db.refresh(modelo)
         return modelo
-    except Exception:
-        db.rollback()
+    finally:
         if staging is not None and staging.exists():
             shutil.rmtree(staging, ignore_errors=True)
-        if instalado and not registrado and destino.exists():
-            shutil.rmtree(destino, ignore_errors=True)
+        if not registrado:
+            db.rollback()
+            if instalado and destino.exists():
+                shutil.rmtree(destino, ignore_errors=True)
+
+
+@router.post("/modelos-ia", status_code=status.HTTP_201_CREATED, response_model=ModeloOut)
+def cargar_modelo(
+    request: Request,
+    archivo: Annotated[UploadFile, File()],
+    nombre: Annotated[str, Form()],
+    version: Annotated[str, Form()],
+    actual: Annotated[SesionActual, Depends(requiere_permiso("ajustes.gestionar"))],
+    db: Annotated[Session, Depends(session_dep)],
+) -> ModeloIA | JSONResponse:
+    if Path(archivo.filename or "").suffix.lower() != ".zip":
+        return _error("paquete_invalido", "El archivo debe ser un paquete ZIP válido.", 422)
+    try:
+        nombre_slug, version_slug = _slug(nombre), _slug(version)
+    except ValueError:
+        return _error("identificador_invalido", "El nombre y la versión no son válidos.", 422)
+    try:
+        archivo.file.seek(0, 2)
+        size = archivo.file.tell()
+        archivo.file.seek(0)
+    except OSError:
+        return _error("paquete_invalido", "No se pudo leer el paquete.", 422)
+    if size > _MAX_ARCHIVO:
+        return _error("archivo_demasiado_grande", "El paquete supera el límite de 600 MB.", 413)
+    try:
+        with zipfile.ZipFile(archivo.file) as paquete:
+            return _instalar(paquete, nombre_slug, version_slug, db)
+    except FileExistsError:
+        return _error("modelo_duplicado", "Ya existe esa versión del modelo.", 409)
+    except (zipfile.BadZipFile, ValueError, OSError):
         return _error("paquete_invalido", "No se pudo procesar el paquete.", 422)
     finally:
         archivo.file.close()
+
+
+class SubidaOut(BaseModel):
+    id: uuid.UUID
+
+
+def _carpeta_subida(subida_id: uuid.UUID) -> Path:
+    return Path(get_settings().modelos_dir) / ".subidas" / str(subida_id)
+
+
+@router.post(
+    "/modelos-ia/paquetes",
+    status_code=status.HTTP_202_ACCEPTED,
+    response_model=SubidaOut,
+)
+def iniciar_paquete(
+    nombre: Annotated[str, Form()],
+    version: Annotated[str, Form()],
+    _actual: Annotated[SesionActual, Depends(requiere_permiso("ajustes.gestionar"))],
+) -> SubidaOut | JSONResponse:
+    """Abre una subida por trozos para un paquete que supera el límite del proxy."""
+    try:
+        nombre_slug, version_slug = _slug(nombre), _slug(version)
+    except ValueError:
+        return _error("identificador_invalido", "El nombre y la versión no son válidos.", 422)
+    subida_id = uuid.uuid4()
+    carpeta = _carpeta_subida(subida_id)
+    try:
+        carpeta.mkdir(parents=True)
+        (carpeta / "meta.json").write_text(
+            json.dumps({"nombre": nombre_slug, "version": version_slug}),
+            encoding="utf-8",
+        )
+    except OSError:
+        return _error("paquete_invalido", "No se pudo iniciar la subida.", 422)
+    return SubidaOut(id=subida_id)
+
+
+@router.put("/modelos-ia/paquetes/{subida_id}/trozos/{indice}", status_code=status.HTTP_204_NO_CONTENT)
+async def subir_trozo(
+    subida_id: uuid.UUID,
+    indice: int,
+    request: Request,
+    _actual: Annotated[SesionActual, Depends(requiere_permiso("ajustes.gestionar"))],
+) -> Response:
+    if not 0 <= indice < _MAX_TROZOS:
+        return _error("trozo_invalido", "El índice del trozo no es válido.", 422)
+    carpeta = _carpeta_subida(subida_id)
+    if not carpeta.is_dir():
+        return _error("paquete_no_encontrado", "La subida no existe o expiró.", 404)
+    destino = carpeta / f"trozo-{indice:03d}.bin"
+    total = 0
+    try:
+        with destino.open("wb") as salida:
+            async for bloque in request.stream():
+                total += len(bloque)
+                if total > _MAX_TROZO:
+                    raise ValueError
+                salida.write(bloque)
+    except ValueError:
+        destino.unlink(missing_ok=True)
+        return _error("trozo_demasiado_grande", "El trozo supera el límite de 32 MB.", 413)
+    except OSError:
+        destino.unlink(missing_ok=True)
+        return _error("paquete_invalido", "No se pudo guardar el trozo.", 422)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post(
+    "/modelos-ia/paquetes/{subida_id}/cerrar",
+    status_code=status.HTTP_201_CREATED,
+    response_model=ModeloOut,
+)
+def cerrar_paquete(
+    subida_id: uuid.UUID,
+    _actual: Annotated[SesionActual, Depends(requiere_permiso("ajustes.gestionar"))],
+    db: Annotated[Session, Depends(session_dep)],
+) -> ModeloIA | JSONResponse:
+    carpeta = _carpeta_subida(subida_id)
+    if not carpeta.is_dir():
+        return _error("paquete_no_encontrado", "La subida no existe o expiró.", 404)
+    try:
+        meta = json.loads((carpeta / "meta.json").read_text(encoding="utf-8"))
+        trozos = sorted(carpeta.glob("trozo-*.bin"))
+        if not trozos or {t.name for t in trozos} != {
+            f"trozo-{i:03d}.bin" for i in range(len(trozos))
+        }:
+            return _error("paquete_incompleto", "Faltan trozos por subir.", 422)
+        total = sum(t.stat().st_size for t in trozos)
+        if total > _MAX_ARCHIVO:
+            return _error("archivo_demasiado_grande", "El paquete supera el límite de 600 MB.", 413)
+        paquete_zip = carpeta / "paquete.zip"
+        with paquete_zip.open("wb") as salida:
+            for trozo in trozos:
+                with trozo.open("rb") as origen:
+                    shutil.copyfileobj(origen, salida, 1024 * 1024)
+        with zipfile.ZipFile(paquete_zip) as paquete:
+            return _instalar(paquete, meta["nombre"], meta["version"], db)
+    except FileExistsError:
+        return _error("modelo_duplicado", "Ya existe esa versión del modelo.", 409)
+    except (OSError, ValueError, KeyError, zipfile.BadZipFile):
+        return _error("paquete_invalido", "No se pudo procesar el paquete.", 422)
+    finally:
+        shutil.rmtree(carpeta, ignore_errors=True)
+
+
+@router.delete("/modelos-ia/paquetes/{subida_id}", status_code=status.HTTP_204_NO_CONTENT)
+def cancelar_paquete(
+    subida_id: uuid.UUID,
+    _actual: Annotated[SesionActual, Depends(requiere_permiso("ajustes.gestionar"))],
+) -> Response:
+    shutil.rmtree(_carpeta_subida(subida_id), ignore_errors=True)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.post("/modelos-ia/{id}/activar", response_model=ModeloOut)
