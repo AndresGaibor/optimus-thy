@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import io
 import uuid
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import pytest
@@ -150,6 +151,30 @@ def test_rechaza_archivo_que_no_es_imagen(client, mundo, db_session, almacen) ->
 
     assert respuesta.status_code == 422
     assert db_session.query(Imagen).count() == 0
+
+
+def test_listado_ordena_la_mas_reciente_primero(client, mundo, db_session, almacen) -> None:
+    _entrar(client, mundo["medico"])
+    caso_id = _caso(client)
+    ids: list[str] = []
+    for nombre in ("uno.png", "dos.png", "tres.png"):
+        respuesta = _subir(client, caso_id, _png(), nombre)
+        assert respuesta.status_code == 201, respuesta.text
+        ids.append(respuesta.json()["id"])
+
+    base = datetime(2026, 1, 1, tzinfo=UTC)
+    for posicion, imagen_id in enumerate(ids):
+        fila = db_session.get(Imagen, uuid.UUID(imagen_id))
+        assert fila is not None
+        fila.creado_en = base + timedelta(minutes=posicion)
+    db_session.commit()
+
+    listado = client.get(f"/casos/{caso_id}/imagenes")
+
+    assert listado.status_code == 200, listado.text
+    cuerpo = listado.json()
+    assert cuerpo["total"] == 3
+    assert [item["id"] for item in cuerpo["items"]] == list(reversed(ids))
 
 
 def test_caso_de_otra_institucion_responde_404(client, mundo, almacen) -> None:

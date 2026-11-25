@@ -91,12 +91,11 @@ export function VistaDelCaso({
           onAbrirSubida={subida.abrir}
           onAnalizar={onAnalizar}
         />
-        <PanelResultados resultados={resultados} casoId={casoSeleccionado.id} />
+        <PanelResultados resultados={resultados} casoId={casoSeleccionado.id} imagenes={imagenes} />
       </EncabezadoDelCaso>
       <DialogoSubida
         abierto={subida.abierta}
-        archivo={subida.archivo}
-        error={subida.error}
+        archivos={subida.archivos}
         guardando={subida.guardando}
         onCambiarApertura={subida.cambiarApertura}
         onArchivo={subida.elegir}

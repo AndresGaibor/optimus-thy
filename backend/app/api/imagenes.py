@@ -276,7 +276,7 @@ def listar_imagenes(
     filas = (
         db.query(Imagen)
         .filter(Imagen.caso_id == caso.id)
-        .order_by(Imagen.creado_en, Imagen.id)
+        .order_by(Imagen.creado_en.desc(), Imagen.id.desc())
         .all()
     )
     try:

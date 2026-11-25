@@ -7,6 +7,7 @@ import logging
 import secrets
 from datetime import UTC, datetime, timedelta
 from typing import Annotated
+from uuid import UUID
 
 import sqlalchemy as sa
 from fastapi import APIRouter, BackgroundTasks, Depends, Request, Response, status
@@ -30,7 +31,12 @@ from app.db import session_dep
 from app.models.correo import TokenRecuperacion
 from app.models.sesiones import Sesion
 from app.models.usuarios import Rol, Usuario, UsuarioRol
-from app.security.passwords import hash_password, verify_dummy, verify_password
+from app.security.passwords import (
+    hash_password,
+    validar_politica_password,
+    verify_dummy,
+    verify_password,
+)
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -55,6 +61,23 @@ class LoginResponse(BaseModel):
 
 class RolActivoRequest(BaseModel):
     rol: str
+
+
+class CambioPasswordRequest(BaseModel):
+    password_actual: str = Field(min_length=1, max_length=128)
+    password_nueva: str = Field(min_length=1, max_length=128)
+
+
+def _error_password(
+    request: Request, code: str, message: str, status_code: int = status.HTTP_400_BAD_REQUEST
+) -> JSONResponse:
+    return JSONResponse(
+        status_code=status_code,
+        content={
+            "error": {"code": code, "message": message},
+            "request_id": getattr(request.state, "request_id", "-"),
+        },
+    )
 
 
 def _no_autenticado(request: Request) -> JSONResponse:
@@ -308,6 +331,78 @@ def put_rol_activo(
         rol.nombre,
         actual.segundos_para_expirar,
     )
+
+
+@router.put("/password", status_code=status.HTTP_204_NO_CONTENT)
+def cambiar_password(
+    request: Request,
+    body: CambioPasswordRequest,
+    db: Annotated[Session, Depends(session_dep)],
+    actual: Annotated[SesionActual, Depends(sesion_actual)],
+) -> Response:
+    """Cambia la contraseña propia (HU-006).
+
+    Exige la contraseña actual, aplica RS-ACC-01 y cierra las demás sesiones.
+    La sesión que hace el cambio sigue viva y se renueva.
+    """
+    usuario = actual.usuario
+    hash_actual = usuario.password_hash
+    if hash_actual is None or not verify_password(body.password_actual, hash_actual)[0]:
+        registrar(
+            db,
+            request,
+            AuditAction.ACCESS_DENIED,
+            AuditModule.AUTH,
+            usuario=usuario,
+            detalles={"reason_code": "password_actual_incorrecta"},
+        )
+        return _error_password(
+            request,
+            "password_actual_incorrecta",
+            "La contraseña actual no es correcta.",
+        )
+
+    fallo = validar_politica_password(body.password_nueva)
+    if fallo is not None:
+        codigo, mensaje = fallo
+        return _error_password(request, codigo, mensaje)
+
+    if verify_password(body.password_nueva, hash_actual)[0]:
+        return _error_password(
+            request,
+            "password_repetida",
+            "La contraseña nueva debe ser distinta de la actual.",
+        )
+
+    ahora = datetime.now(UTC)
+    usuario.password_hash = hash_password(usuario.email, body.password_nueva)
+    usuario.intentos_fallidos = 0
+    usuario.bloqueado_hasta = None
+    revocadas = (
+        db.query(Sesion)
+        .filter(
+            Sesion.usuario_id == usuario.id,
+            Sesion.id != UUID(actual.sesion_id),
+            Sesion.revocada_en.is_(None),
+        )
+        .update({Sesion.revocada_en: ahora}, synchronize_session=False)
+    )
+    # La sesión actual sigue abierta y renueva su ventana de inactividad.
+    sesion_actual_fila = db.query(Sesion).filter(Sesion.id == UUID(actual.sesion_id)).first()
+    if sesion_actual_fila is not None:
+        sesion_actual_fila.ultima_actividad = ahora
+        db.add(sesion_actual_fila)
+    db.add(usuario)
+    db.commit()
+    registrar(
+        db,
+        request,
+        AuditAction.PASSWORD_CHANGE,
+        AuditModule.AUTH,
+        usuario=usuario,
+        detalles={"reason_code": "password_change", "resource_count": revocadas},
+    )
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 class RecuperacionRequest(BaseModel):

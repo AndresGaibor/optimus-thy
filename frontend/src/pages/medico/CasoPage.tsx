@@ -3,23 +3,21 @@ import { useParams } from 'react-router-dom';
 import {
   Button,
   Callout,
-  Dialog,
-  DialogClose,
   EmptyState,
-  Field,
-  Input,
   PageHeader,
   Spinner,
   SupportNotice,
 } from '../../design-system';
 import { obtenerCaso, type CasoDetalle } from '../../api/casos';
 import { listarConsentimientos, type Consentimiento } from '../../api/consentimientos';
-import { listarImagenes, subirImagen, type ImagenCaso } from '../../api/imagenes';
+import { listarImagenes, type ImagenCaso } from '../../api/imagenes';
 import { listarResultados, type Inferencia } from '../../api/resultados';
 import { consultarTrabajo, encolarInferencia } from '../../api/trabajos';
 import { GaleriaImagenes } from './GaleriaImagenes';
 import { ConsentimientosCaso } from './ConsentimientosCaso';
 import { ResultadosDelCaso } from './ResultadosDelCaso';
+import { DialogoSubida } from './inferencia/DialogoSubida';
+import { useSubidaEcografia } from './inferencia/useSubidaEcografia';
 import { AbrirVisor } from './visor/AbrirVisor';
 
 const INTERVALO_MS = 3000;
@@ -33,9 +31,6 @@ export function CasoPage() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
-  const [subidaAbierta, setSubidaAbierta] = useState(false);
-  const [archivo, setArchivo] = useState<File | null>(null);
-  const [guardando, setGuardando] = useState(false);
   const [analizando, setAnalizando] = useState<string | null>(null);
   const intervalo = useRef<number | null>(null);
 
@@ -72,22 +67,15 @@ export function CasoPage() {
     return detener;
   }, [cargar, detener]);
 
-  const subir = async () => {
-    if (!archivo) return;
-    setGuardando(true);
-    setError(null);
-    try {
-      await subirImagen(casoId, archivo);
-      setSubidaAbierta(false);
-      setArchivo(null);
-      setAviso('Ecografía cargada y saneada.');
+  const subida = useSubidaEcografia({
+    casoId,
+    alSubir: async (subidas) => {
+      const mensaje =
+        subidas === 1 ? 'Ecografía cargada y saneada.' : 'Ecografías cargadas y saneadas.';
+      setAviso(mensaje);
       await cargar();
-    } catch {
-      setError('No se pudo subir la ecografía. Comprueba que sea PNG o JPEG.');
-    } finally {
-      setGuardando(false);
-    }
-  };
+    },
+  });
 
   const esperar = (trabajoId: string) => {
     detener();
@@ -136,7 +124,7 @@ export function CasoPage() {
       <PageHeader
         title={caso ? `Caso ${caso.codigo}` : 'Caso'}
         description={caso ? `Paciente ${caso.paciente_codigo}` : undefined}
-        actions={<Button onClick={() => setSubidaAbierta(true)}>Subir ecografía</Button>}
+        actions={<Button onClick={subida.abrir}>Subir ecografía</Button>}
       />
       <SupportNotice context="inferencia" />
       <ConsentimientosCaso
@@ -161,7 +149,7 @@ export function CasoPage() {
           <EmptyState
             title="Sin ecografías"
             description="Sube una imagen PNG o JPEG para poder analizarla."
-            action={<Button onClick={() => setSubidaAbierta(true)}>Subir ecografía</Button>}
+            action={<Button onClick={subida.abrir}>Subir ecografía</Button>}
           />
         ) : (
           <GaleriaImagenes
@@ -177,32 +165,16 @@ export function CasoPage() {
         {imagenes.length > 0 ? <AbrirVisor imagenes={imagenes} /> : null}
       </section>
 
-      <ResultadosDelCaso resultados={resultados} casoId={casoId} />
+      <ResultadosDelCaso resultados={resultados} casoId={casoId} imagenes={imagenes} />
 
-      <Dialog
-        open={subidaAbierta}
-        onOpenChange={setSubidaAbierta}
-        title="Subir ecografía"
-        description="Se guarda una copia saneada, sin metadatos EXIF ni ICC."
-        footer={
-          <>
-            <DialogClose asChild>
-              <Button variant="outline">Cancelar</Button>
-            </DialogClose>
-            <Button onClick={() => void subir()} disabled={!archivo} loading={guardando}>
-              Subir ecografía
-            </Button>
-          </>
-        }
-      >
-        <Field label="Archivo PNG o JPEG" required>
-          <Input
-            type="file"
-            accept="image/png,image/jpeg"
-            onChange={(event) => setArchivo(event.currentTarget.files?.[0] ?? null)}
-          />
-        </Field>
-      </Dialog>
+      <DialogoSubida
+        abierto={subida.abierta}
+        archivos={subida.archivos}
+        guardando={subida.guardando}
+        onCambiarApertura={subida.cambiarApertura}
+        onArchivo={subida.elegir}
+        onSubir={() => void subida.subir()}
+      />
     </main>
   );
 }

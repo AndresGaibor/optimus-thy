@@ -2586,6 +2586,46 @@
         ]
       }
     },
+    "/auth/password": {
+      "put": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Cambiar Password",
+        "description": "Cambia la contraseña propia (HU-006).\n\nExige la contraseña actual, aplica RS-ACC-01 y cierra las demás sesiones.\nLa sesión que hace el cambio sigue viva y se renueva.",
+        "operationId": "cambiar_password_auth_password_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CambioPasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
+      }
+    },
     "/auth/recuperacion": {
       "post": {
         "tags": [
@@ -3026,6 +3066,28 @@
           "version"
         ],
         "title": "Body_iniciar_paquete_modelos_ia_paquetes_post"
+      },
+      "CambioPasswordRequest": {
+        "properties": {
+          "password_actual": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Password Actual"
+          },
+          "password_nueva": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Password Nueva"
+          }
+        },
+        "type": "object",
+        "required": [
+          "password_actual",
+          "password_nueva"
+        ],
+        "title": "CambioPasswordRequest"
       },
       "CasoAnonimizadoOut": {
         "properties": {

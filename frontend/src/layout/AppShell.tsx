@@ -9,6 +9,7 @@ import {
   LayoutDashboard,
   Mail,
   ShieldCheck,
+  UserRound,
   Users,
 } from 'lucide-react';
 import { Outlet, useNavigate } from 'react-router-dom';
@@ -58,7 +59,7 @@ export function AppShell() {
 
   return (
     <SidebarLayout
-      navItems={NAV_BY_ROLE[rolActivo]}
+      navItems={[...NAV_BY_ROLE[rolActivo], { to: '/perfil', label: 'Mi perfil', icon: UserRound }]}
       navLabel="Navegación principal"
       tone={rolActivo as RoleKey}
       sessionInfo={

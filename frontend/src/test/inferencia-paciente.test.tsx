@@ -258,7 +258,7 @@ describe('inferencia del paciente', () => {
     const dialogo = await screen.findByRole('dialog');
     const archivo = new File(['contenido sintético'], 'eco.png', { type: 'image/png' });
     await user.upload(
-      within(dialogo).getByLabelText(/Selecciona una ecografía PNG o JPEG/),
+      within(dialogo).getByLabelText(/Selecciona una o varias ecografías PNG o JPEG/),
       archivo,
     );
     expect(within(dialogo).getByText('Archivo seleccionado: eco.png')).toBeInTheDocument();
