@@ -47,6 +47,8 @@ export { Select } from './components/atoms/Select';
 export type { SelectProps } from './components/atoms/Select';
 export { Spinner } from './components/atoms/Spinner';
 export type { SpinnerProps } from './components/atoms/Spinner';
+export { Skeleton } from './components/atoms/Skeleton';
+export type { SkeletonProps } from './components/atoms/Skeleton';
 export { Switch } from './components/atoms/Switch';
 export type { SwitchProps } from './components/atoms/Switch';
 export {

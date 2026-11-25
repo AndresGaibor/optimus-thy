@@ -1864,6 +1864,100 @@
         }
       }
     },
+    "/investigacion/metricas": {
+      "get": {
+        "tags": [
+          "investigacion"
+        ],
+        "summary": "Consultar Metricas",
+        "description": "Cuenta las decisiones de la institución; no calcula métricas clínicas.",
+        "operationId": "consultar_metricas_investigacion_metricas_get",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "desde",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Desde"
+            }
+          },
+          {
+            "name": "hasta",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Hasta"
+            }
+          },
+          {
+            "name": "modelo",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Modelo"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MetricasModeloOut"
+                  },
+                  "title": "Response Consultar Metricas Investigacion Metricas Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/casos/{caso_id}/inferencias/{inferencia_id}/decision": {
       "post": {
         "tags": [
@@ -3477,6 +3571,49 @@
         ],
         "title": "ConfiguracionOut"
       },
+      "ConteoResultadoOut": {
+        "properties": {
+          "resultado": {
+            "type": "string",
+            "enum": [
+              "benigno",
+              "maligno",
+              "sin_nodulo"
+            ],
+            "title": "Resultado"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "acepta": {
+            "type": "integer",
+            "title": "Acepta"
+          },
+          "corrige": {
+            "type": "integer",
+            "title": "Corrige"
+          },
+          "descarta": {
+            "type": "integer",
+            "title": "Descarta"
+          },
+          "pendiente": {
+            "type": "integer",
+            "title": "Pendiente"
+          }
+        },
+        "type": "object",
+        "required": [
+          "resultado",
+          "total",
+          "acepta",
+          "corrige",
+          "descarta",
+          "pendiente"
+        ],
+        "title": "ConteoResultadoOut"
+      },
       "CrearConsentimientoRequest": {
         "properties": {
           "base_legal": {
@@ -4020,6 +4157,91 @@
         ],
         "title": "MatrizPermisosRequest",
         "description": "Estado deseado y estado del que partió el cliente, por id de rol."
+      },
+      "MetricasModeloOut": {
+        "properties": {
+          "modelo": {
+            "$ref": "#/components/schemas/ModeloMetricasOut"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "acepta": {
+            "type": "integer",
+            "title": "Acepta"
+          },
+          "corrige": {
+            "type": "integer",
+            "title": "Corrige"
+          },
+          "descarta": {
+            "type": "integer",
+            "title": "Descarta"
+          },
+          "pendiente": {
+            "type": "integer",
+            "title": "Pendiente"
+          },
+          "acuerdo": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acuerdo"
+          },
+          "por_resultado": {
+            "items": {
+              "$ref": "#/components/schemas/ConteoResultadoOut"
+            },
+            "type": "array",
+            "title": "Por Resultado"
+          }
+        },
+        "type": "object",
+        "required": [
+          "modelo",
+          "total",
+          "acepta",
+          "corrige",
+          "descarta",
+          "pendiente",
+          "acuerdo",
+          "por_resultado"
+        ],
+        "title": "MetricasModeloOut"
+      },
+      "ModeloMetricasOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "hash_pesos": {
+            "type": "string",
+            "title": "Hash Pesos"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "nombre",
+          "version",
+          "hash_pesos"
+        ],
+        "title": "ModeloMetricasOut"
       },
       "ModeloOut": {
         "properties": {

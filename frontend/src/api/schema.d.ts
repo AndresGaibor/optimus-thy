@@ -448,6 +448,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/investigacion/metricas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Consultar Metricas
+         * @description Cuenta las decisiones de la institución; no calcula métricas clínicas.
+         */
+        get: operations["consultar_metricas_investigacion_metricas_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/casos/{caso_id}/inferencias/{inferencia_id}/decision": {
         parameters: {
             query?: never;
@@ -1002,6 +1022,24 @@ export interface components {
             /** Ultima Prueba Ok */
             ultima_prueba_ok: boolean | null;
         };
+        /** ConteoResultadoOut */
+        ConteoResultadoOut: {
+            /**
+             * Resultado
+             * @enum {string}
+             */
+            resultado: "benigno" | "maligno" | "sin_nodulo";
+            /** Total */
+            total: number;
+            /** Acepta */
+            acepta: number;
+            /** Corrige */
+            corrige: number;
+            /** Descarta */
+            descarta: number;
+            /** Pendiente */
+            pendiente: number;
+        };
         /**
          * CrearConsentimientoRequest
          * @description Finalidad y versión del texto firmado; nunca contenido clínico.
@@ -1205,6 +1243,35 @@ export interface components {
             esperado: {
                 [key: string]: string[];
             };
+        };
+        /** MetricasModeloOut */
+        MetricasModeloOut: {
+            modelo: components["schemas"]["ModeloMetricasOut"];
+            /** Total */
+            total: number;
+            /** Acepta */
+            acepta: number;
+            /** Corrige */
+            corrige: number;
+            /** Descarta */
+            descarta: number;
+            /** Pendiente */
+            pendiente: number;
+            /** Acuerdo */
+            acuerdo: number | null;
+            /** Por Resultado */
+            por_resultado: components["schemas"]["ConteoResultadoOut"][];
+        };
+        /** ModeloMetricasOut */
+        ModeloMetricasOut: {
+            /** Id */
+            id: string;
+            /** Nombre */
+            nombre: string;
+            /** Version */
+            version: string;
+            /** Hash Pesos */
+            hash_pesos: string;
         };
         /** ModeloOut */
         ModeloOut: {
@@ -2345,6 +2412,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    consultar_metricas_investigacion_metricas_get: {
+        parameters: {
+            query?: {
+                desde?: string | null;
+                hasta?: string | null;
+                modelo?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MetricasModeloOut"][];
                 };
             };
             /** @description Validation Error */
