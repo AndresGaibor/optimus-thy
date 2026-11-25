@@ -18,6 +18,7 @@ import { Pagination } from '../../design-system/components/molecules/Pagination'
 import { listarPacientes, type Paciente } from '../../api/pacientes';
 import { ConclusionMedica } from './ConclusionMedica';
 import { FiltrosResultados } from './FiltrosResultados';
+import { FORMATO_FECHA, RESULTADOS, SIN_CLASIFICAR } from './conclusion/compartidos';
 import {
   descargarReporte,
   listarResultadosGuardados,
@@ -25,12 +26,6 @@ import {
 } from '../../api/resultados';
 
 const LIMITE_POR_PAGINA = 20;
-const FORMATO_FECHA = new Intl.DateTimeFormat('es-EC', { dateStyle: 'medium', timeStyle: 'short' });
-const ETIQUETAS: Record<string, { texto: string; tono: 'success' | 'danger' | 'neutral' }> = {
-  benigno: { texto: 'Benigno', tono: 'success' },
-  maligno: { texto: 'Maligno', tono: 'danger' },
-  sin_nodulo: { texto: 'Normal (sin nódulo)', tono: 'neutral' },
-};
 
 export function ResultadosPage() {
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
@@ -46,6 +41,7 @@ export function ResultadosPage() {
   const [descargando, setDescargando] = useState<string | null>(null);
   const [errorDescarga, setErrorDescarga] = useState(false);
   const [conclusionDe, setConclusionDe] = useState<ResultadoGuardado | null>(null);
+  const [avisoConclusion, setAvisoConclusion] = useState(false);
 
   useEffect(() => {
     void listarPacientes({ limite: 50 }).then((resultado) => {
@@ -122,6 +118,11 @@ export function ResultadosPage() {
         onClase={(valor) => cambiarFiltro(() => setClase(valor))}
       />
 
+      {avisoConclusion ? (
+        <Callout tone="success" title="Conclusión registrada" role="status">
+          La predicción del modelo no cambió y la conclusión quedó guardada.
+        </Callout>
+      ) : null}
       {error ? (
         <Callout tone="danger" title="No se pudieron cargar los resultados">
           {error}
@@ -155,10 +156,7 @@ export function ResultadosPage() {
           </TableHeader>
           <TableBody>
             {resultados.map((fila) => {
-              const etiqueta = ETIQUETAS[fila.resultado] ?? {
-                texto: 'Sin clasificar',
-                tono: 'neutral' as const,
-              };
+              const etiqueta = RESULTADOS[fila.resultado] ?? SIN_CLASIFICAR;
               return (
                 <TableRow key={fila.id}>
                   <TableCell>{FORMATO_FECHA.format(new Date(fila.creado_en))}</TableCell>
@@ -211,6 +209,7 @@ export function ResultadosPage() {
             if (!abierta) setConclusionDe(null);
           }}
           inferencia={conclusionDe}
+          onRegistrada={() => setAvisoConclusion(true)}
         />
       ) : null}
     </div>

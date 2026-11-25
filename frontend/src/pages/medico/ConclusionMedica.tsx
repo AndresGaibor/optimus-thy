@@ -1,245 +1,199 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
-  Badge,
-  Button,
-  Callout,
-  Dialog,
-  DialogClose,
-  Field,
-  Input,
-  Select,
-  Textarea,
-} from '../../design-system';
-
-type CategoriaConclusion = 'acepta' | 'corrige' | 'descarta';
-type Paso = 'formulario' | 'confirmacion';
-
-const CATEGORIAS: Array<{ valor: CategoriaConclusion; etiqueta: string }> = [
-  { valor: 'acepta', etiqueta: 'Acepto el resultado' },
-  { valor: 'corrige', etiqueta: 'Corrijo el resultado' },
-  { valor: 'descarta', etiqueta: 'Descarto el resultado' },
-];
-
-const RESULTADOS: Record<string, { texto: string; tono: 'success' | 'danger' | 'neutral' }> = {
-  benigno: { texto: 'Benigno', tono: 'success' },
-  maligno: { texto: 'Maligno', tono: 'danger' },
-  sin_nodulo: { texto: 'Normal (sin nódulo)', tono: 'neutral' },
-};
-
-const SIN_CLASIFICAR = { texto: 'Sin clasificar', tono: 'neutral' as const };
-
-const NOTA_MINIMA = 10;
-const NOTA_MAXIMA = 2000;
-const FORMATO_FECHA = new Intl.DateTimeFormat('es-EC', { dateStyle: 'medium', timeStyle: 'short' });
-
-/** Datos de la inferencia que la conclusión toma solo como referencia. */
-interface InferenciaResumen {
-  resultado: string;
-  confianza: number | null;
-  creado_en: string;
-  modelo: { nombre: string; version: string };
-}
+  consultarDecision,
+  DecisionExistenteError,
+  registrarDecision,
+  type DecisionRegistrada,
+} from '../../api/decisiones';
+import { Button, Callout, Dialog, Spinner } from '../../design-system';
+import { DecisionRegistradaVista } from './conclusion/DecisionRegistradaVista';
+import { FormularioConclusion } from './conclusion/FormularioConclusion';
+import { PieConclusion } from './conclusion/PieConclusion';
+import { ResumenConfirmacion } from './conclusion/ResumenConfirmacion';
+import {
+  CATEGORIAS,
+  RESULTADOS,
+  SIN_CLASIFICAR,
+  type CategoriaConclusion,
+  type Errores,
+  type InferenciaResumen,
+  type Paso,
+} from './conclusion/compartidos';
+import { validarConclusion } from './conclusion/validacion';
 
 interface ConclusionMedicaProps {
   abierta: boolean;
   onAbiertaChange: (abierta: boolean) => void;
   inferencia: InferenciaResumen;
-}
-
-interface Errores {
-  categoria?: string;
-  nota?: string;
+  onRegistrada?: (decision: DecisionRegistrada) => void;
 }
 
 /**
- * Formulario de conclusión del médico, separado de la predicción del modelo.
+ * Conclusión del médico, separada de la predicción del modelo.
  *
- * La conclusión se redacta y se revisa, pero el envío queda bloqueado mientras el
- * backend no exponga el registro de decisiones médicas (RF-INF-09). La inferencia
- * original nunca se modifica desde aquí.
+ * Consulta si la inferencia ya tiene una decisión y, si no, envía la conclusión
+ * al servidor. La inferencia original nunca se modifica desde aquí.
  */
 export function ConclusionMedica({
   abierta,
   onAbiertaChange,
   inferencia,
+  onRegistrada,
 }: ConclusionMedicaProps) {
-  const [paso, setPaso] = useState<Paso>('formulario');
+  const incrustada = inferencia.decision ?? null;
+  const [paso, setPaso] = useState<Paso>(incrustada ? 'lectura' : 'consulta');
+  const [decision, setDecision] = useState<DecisionRegistrada | null>(incrustada);
   const [categoria, setCategoria] = useState<CategoriaConclusion | ''>('');
   const [nota, setNota] = useState('');
   const [errores, setErrores] = useState<Errores>({});
+  const [enviando, setEnviando] = useState(false);
+  const [errorEnvio, setErrorEnvio] = useState(false);
+  const [errorConsulta, setErrorConsulta] = useState(false);
 
   const resultado = RESULTADOS[inferencia.resultado] ?? SIN_CLASIFICAR;
   const etiquetaCategoria =
     CATEGORIAS.find((opcion) => opcion.valor === categoria)?.etiqueta ?? '—';
 
+  const cargarDecision = useCallback(async () => {
+    setErrorConsulta(false);
+    setPaso('consulta');
+    try {
+      const encontrada = await consultarDecision(inferencia.caso_id, inferencia.id);
+      setDecision(encontrada);
+      setPaso(encontrada ? 'lectura' : 'formulario');
+    } catch {
+      setErrorConsulta(true);
+    }
+  }, [inferencia.caso_id, inferencia.id]);
+
+  useEffect(() => {
+    if (!abierta || inferencia.decision) return;
+    void cargarDecision();
+  }, [abierta, inferencia.decision, cargarDecision]);
+
   function cambiarApertura(siguiente: boolean) {
     if (!siguiente) {
-      setPaso('formulario');
+      setPaso(inferencia.decision ? 'lectura' : 'consulta');
       setCategoria('');
       setNota('');
       setErrores({});
+      setErrorEnvio(false);
+      setErrorConsulta(false);
     }
     onAbiertaChange(siguiente);
   }
 
   function revisar() {
-    const siguientes: Errores = {};
-    if (!categoria) {
-      siguientes.categoria = 'Selecciona una categoría para tu conclusión.';
-    }
-    const limpia = nota.trim();
-    if (!limpia) {
-      siguientes.nota = 'Escribe una nota con tu criterio.';
-    } else if (limpia.length < NOTA_MINIMA) {
-      siguientes.nota = `La nota debe tener al menos ${NOTA_MINIMA} caracteres.`;
-    }
+    const siguientes = validarConclusion(categoria, nota);
     setErrores(siguientes);
-    if (Object.keys(siguientes).length === 0) {
-      setPaso('confirmacion');
+    if (Object.keys(siguientes).length === 0) setPaso('confirmacion');
+  }
+
+  async function enviar() {
+    if (!categoria || enviando) return;
+    setEnviando(true);
+    setErrorEnvio(false);
+    try {
+      const registrada = await registrarDecision(inferencia.caso_id, inferencia.id, {
+        decision: categoria,
+        observaciones: nota.trim(),
+      });
+      setEnviando(false);
+      onRegistrada?.(registrada);
+      cambiarApertura(false);
+    } catch (error) {
+      setEnviando(false);
+      if (error instanceof DecisionExistenteError) {
+        await cargarDecision();
+      } else {
+        setErrorEnvio(true);
+      }
     }
   }
 
-  const formulario = (
-    <div className="flex flex-col gap-4">
-      <Callout tone="warning" title="El registro todavía no está disponible">
-        El servidor aún no expone el guardado de conclusiones médicas. Puedes redactar y revisar
-        tu conclusión, pero no se enviará ni se guardará al cerrar.
-      </Callout>
+  const titulo =
+    paso === 'confirmacion'
+      ? 'Revisa tu conclusión'
+      : paso === 'lectura'
+        ? 'Conclusión registrada'
+        : 'Conclusión del médico';
+  const descripcion =
+    paso === 'confirmacion'
+      ? 'Así quedará tu conclusión antes de enviarla.'
+      : paso === 'lectura'
+        ? 'Ya existe una conclusión para esta inferencia; puedes consultarla, no reenviarla.'
+        : paso === 'consulta'
+          ? 'Comprobando si la inferencia ya tiene una conclusión registrada.'
+          : 'Redacta tu criterio aparte de la predicción; la inferencia original no cambia.';
 
-      <dl className="grid gap-3 text-sm sm:grid-cols-2">
-        <div>
-          <dt className="text-muted-foreground">Predicción del modelo</dt>
-          <dd>
-            <Badge tone={resultado.tono}>{resultado.texto}</Badge>
-          </dd>
-        </div>
-        <div>
-          <dt className="text-muted-foreground">Confianza</dt>
-          <dd>
-            {inferencia.confianza === null
-              ? '—'
-              : `${(inferencia.confianza * 100).toFixed(1)} %`}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-muted-foreground">Fecha de la inferencia</dt>
-          <dd>{FORMATO_FECHA.format(new Date(inferencia.creado_en))}</dd>
-        </div>
-        <div>
-          <dt className="text-muted-foreground">Modelo</dt>
-          <dd>
-            {inferencia.modelo.nombre} {inferencia.modelo.version}
-          </dd>
-        </div>
-      </dl>
-
-      <Field label="Categoría" required error={errores.categoria}>
-        <Select
-          value={categoria}
-          onChange={(event) =>
-            setCategoria(event.currentTarget.value as CategoriaConclusion | '')
-          }
-        >
-          <option value="">Selecciona una categoría</option>
-          {CATEGORIAS.map((opcion) => (
-            <option key={opcion.valor} value={opcion.valor}>
-              {opcion.etiqueta}
-            </option>
-          ))}
-        </Select>
-      </Field>
-
-      <Field
-        label="Nota"
-        required
-        hint={`Mínimo ${NOTA_MINIMA} caracteres. Describe tu criterio clínico.`}
-        error={errores.nota}
-      >
-        <Textarea
-          value={nota}
-          maxLength={NOTA_MAXIMA}
-          onChange={(event) => setNota(event.currentTarget.value)}
+  function contenido() {
+    if (paso === 'consulta') {
+      return errorConsulta ? (
+        <Callout tone="danger" title="No se pudo consultar la conclusión">
+          No se pudo comprobar si esta inferencia ya tiene una conclusión. Reintenta.
+          <div className="mt-3">
+            <Button variant="outline" size="sm" onClick={() => void cargarDecision()}>
+              Reintentar
+            </Button>
+          </div>
+        </Callout>
+      ) : (
+        <Spinner size="lg" label="Consultando la conclusión" />
+      );
+    }
+    if (paso === 'lectura') {
+      return decision ? (
+        <DecisionRegistradaVista decision={decision} resultado={resultado} />
+      ) : null;
+    }
+    if (paso === 'formulario') {
+      return (
+        <FormularioConclusion
+          inferencia={inferencia}
+          resultado={resultado}
+          categoria={categoria}
+          nota={nota}
+          errores={errores}
+          onCategoriaChange={setCategoria}
+          onNotaChange={setNota}
         />
-      </Field>
-      <p className="text-sm text-muted-foreground">
-        {nota.length} / {NOTA_MAXIMA} caracteres
-      </p>
-
-      <Field
-        label="Fecha de la conclusión"
-        hint="La fecha y la hora las asigna el servidor al guardar; no se editan aquí."
-      >
-        <Input readOnly value="Se asigna al guardar" />
-      </Field>
-    </div>
-  );
-
-  const confirmacion = (
-    <div className="flex flex-col gap-4">
-      <Callout tone="warning" title="No se guardó nada">
-        El servidor todavía no acepta conclusiones médicas. Cuando el registro esté disponible,
-        la conclusión se enviará con tu usuario y la fecha del servidor.
-      </Callout>
-
-      <dl className="grid gap-3 text-sm">
-        <div>
-          <dt className="text-muted-foreground">Categoría</dt>
-          <dd>{etiquetaCategoria}</dd>
-        </div>
-        <div>
-          <dt className="text-muted-foreground">Nota</dt>
-          <dd className="whitespace-pre-wrap">{nota.trim()}</dd>
-        </div>
-        <div>
-          <dt className="text-muted-foreground">Fecha</dt>
-          <dd>Se asigna al guardar, en el servidor.</dd>
-        </div>
-        <div>
-          <dt className="text-muted-foreground">Autor</dt>
-          <dd>Tu usuario de la sesión.</dd>
-        </div>
-        <div>
-          <dt className="text-muted-foreground">Predicción (sin cambios)</dt>
-          <dd>
-            <Badge tone={resultado.tono}>{resultado.texto}</Badge>
-          </dd>
-        </div>
-      </dl>
-    </div>
-  );
+      );
+    }
+    return (
+      <>
+        {errorEnvio ? (
+          <Callout tone="danger" title="No se pudo registrar la conclusión">
+            No se pudo guardar la conclusión. Revisa tu conexión e inténtalo de nuevo.
+          </Callout>
+        ) : null}
+        <ResumenConfirmacion
+          resultado={resultado}
+          etiquetaCategoria={etiquetaCategoria}
+          nota={nota}
+        />
+      </>
+    );
+  }
 
   return (
     <Dialog
       open={abierta}
       onOpenChange={cambiarApertura}
-      title={paso === 'formulario' ? 'Conclusión del médico' : 'Revisa tu conclusión'}
-      description={
-        paso === 'formulario'
-          ? 'Redacta tu criterio aparte de la predicción; la inferencia original no cambia.'
-          : 'Así quedará tu conclusión. Todavía no se puede guardar en el servidor.'
-      }
+      title={titulo}
+      description={descripcion}
       size="lg"
       footer={
-        paso === 'formulario' ? (
-          <>
-            <DialogClose asChild>
-              <Button variant="outline">Cancelar</Button>
-            </DialogClose>
-            <Button onClick={revisar}>Revisar conclusión</Button>
-          </>
-        ) : (
-          <>
-            <Button variant="outline" onClick={() => setPaso('formulario')}>
-              Volver
-            </Button>
-            <DialogClose asChild>
-              <Button>Cerrar</Button>
-            </DialogClose>
-          </>
-        )
+        <PieConclusion
+          paso={paso}
+          enviando={enviando}
+          errorEnvio={errorEnvio}
+          onVolver={() => setPaso('formulario')}
+          onRevisar={revisar}
+          onEnviar={() => void enviar()}
+        />
       }
     >
-      {paso === 'formulario' ? formulario : confirmacion}
+      {contenido()}
     </Dialog>
   );
 }
