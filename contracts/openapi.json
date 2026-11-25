@@ -167,6 +167,128 @@
         }
       }
     },
+    "/auditoria/exportar": {
+      "get": {
+        "tags": [
+          "auditoria"
+        ],
+        "summary": "Exportar Bitacora",
+        "description": "CSV de la bitácora filtrada, con un tope de 5000 filas.\n\nAplica los mismos filtros que el listado, omite la dirección IP y registra\nun evento `EXPORT.EXPORT` con el número de filas, nunca con su contenido.",
+        "operationId": "exportar_bitacora_auditoria_exportar_get",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "usuario",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 36
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Usuario"
+            }
+          },
+          {
+            "name": "accion",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accion"
+            }
+          },
+          {
+            "name": "desde",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Desde"
+            }
+          },
+          {
+            "name": "hasta",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Hasta"
+            }
+          },
+          {
+            "name": "recurso",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^(PATIENT|CASE|RECORD|DOCUMENT|IMAGE|INFERENCE|CONSENT|USER|ROLE|SYSTEM|DATASET|REPORT|AUDIT)$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Recurso"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/pacientes": {
       "post": {
         "tags": [
@@ -1581,6 +1703,167 @@
         }
       }
     },
+    "/investigacion/predicciones": {
+      "get": {
+        "tags": [
+          "investigacion"
+        ],
+        "summary": "Auditar Predicciones",
+        "description": "Predicciones auditables, de la más reciente a la más antigua.",
+        "operationId": "auditar_predicciones_investigacion_predicciones_get",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "desde",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Desde"
+            }
+          },
+          {
+            "name": "hasta",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Hasta"
+            }
+          },
+          {
+            "name": "resultado",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^(benigno|maligno|sin_nodulo)$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Resultado"
+            }
+          },
+          {
+            "name": "decision",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^(acepta|corrige|descarta|pendiente)$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Decision"
+            }
+          },
+          {
+            "name": "caso",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 36
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Caso"
+            }
+          },
+          {
+            "name": "modelo",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 36
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Modelo"
+            }
+          },
+          {
+            "name": "limite",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 25,
+              "title": "Limite"
+            }
+          },
+          {
+            "name": "desplazamiento",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Desplazamiento"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/casos/{caso_id}/inferencias/{inferencia_id}/decision": {
       "post": {
         "tags": [
@@ -1683,6 +1966,126 @@
             "content": {
               "application/json": {
                 "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/investigacion/datasets": {
+      "get": {
+        "tags": [
+          "investigacion"
+        ],
+        "summary": "Listar Datasets",
+        "description": "Metadatos de los datasets de la institución, del más reciente al más antiguo.",
+        "operationId": "listar_datasets_investigacion_datasets_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetsListOut"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "investigacion"
+        ],
+        "summary": "Crear Dataset",
+        "description": "Anonimiza los casos que cumplen el filtro y guarda la versión fija.",
+        "operationId": "crear_dataset_investigacion_datasets_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CrearDatasetRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
+      }
+    },
+    "/investigacion/datasets/{id}": {
+      "get": {
+        "tags": [
+          "investigacion"
+        ],
+        "summary": "Obtener Dataset",
+        "description": "Fila anonimizada por caso; un dataset ajeno responde 404.",
+        "operationId": "obtener_dataset_investigacion_datasets__id__get",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetOut"
+                }
               }
             }
           },
@@ -2624,6 +3027,236 @@
         ],
         "title": "Body_iniciar_paquete_modelos_ia_paquetes_post"
       },
+      "CasoAnonimizadoOut": {
+        "properties": {
+          "sujeto": {
+            "type": "string",
+            "title": "Sujeto"
+          },
+          "edad_rango": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Edad Rango"
+          },
+          "mes_caso": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mes Caso"
+          },
+          "mes_tsh": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mes Tsh"
+          },
+          "tsh": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tsh"
+          },
+          "tsh_unidad": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tsh Unidad"
+          },
+          "mes_t3": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mes T3"
+          },
+          "t3": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "T3"
+          },
+          "t3_unidad": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "T3 Unidad"
+          },
+          "mes_t4": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mes T4"
+          },
+          "t4": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "T4"
+          },
+          "t4_unidad": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "T4 Unidad"
+          },
+          "tamano_nodulo_mm": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tamano Nodulo Mm"
+          },
+          "lateralidad": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lateralidad"
+          },
+          "tirads": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tirads"
+          },
+          "bethesda": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bethesda"
+          },
+          "cie10": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cie10"
+          },
+          "tipo_diagnostico": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tipo Diagnostico"
+          },
+          "tipo_consulta": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tipo Consulta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sujeto",
+          "edad_rango",
+          "mes_caso",
+          "mes_tsh",
+          "tsh",
+          "tsh_unidad",
+          "mes_t3",
+          "t3",
+          "t3_unidad",
+          "mes_t4",
+          "t4",
+          "t4_unidad",
+          "tamano_nodulo_mm",
+          "lateralidad",
+          "tirads",
+          "bethesda",
+          "cie10",
+          "tipo_diagnostico",
+          "tipo_consulta"
+        ],
+        "title": "CasoAnonimizadoOut",
+        "description": "Una fila publicable: sin identificadores ni vínculo con el caso."
+      },
       "ConfiguracionIn": {
         "properties": {
           "host": {
@@ -2821,6 +3454,42 @@
         "title": "CrearConsentimientoRequest",
         "description": "Finalidad y versión del texto firmado; nunca contenido clínico."
       },
+      "CrearDatasetRequest": {
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Nombre"
+          },
+          "descripcion": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Descripcion"
+          },
+          "k": {
+            "type": "integer",
+            "title": "K",
+            "default": 5
+          },
+          "filtro": {
+            "$ref": "#/components/schemas/FiltroCasos"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "nombre"
+        ],
+        "title": "CrearDatasetRequest"
+      },
       "CrearInstitucionRequest": {
         "properties": {
           "nombre": {
@@ -2946,6 +3615,149 @@
         ],
         "title": "CrearUsuarioRequest"
       },
+      "DatasetOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "descripcion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Descripcion"
+          },
+          "total_casos": {
+            "type": "integer",
+            "title": "Total Casos"
+          },
+          "k": {
+            "type": "integer",
+            "title": "K"
+          },
+          "huella": {
+            "type": "string",
+            "title": "Huella"
+          },
+          "criterios": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Criterios"
+          },
+          "creado_en": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Creado En"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CasoAnonimizadoOut"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "nombre",
+          "descripcion",
+          "total_casos",
+          "k",
+          "huella",
+          "criterios",
+          "creado_en",
+          "items"
+        ],
+        "title": "DatasetOut"
+      },
+      "DatasetResumenOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "descripcion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Descripcion"
+          },
+          "total_casos": {
+            "type": "integer",
+            "title": "Total Casos"
+          },
+          "k": {
+            "type": "integer",
+            "title": "K"
+          },
+          "huella": {
+            "type": "string",
+            "title": "Huella"
+          },
+          "criterios": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Criterios"
+          },
+          "creado_en": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Creado En"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "nombre",
+          "descripcion",
+          "total_casos",
+          "k",
+          "huella",
+          "criterios",
+          "creado_en"
+        ],
+        "title": "DatasetResumenOut"
+      },
+      "DatasetsListOut": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/DatasetResumenOut"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "items"
+        ],
+        "title": "DatasetsListOut"
+      },
       "DecisionIn": {
         "properties": {
           "decision": {
@@ -2977,6 +3789,98 @@
         ],
         "title": "DecisionIn",
         "description": "Conclusión del médico; las observaciones son opcionales y acotadas."
+      },
+      "FiltroCasos": {
+        "properties": {
+          "desde": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Desde"
+          },
+          "hasta": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hasta"
+          },
+          "tipo_diagnostico": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tipo Diagnostico"
+          },
+          "tipo_consulta": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tipo Consulta"
+          },
+          "tirads": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 16
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tirads"
+          },
+          "bethesda": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 16
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bethesda"
+          },
+          "cie10": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 16
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cie10"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "FiltroCasos",
+        "description": "Criterios clínicos del conjunto; nunca identificadores de pacientes."
       },
       "HTTPValidationError": {
         "properties": {

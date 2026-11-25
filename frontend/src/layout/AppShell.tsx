@@ -31,6 +31,7 @@ const NAV_BY_ROLE: Record<Role, SidebarNavItem[]> = {
   ],
   investigador: [
     { to: '/investigador/cohortes', label: 'Cohortes', icon: LayoutDashboard },
+    { to: '/investigador/predicciones', label: 'Predicciones', icon: FileText },
     { to: '/investigador/exportaciones', label: 'Exportaciones', icon: Download },
   ],
   administrador: [

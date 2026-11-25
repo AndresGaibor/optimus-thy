@@ -6,6 +6,7 @@ from app.db import Base
 from app.models.auditoria import Auditoria
 from app.models.consentimientos import Consentimiento
 from app.models.correo import ConfiguracionCorreo, PlantillaCorreo, TokenRecuperacion
+from app.models.datasets import Dataset, DatasetCaso
 from app.models.documentos import Documento
 from app.models.fichas import Caso, FichaClinica, FichaVersion
 from app.models.imagenes import DecisionMedica, Imagen, Inferencia, ModeloIA, Nodulo
@@ -21,6 +22,8 @@ __all__ = [
     "Caso",
     "ConfiguracionCorreo",
     "Consentimiento",
+    "Dataset",
+    "DatasetCaso",
     "DecisionMedica",
     "Documento",
     "FichaClinica",
@@ -62,6 +65,8 @@ TABLAS: list[str] = [
     "nodulos",
     "decisiones_medicas",
     "consentimientos",
+    "datasets",
+    "datasets_casos",
     "auditoria",
     "sesiones",
     "trabajos",
