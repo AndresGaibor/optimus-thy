@@ -24,6 +24,7 @@ export function ModelosPage() {
   const [nombre, setNombre] = useState('');
   const [version, setVersion] = useState('');
   const [guardando, setGuardando] = useState(false);
+  const [progreso, setProgreso] = useState<number | null>(null);
 
   const cargarModelos = useCallback(async () => {
     setCargando(true);
@@ -45,18 +46,24 @@ export function ModelosPage() {
     if (!archivo || !nombre.trim() || !version.trim()) return;
     setGuardando(true);
     setError(null);
+    setProgreso(0);
     try {
-      const modelo = await subirModelo(archivo, nombre.trim(), version.trim());
+      const modelo = await subirModelo(archivo, nombre.trim(), version.trim(), setProgreso);
       setModelos((actuales) => [modelo, ...actuales]);
       setAviso(`Se subió ${modelo.nombre} ${modelo.version}.`);
       setSubidaAbierta(false);
       setArchivo(null);
       setNombre('');
       setVersion('');
-    } catch {
-      setError('No se pudo subir el archivo ZIP. Comprueba los datos y vuelve a intentarlo.');
+    } catch (fallo) {
+      setError(
+        fallo instanceof Error
+          ? fallo.message
+          : 'No se pudo subir el archivo ZIP. Comprueba los datos y vuelve a intentarlo.',
+      );
     } finally {
       setGuardando(false);
+      setProgreso(null);
     }
   };
 
@@ -140,6 +147,11 @@ export function ModelosPage() {
         }
       >
         <div className="flex flex-col gap-4">
+          {progreso !== null ? (
+            <p role="status" className="text-sm text-muted-foreground">
+              Subiendo… {Math.round(progreso * 100)} % de {archivo ? archivo.name : 'archivo'}
+            </p>
+          ) : null}
           <Field label="Archivo ZIP" required>
             <Input
               type="file"

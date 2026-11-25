@@ -17,7 +17,12 @@ COPY requirements-modelos.txt ./
 
 RUN pip install --upgrade pip \
  && pip install . \
- && if [ "$INSTALAR_MODELOS" = "true" ]; then pip install -r requirements-modelos.txt; fi
+ && if [ "$INSTALAR_MODELOS" = "true" ]; then \
+      apt-get update \
+      && apt-get install -y --no-install-recommends libxcb1 libgl1 libglib2.0-0 libsm6 libxext6 \
+      && rm -rf /var/lib/apt/lists/* \
+      && pip install -r requirements-modelos.txt; \
+    fi
 
 # Usuario no root.
 RUN useradd --create-home --uid 1000 app
