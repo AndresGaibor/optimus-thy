@@ -16,6 +16,7 @@ import { EmptyState } from '../../design-system/components/molecules/EmptyState'
 import { PageHeader } from '../../design-system/components/molecules/PageHeader';
 import { Pagination } from '../../design-system/components/molecules/Pagination';
 import { listarPacientes, type Paciente } from '../../api/pacientes';
+import { ConclusionMedica } from './ConclusionMedica';
 import { FiltrosResultados } from './FiltrosResultados';
 import {
   descargarReporte,
@@ -44,6 +45,7 @@ export function ResultadosPage() {
   const [error, setError] = useState<string | null>(null);
   const [descargando, setDescargando] = useState<string | null>(null);
   const [errorDescarga, setErrorDescarga] = useState(false);
+  const [conclusionDe, setConclusionDe] = useState<ResultadoGuardado | null>(null);
 
   useEffect(() => {
     void listarPacientes({ limite: 50 }).then((resultado) => {
@@ -173,14 +175,19 @@ export function ResultadosPage() {
                     {fila.confianza === null ? '—' : `${(fila.confianza * 100).toFixed(1)} %`}
                   </TableCell>
                   <TableCell>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      loading={descargando === fila.id}
-                      onClick={() => void descargar(fila)}
-                    >
-                      Reporte PDF
-                    </Button>
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        loading={descargando === fila.id}
+                        onClick={() => void descargar(fila)}
+                      >
+                        Reporte PDF
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => setConclusionDe(fila)}>
+                        Conclusión
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               );
@@ -196,6 +203,16 @@ export function ResultadosPage() {
         onOffsetChange={setDesplazamiento}
         itemLabel="resultado"
       />
+
+      {conclusionDe ? (
+        <ConclusionMedica
+          abierta
+          onAbiertaChange={(abierta) => {
+            if (!abierta) setConclusionDe(null);
+          }}
+          inferencia={conclusionDe}
+        />
+      ) : null}
     </div>
   );
 }
