@@ -1,4 +1,5 @@
 import { ConfidenceBadge, EmptyState } from '../../../design-system';
+import type { ImagenCaso } from '../../../api/imagenes';
 import type { Inferencia } from '../../../api/resultados';
 import { ResultadoInferencia } from '../ResultadoInferencia';
 
@@ -7,10 +8,12 @@ interface PanelResultadosProps {
   resultados: Inferencia[];
   /** Caso al que pertenecen los resultados. */
   casoId: string;
+  /** Ecografías del caso, para indicar con cuál se hizo cada inferencia. */
+  imagenes: ImagenCaso[];
 }
 
 /** Sección de resultados de inferencia con la confianza y la evidencia por nódulo. */
-export function PanelResultados({ resultados, casoId }: PanelResultadosProps) {
+export function PanelResultados({ resultados, casoId, imagenes }: PanelResultadosProps) {
   return (
     <section className="flex flex-col gap-4" aria-labelledby="resultados-title">
       <h2 id="resultados-title" className="text-lg font-semibold">
@@ -34,7 +37,11 @@ export function PanelResultados({ resultados, casoId }: PanelResultadosProps) {
                   <ConfidenceBadge value={confianza} tone="ai" label="Confianza del resultado" />
                 </div>
               )}
-              <ResultadoInferencia inferencia={inferencia} casoId={casoId} />
+              <ResultadoInferencia
+                inferencia={inferencia}
+                casoId={casoId}
+                imagen={imagenes.find((imagen) => imagen.id === inferencia.imagen_id)}
+              />
             </article>
           );
         })

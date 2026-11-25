@@ -29,7 +29,7 @@ PUBLICAS = {
     "/auth/recuperacion/confirmar",
 }
 # Basta una sesión válida: actúan sobre la propia sesión, no sobre datos.
-SOLO_SESION = {"/auth/me", "/auth/rol-activo"}
+SOLO_SESION = {"/auth/me", "/auth/rol-activo", "/auth/password"}
 
 
 def _dependencias(dependant):

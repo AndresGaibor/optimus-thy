@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Badge, Button, Callout } from '../../design-system';
+import type { ImagenCaso } from '../../api/imagenes';
 import { descargarReporte, type Inferencia } from '../../api/resultados';
 import { ResultadoNodulo } from './ResultadoNodulo';
 
@@ -15,9 +16,12 @@ const SIN_CLASIFICAR = { etiqueta: 'Sin clasificar', tono: 'neutral' as const };
 export function ResultadoInferencia({
   inferencia,
   casoId,
+  imagen,
 }: {
   inferencia: Inferencia;
   casoId: string;
+  /** Imagen del caso con la que se ejecutó la inferencia. */
+  imagen?: ImagenCaso | undefined;
 }) {
   const resultado = RESULTADOS[inferencia.resultado] ?? SIN_CLASIFICAR;
   const [descargando, setDescargando] = useState(false);
@@ -55,6 +59,11 @@ export function ResultadoInferencia({
           Descargar reporte
         </Button>
       </div>
+      <p className="text-sm text-muted-foreground">
+        {imagen
+          ? `Imagen usada: ${imagen.formato.toUpperCase()} ${imagen.ancho}×${imagen.alto} del ${FORMATO_FECHA.format(new Date(imagen.creado_en))}`
+          : `Imagen usada: #${inferencia.imagen_id.slice(0, 8)}`}
+      </p>
       {errorDescarga ? (
         <Callout tone="danger" title="No se pudo descargar el reporte">
           Inténtalo de nuevo; la descarga queda registrada cuando se completa.

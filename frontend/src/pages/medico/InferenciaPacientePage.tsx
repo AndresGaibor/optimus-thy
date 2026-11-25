@@ -122,10 +122,10 @@ function InferenciaDePaciente({ pacienteId }: { pacienteId: string }) {
 
   const subida = useSubidaEcografia({
     casoId,
-    alSubir: async () => {
+    alSubir: async (subidas) => {
       setErrorAnalisis(null);
       setImagenReintento(null);
-      setAviso('Ecografía cargada y saneada.');
+      setAviso(subidas === 1 ? 'Ecografía cargada y saneada.' : 'Ecografías cargadas y saneadas.');
       await cargarCaso(casoId);
     },
   });

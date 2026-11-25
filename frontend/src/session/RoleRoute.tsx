@@ -52,6 +52,20 @@ export function RoleRoute({ role, children }: { role: Role; children: ReactNode 
   return <>{children}</>;
 }
 
+export function SesionRoute({ children }: { children: ReactNode }) {
+  const { estado } = useSession();
+
+  if (estado === 'cargando') {
+    return <LoadingScreen mensaje="Cargando sesión…" />;
+  }
+
+  if (estado === 'anonimo') {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <>{children}</>;
+}
+
 export function RootRedirect() {
   const { estado, rolActivo } = useSession();
   if (estado === 'cargando') {

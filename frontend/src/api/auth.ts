@@ -91,3 +91,33 @@ export async function setRolActivo(rol: string): Promise<SetRolActivoResult> {
 }
 
 export const login = loginWithCredentials;
+
+export type CambioPasswordResultado = { ok: true } | { ok: false; codigo: string; mensaje: string };
+
+/** Cambia la contraseña propia; el servidor exige la actual y cierra las demás sesiones. */
+export async function cambiarPassword(
+  passwordActual: string,
+  passwordNueva: string,
+): Promise<CambioPasswordResultado> {
+  const res = await fetch('/api/auth/password', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ password_actual: passwordActual, password_nueva: passwordNueva }),
+  });
+
+  if (res.ok) {
+    return { ok: true };
+  }
+
+  let codigo = 'error';
+  let mensaje = 'No se pudo cambiar la contraseña. Reintenta en un momento.';
+  try {
+    const data = (await res.json()) as { error?: { code?: string; message?: string } };
+    codigo = data.error?.code ?? codigo;
+    mensaje = data.error?.message ?? mensaje;
+  } catch {
+    // Sin cuerpo JSON se conserva el mensaje genérico.
+  }
+  return { ok: false, codigo, mensaje };
+}

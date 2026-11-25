@@ -18,7 +18,9 @@ import { ComparacionResultadosPage } from './pages/medico/ComparacionResultadosP
 import { AuditoriaPrediccionesPage } from './pages/investigador/AuditoriaPrediccionesPage';
 import { DatasetsPage } from './pages/investigador/DatasetsPage';
 import { InferenciaPacientePage } from './pages/medico/InferenciaPacientePage';
-import { RootRedirect, RoleRoute } from './session/RoleRoute';
+import { ExplicacionModeloPage } from './pages/medico/ExplicacionModeloPage';
+import { PerfilPage } from './pages/PerfilPage';
+import { RootRedirect, RoleRoute, SesionRoute } from './session/RoleRoute';
 
 export function AppRoutes() {
   return (
@@ -42,6 +44,7 @@ export function AppRoutes() {
         <Route path="casos/:casoId" element={<CasoPage />} />
         <Route path="historial" element={<HistorialInferenciasPage />} />
         <Route path="comparacion" element={<ComparacionResultadosPage />} />
+        <Route path="modelo" element={<ExplicacionModeloPage />} />
         <Route path="casos/:casoId/historial" element={<HistorialInferenciasPage />} />
         <Route path="pacientes/:id/inferencia" element={<InferenciaPacientePage />} />
         <Route path="inferencia" element={<InferenciaPacientePage />} />
@@ -77,6 +80,16 @@ export function AppRoutes() {
         <Route path="modelos" element={<ModelosPage />} />
         <Route path="correo" element={<CorreoPage />} />
         <Route path="auditoria" element={<AuditoriaPage />} />
+      </Route>
+      <Route
+        path="/perfil"
+        element={
+          <SesionRoute>
+            <AppShell />
+          </SesionRoute>
+        }
+      >
+        <Route index element={<PerfilPage />} />
       </Route>
       <Route path="*" element={<NotFoundPage />} />
     </Routes>

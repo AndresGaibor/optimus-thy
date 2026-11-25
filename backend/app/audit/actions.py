@@ -65,6 +65,8 @@ class AuditAction(StrEnum):
 
     # Recuperación de contraseña (TES-377)
     PASSWORD_RESET = "PASSWORD_RESET"
+    # Cambio de contraseña desde el perfil (HU-006)
+    PASSWORD_CHANGE = "PASSWORD_CHANGE"
 
     # Decisión médica sobre una inferencia (TES-337)
     INFERENCE_DECISION = "INFERENCE_DECISION"
