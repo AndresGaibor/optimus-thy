@@ -1,0 +1,43 @@
+## ADDED Requirements
+
+### Requirement: Registro de la conclusión médica
+
+La API SHALL permitir registrar una única conclusión por inferencia, con `acepta`, `corrige` o `descarta`, observaciones opcionales y el usuario del token como autor.
+
+#### Scenario: Conclusión registrada
+
+- **WHEN** el médico envía una conclusión válida sobre una inferencia de un caso suyo
+- **THEN** la decisión queda guardada con su autor y su fecha, y la inferencia no cambia
+
+#### Scenario: Segunda conclusión
+
+- **WHEN** ya existe una decisión para esa inferencia
+- **THEN** la respuesta es `409` y la decisión original se conserva
+
+#### Scenario: Inferencia de otro caso
+
+- **WHEN** la inferencia no pertenece al caso indicado
+- **THEN** la respuesta es `404`
+
+#### Scenario: Observaciones fuera de rango
+
+- **WHEN** las observaciones tienen menos de 10 o más de 2000 caracteres
+- **THEN** la respuesta es `422`
+
+### Requirement: Lectura del estado de la decisión
+
+La lectura de inferencias SHALL incluir la decisión registrada con su fecha y su autor, sin datos personales del médico.
+
+#### Scenario: Decisión visible
+
+- **WHEN** se consulta un caso con una inferencia ya concluida
+- **THEN** la respuesta trae la decisión, su fecha y el identificador y rol de quien la registró
+
+### Requirement: Auditoría de la decisión
+
+La API SHALL registrar la conclusión con el identificador de la inferencia y el sentido de la decisión, sin contenido clínico.
+
+#### Scenario: Evento registrado
+
+- **WHEN** se registra una conclusión
+- **THEN** la bitácora guarda el evento con la inferencia y el sentido, sin observaciones

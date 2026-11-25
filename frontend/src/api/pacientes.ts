@@ -7,6 +7,20 @@ export interface Paciente {
   total_casos: number;
 }
 
+/** Caso asociado al paciente en el detalle (`GET /pacientes/{id}`). */
+export interface CasoResumen {
+  id: string;
+  codigo: string;
+  paciente_id: string;
+  paciente_codigo: string;
+  creado_en: string;
+}
+
+/** Paciente con sus casos; el listado no los incluye, el detalle sí. */
+export interface PacienteDetalle extends Paciente {
+  casos: CasoResumen[];
+}
+
 function esPaciente(valor: unknown): valor is Paciente {
   if (typeof valor !== 'object' || valor === null) {
     return false;
@@ -18,6 +32,10 @@ function esPaciente(valor: unknown): valor is Paciente {
     typeof v.creado_en === 'string' &&
     typeof v.total_casos === 'number'
   );
+}
+
+function esPacienteDetalle(valor: unknown): valor is PacienteDetalle {
+  return esPaciente(valor) && 'casos' in valor && Array.isArray(valor.casos);
 }
 
 export interface ListaPacientes {
@@ -112,7 +130,7 @@ export async function crearPaciente(datos: {
   return { ok: false, status: 422 };
 }
 
-export async function obtenerPaciente(id: string): Promise<ApiResult<Paciente>> {
+export async function obtenerPaciente(id: string): Promise<ApiResult<PacienteDetalle>> {
   const { data, error, response } = await client.GET('/pacientes/{id}', {
     params: {
       path: { id },
@@ -120,7 +138,7 @@ export async function obtenerPaciente(id: string): Promise<ApiResult<Paciente>> 
   });
 
   if (data) {
-    if (esPaciente(data)) {
+    if (esPacienteDetalle(data)) {
       return { ok: true, data };
     }
     return { ok: false, status: 422 };

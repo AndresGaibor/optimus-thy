@@ -73,6 +73,24 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
+        /** Actualizar Paciente */
+        patch: operations["actualizar_paciente_pacientes__id__patch"];
+        trace?: never;
+    };
+    "/pacientes/{id}/identidad": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Obtener Identidad */
+        get: operations["obtener_identidad_pacientes__id__identidad_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
         patch?: never;
         trace?: never;
     };
@@ -387,6 +405,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/casos/{caso_id}/inferencias/{inferencia_id}/decision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Consultar Decision
+         * @description Decisión registrada, con fecha y autor sin datos personales.
+         */
+        get: operations["consultar_decision_casos__caso_id__inferencias__inferencia_id__decision_get"];
+        put?: never;
+        /**
+         * Registrar Decision
+         * @description Registra una única conclusión por inferencia; la segunda responde 409.
+         */
+        post: operations["registrar_decision_casos__caso_id__inferencias__inferencia_id__decision_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/casos/{caso_id}/inferencias/{inferencia_id}/reporte.pdf": {
         parameters: {
             query?: never;
@@ -420,6 +462,77 @@ export interface paths {
         /** Cargar Modelo */
         post: operations["cargar_modelo_modelos_ia_post"];
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/modelos-ia/paquetes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Iniciar Paquete
+         * @description Abre una subida por trozos para un paquete que supera el límite del proxy.
+         */
+        post: operations["iniciar_paquete_modelos_ia_paquetes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/modelos-ia/paquetes/{subida_id}/trozos/{indice}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Subir Trozo */
+        put: operations["subir_trozo_modelos_ia_paquetes__subida_id__trozos__indice__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/modelos-ia/paquetes/{subida_id}/cerrar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cerrar Paquete */
+        post: operations["cerrar_paquete_modelos_ia_paquetes__subida_id__cerrar_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/modelos-ia/paquetes/{subida_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Cancelar Paquete */
+        delete: operations["cancelar_paquete_modelos_ia_paquetes__subida_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -670,6 +783,13 @@ export interface components {
             /** Version */
             version: string;
         };
+        /** Body_iniciar_paquete_modelos_ia_paquetes_post */
+        Body_iniciar_paquete_modelos_ia_paquetes_post: {
+            /** Nombre */
+            nombre: string;
+            /** Version */
+            version: string;
+        };
         /** ConfiguracionIn */
         ConfiguracionIn: {
             /** Host */
@@ -785,6 +905,19 @@ export interface components {
             /** Password */
             password: string;
         };
+        /**
+         * DecisionIn
+         * @description Conclusión del médico; las observaciones son opcionales y acotadas.
+         */
+        DecisionIn: {
+            /**
+             * Decision
+             * @enum {string}
+             */
+            decision: "acepta" | "corrige" | "descarta";
+            /** Observaciones */
+            observaciones?: string | null;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -875,6 +1008,20 @@ export interface components {
             /** Activa */
             activa?: boolean | null;
         };
+        /**
+         * PatchPacienteRequest
+         * @description Corrección de la identidad (TES-327); solo se aplica lo enviado.
+         */
+        PatchPacienteRequest: {
+            /** Nombres */
+            nombres?: string | null;
+            /** Apellidos */
+            apellidos?: string | null;
+            /** Documento */
+            documento?: string | null;
+            /** Fecha Nacimiento */
+            fecha_nacimiento?: string | null;
+        };
         /** PatchUsuarioRequest */
         PatchUsuarioRequest: {
             /** Nombre */
@@ -956,6 +1103,14 @@ export interface components {
         RolesRequest: {
             /** Roles */
             roles: string[];
+        };
+        /** SubidaOut */
+        SubidaOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
         };
         /** ValidationError */
         ValidationError: {
@@ -1103,6 +1258,72 @@ export interface operations {
         };
     };
     obtener_paciente_pacientes__id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    actualizar_paciente_pacientes__id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PatchPacienteRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    obtener_identidad_pacientes__id__identidad_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -1813,6 +2034,74 @@ export interface operations {
             };
         };
     };
+    consultar_decision_casos__caso_id__inferencias__inferencia_id__decision_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                caso_id: string;
+                inferencia_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    registrar_decision_casos__caso_id__inferencias__inferencia_id__decision_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                caso_id: string;
+                inferencia_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DecisionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     descargar_reporte_casos__caso_id__inferencias__inferencia_id__reporte_pdf_get: {
         parameters: {
             query?: never;
@@ -1886,6 +2175,129 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ModeloOut"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    iniciar_paquete_modelos_ia_paquetes_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/x-www-form-urlencoded": components["schemas"]["Body_iniciar_paquete_modelos_ia_paquetes_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubidaOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    subir_trozo_modelos_ia_paquetes__subida_id__trozos__indice__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                subida_id: string;
+                indice: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cerrar_paquete_modelos_ia_paquetes__subida_id__cerrar_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                subida_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModeloOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancelar_paquete_modelos_ia_paquetes__subida_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                subida_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

@@ -1,9 +1,10 @@
 """Pacientes y casos (HU-030, HU-031, HU-033).
 
 Las respuestas nunca llevan la identidad: el paciente se ve por su código
-interno. La identidad queda cifrada en ``identidades_paciente`` y revelarla es
-otra operación, aún sin implementar (requiere el visto bueno del director).
-Un paciente de otra institución responde 404, igual que uno que no existe.
+interno. La identidad queda cifrada en ``identidades_paciente``; solo se
+revela en ``GET /pacientes/{id}/identidad``, que queda auditado como
+``PII_REVEAL``. Un paciente de otra institución responde 404, igual que uno
+que no existe.
 """
 
 from __future__ import annotations
@@ -34,6 +35,12 @@ _LIMITE_MAXIMO = 100
 _INTENTOS_CODIGO = 5
 
 
+def _fecha_nacimiento_valida(valor: date) -> date:
+    if valor > date.today() or valor.year < 1900:
+        raise ValueError("fecha de nacimiento fuera de rango")
+    return valor
+
+
 class CrearPacienteRequest(BaseModel):
     """Solo los datos mínimos para identificar a la persona (RF-PAC-01)."""
 
@@ -47,9 +54,34 @@ class CrearPacienteRequest(BaseModel):
     @field_validator("fecha_nacimiento")
     @classmethod
     def _fecha_razonable(cls, valor: date) -> date:
-        if valor > date.today() or valor.year < 1900:
-            raise ValueError("fecha de nacimiento fuera de rango")
-        return valor
+        return _fecha_nacimiento_valida(valor)
+
+
+class PatchPacienteRequest(BaseModel):
+    """Corrección de la identidad (TES-327); solo se aplica lo enviado."""
+
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    nombres: str | None = Field(default=None, min_length=1, max_length=120)
+    apellidos: str | None = Field(default=None, min_length=1, max_length=120)
+    documento: str | None = Field(
+        default=None, min_length=5, max_length=20, pattern=r"^[A-Za-z0-9-]+$"
+    )
+    fecha_nacimiento: date | None = None
+
+    @field_validator("fecha_nacimiento")
+    @classmethod
+    def _fecha_razonable(cls, valor: date | None) -> date | None:
+        return None if valor is None else _fecha_nacimiento_valida(valor)
+
+
+class IdentidadOut(BaseModel):
+    """Identidad descifrada; solo la devuelve la ruta que la revela."""
+
+    nombres: str
+    apellidos: str
+    documento: str
+    fecha_nacimiento: date
 
 
 class PacienteOut(BaseModel):
@@ -85,14 +117,18 @@ class PacienteDetalleOut(PacienteOut):
     casos: list[CasoOut]
 
 
-def _no_encontrado(request: Request) -> JSONResponse:
+def _error(request: Request, codigo_http: int, clave: str, mensaje: str) -> JSONResponse:
     return JSONResponse(
-        status_code=status.HTTP_404_NOT_FOUND,
+        status_code=codigo_http,
         content={
-            "error": {"code": "not_found", "message": "No encontrado"},
+            "error": {"code": clave, "message": mensaje},
             "request_id": getattr(request.state, "request_id", "-"),
         },
     )
+
+
+def _no_encontrado(request: Request) -> JSONResponse:
+    return _error(request, status.HTTP_404_NOT_FOUND, "not_found", "No encontrado")
 
 
 def _id(valor: str) -> uuid.UUID | None:
@@ -128,6 +164,19 @@ def _paciente_de(db: Session, actual: SesionActual, id_texto: str) -> Paciente |
 
 def _total_casos(db: Session, paciente_id: uuid.UUID) -> int:
     return db.query(func.count(Caso.id)).filter(Caso.paciente_id == paciente_id).scalar() or 0
+
+
+def _documento_en_uso(
+    db: Session, institucion_id: uuid.UUID, documento: str, excluir: uuid.UUID
+) -> bool:
+    """El documento no tiene índice propio: se compara en claro dentro de la institución."""
+    filas = (
+        db.query(IdentidadPaciente.documento_cifrado)
+        .join(Paciente, Paciente.id == IdentidadPaciente.paciente_id)
+        .filter(Paciente.institucion_id == institucion_id, Paciente.id != excluir)
+        .all()
+    )
+    return any(fila[0] == documento for fila in filas)
 
 
 def _paciente_out(db: Session, paciente: Paciente) -> PacienteOut:
@@ -188,6 +237,82 @@ def crear_paciente(
     return _paciente_out(db, paciente)
 
 
+@router.patch("/pacientes/{id}", response_model=None)
+def actualizar_paciente(
+    request: Request,
+    id: str,
+    body: PatchPacienteRequest,
+    db: Annotated[Session, Depends(session_dep)],
+    actual: Annotated[SesionActual, Depends(requiere_permiso("paciente.escribir"))],
+) -> PacienteOut | JSONResponse:
+    paciente = _paciente_de(db, actual, id)
+    if paciente is None:
+        return _no_encontrado(request)
+    identidad = paciente.identidad
+    if identidad is None:
+        return _no_encontrado(request)
+
+    if not body.model_fields_set:
+        return _error(
+            request,
+            status.HTTP_422_UNPROCESSABLE_ENTITY,
+            "unprocessable_entity",
+            "No hay cambios que aplicar",
+        )
+    if any(getattr(body, campo) is None for campo in body.model_fields_set):
+        return _error(
+            request,
+            status.HTTP_422_UNPROCESSABLE_ENTITY,
+            "validation_error",
+            "Datos de entrada inválidos",
+        )
+
+    cambios: list[str] = []
+    if body.nombres is not None and body.nombres != identidad.nombres_cifrados:
+        identidad.nombres_cifrados = body.nombres
+        cambios.append("nombres")
+    if body.apellidos is not None and body.apellidos != identidad.apellidos_cifrados:
+        identidad.apellidos_cifrados = body.apellidos
+        cambios.append("apellidos")
+    if body.documento is not None and body.documento != identidad.documento_cifrado:
+        if _documento_en_uso(db, paciente.institucion_id, body.documento, paciente.id):
+            return _error(
+                request,
+                status.HTTP_409_CONFLICT,
+                "conflict",
+                "Ya existe un paciente con ese documento",
+            )
+        identidad.documento_cifrado = body.documento
+        cambios.append("documento")
+    if body.fecha_nacimiento is not None:
+        fecha = body.fecha_nacimiento.isoformat()
+        if fecha != identidad.fecha_nacimiento_cifrada:
+            identidad.fecha_nacimiento_cifrada = fecha
+            cambios.append("fecha_nacimiento")
+
+    # Un PATCH idempotente no reescribe ni audita nada: no hubo cambio real.
+    if not cambios:
+        return _paciente_out(db, paciente)
+
+    identidad.clave_version = get_cipher().key_id()
+    db.add(identidad)
+    db.commit()
+    db.refresh(paciente)
+    registrar(
+        db,
+        request,
+        AuditAction.PATIENT_UPDATE,
+        AuditModule.PATIENTS,
+        usuario=actual.usuario,
+        rol=actual.rol_activo.nombre if actual.rol_activo else None,
+        tipo_objeto=AuditObjectType.PATIENT,
+        objeto_id=paciente.id,
+        # Solo nombres de campo; el valor corregido nunca entra en la bitácora.
+        detalles={"changed_fields": ".".join(cambios)},
+    )
+    return _paciente_out(db, paciente)
+
+
 @router.get("/pacientes")
 def listar_pacientes(
     request: Request,
@@ -244,6 +369,37 @@ def obtener_paciente(
     )
     base = _paciente_out(db, paciente)
     return PacienteDetalleOut(**base.model_dump(), casos=[_caso_out(c, paciente) for c in casos])
+
+
+@router.get("/pacientes/{id}/identidad", response_model=None)
+def obtener_identidad(
+    request: Request,
+    id: str,
+    db: Annotated[Session, Depends(session_dep)],
+    actual: Annotated[SesionActual, Depends(requiere_permiso("paciente.leer"))],
+) -> IdentidadOut | JSONResponse:
+    paciente = _paciente_de(db, actual, id)
+    if paciente is None or paciente.identidad is None:
+        return _no_encontrado(request)
+    identidad = paciente.identidad
+    datos = IdentidadOut(
+        nombres=identidad.nombres_cifrados,
+        apellidos=identidad.apellidos_cifrados,
+        documento=identidad.documento_cifrado,
+        fecha_nacimiento=date.fromisoformat(identidad.fecha_nacimiento_cifrada),
+    )
+    # Revelar la identidad es un acceso a datos personales: se audita siempre.
+    registrar(
+        db,
+        request,
+        AuditAction.PII_REVEAL,
+        AuditModule.PATIENTS,
+        usuario=actual.usuario,
+        rol=actual.rol_activo.nombre if actual.rol_activo else None,
+        tipo_objeto=AuditObjectType.PATIENT,
+        objeto_id=paciente.id,
+    )
+    return datos
 
 
 @router.post("/pacientes/{id}/casos", status_code=status.HTTP_201_CREATED, response_model=None)
