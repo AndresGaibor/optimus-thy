@@ -1,17 +1,33 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Button } from '../../design-system';
 import { Spinner } from '../../design-system/components/atoms/Spinner';
 import { Callout } from '../../design-system/components/molecules/Callout';
 import { EmptyState } from '../../design-system/components/molecules/EmptyState';
 import { PageHeader } from '../../design-system/components/molecules/PageHeader';
 import { Pagination } from '../../design-system/components/molecules/Pagination';
 import { Dialog } from '../../design-system/components/organisms/Dialog';
-import { listarBitacora, type EventoAuditoria } from '../../api/auditoria';
+import {
+  exportarBitacora,
+  listarBitacora,
+  type EventoAuditoria,
+  type FiltrosBitacora,
+} from '../../api/auditoria';
 import { listarUsuarios, type Usuario } from '../../api/usuarios';
 import { AuditoriaFiltros, FILTROS_VACIOS, type FiltrosAuditoria } from './AuditoriaFiltros';
 import { AuditoriaTabla, FORMATO_FECHA } from './AuditoriaTabla';
 import { etiquetaEvento, nombreCampo } from './etiquetas-evento';
 
 const LIMITE_POR_PAGINA = 50;
+
+function filtrosConsulta(filtros: FiltrosAuditoria): FiltrosBitacora {
+  return {
+    ...(filtros.usuario ? { usuario: filtros.usuario } : {}),
+    ...(filtros.accion ? { accion: filtros.accion } : {}),
+    ...(filtros.recurso ? { recurso: filtros.recurso } : {}),
+    ...(filtros.desde ? { desde: filtros.desde } : {}),
+    ...(filtros.hasta ? { hasta: filtros.hasta } : {}),
+  };
+}
 
 export function AuditoriaPage() {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
@@ -22,6 +38,8 @@ export function AuditoriaPage() {
   const [detalle, setDetalle] = useState<EventoAuditoria | null>(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [exportando, setExportando] = useState(false);
+  const [errorExportacion, setErrorExportacion] = useState(false);
 
   const rangoInvalido = Boolean(filtros.desde && filtros.hasta && filtros.desde > filtros.hasta);
 
@@ -42,11 +60,7 @@ export function AuditoriaPage() {
     setError(null);
     try {
       const datos = await listarBitacora({
-        ...(filtros.usuario ? { usuario: filtros.usuario } : {}),
-        ...(filtros.accion ? { accion: filtros.accion } : {}),
-        ...(filtros.recurso ? { recurso: filtros.recurso } : {}),
-        ...(filtros.desde ? { desde: filtros.desde } : {}),
-        ...(filtros.hasta ? { hasta: filtros.hasta } : {}),
+        ...filtrosConsulta(filtros),
         limite: LIMITE_POR_PAGINA,
         desplazamiento,
       });
@@ -71,6 +85,18 @@ export function AuditoriaPage() {
     setDetalle(null);
   }, []);
 
+  const exportar = useCallback(async () => {
+    setExportando(true);
+    setErrorExportacion(false);
+    try {
+      await exportarBitacora(filtrosConsulta(filtros));
+    } catch {
+      setErrorExportacion(true);
+    } finally {
+      setExportando(false);
+    }
+  }, [filtros]);
+
   const correos = new Map(usuarios.map((fila) => [fila.id, fila.correo]));
 
   return (
@@ -78,6 +104,16 @@ export function AuditoriaPage() {
       <PageHeader
         title="Auditoría"
         description="Bitácora de solo lectura: eventos de la institución, del más reciente al más antiguo."
+        actions={
+          <Button
+            variant="outline"
+            loading={exportando}
+            disabled={rangoInvalido}
+            onClick={() => void exportar()}
+          >
+            Exportar CSV
+          </Button>
+        }
       />
 
       <AuditoriaFiltros
@@ -96,6 +132,12 @@ export function AuditoriaPage() {
       {error ? (
         <Callout tone="danger" title="No se pudo cargar la bitácora">
           {error}
+        </Callout>
+      ) : null}
+
+      {errorExportacion ? (
+        <Callout tone="danger" title="No se pudo exportar la bitácora">
+          Reintenta la operación; la exportación solo se registra cuando se completa.
         </Callout>
       ) : null}
 

@@ -43,6 +43,10 @@ class AuditAction(StrEnum):
     # Exportaciones (RF-AUD-05)
     EXPORT = "EXPORT"
 
+    # Investigación (HT-070, HU-090)
+    DATASET_CREATE = "DATASET_CREATE"
+    DATASET_READ = "DATASET_READ"
+
     # Administración (RF-AUD-06)
     USER_CREATE = "USER_CREATE"
     USER_UPDATE = "USER_UPDATE"
@@ -77,6 +81,7 @@ class AuditModule(StrEnum):
     ADMIN = "ADMIN"
     AUDIT = "AUDIT"
     EXPORT = "EXPORT"
+    RESEARCH = "RESEARCH"
 
 
 class AuditObjectType(StrEnum):

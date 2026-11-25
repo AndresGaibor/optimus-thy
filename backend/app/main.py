@@ -15,11 +15,13 @@ from fastapi.responses import JSONResponse, Response
 from app.api.auditoria import router as auditoria_router
 from app.api.consentimientos import router as consentimientos_router
 from app.api.correo import router as correo_router
+from app.api.datasets import router as datasets_router
 from app.api.decisiones import router as decisiones_router
 from app.api.imagenes import router as imagenes_router
 from app.api.instituciones import router as instituciones_router
 from app.api.modelos_ia import router as modelos_ia_router
 from app.api.pacientes import router as pacientes_router
+from app.api.predicciones import router as predicciones_router
 from app.api.reportes import router as reportes_router
 from app.api.resultados import router as resultados_router
 from app.api.roles import router as roles_router
@@ -185,7 +187,9 @@ def create_app() -> FastAPI:
     app.include_router(imagenes_router)
     app.include_router(consentimientos_router)
     app.include_router(resultados_router)
+    app.include_router(predicciones_router)
     app.include_router(decisiones_router)
+    app.include_router(datasets_router)
     app.include_router(reportes_router)
     app.include_router(modelos_ia_router)
     app.include_router(auth_router)

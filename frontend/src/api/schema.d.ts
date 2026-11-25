@@ -41,6 +41,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auditoria/exportar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Exportar Bitacora
+         * @description CSV de la bitácora filtrada, con un tope de 5000 filas.
+         *
+         *     Aplica los mismos filtros que el listado, omite la dirección IP y registra
+         *     un evento `EXPORT.EXPORT` con el número de filas, nunca con su contenido.
+         */
+        get: operations["exportar_bitacora_auditoria_exportar_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/pacientes": {
         parameters: {
             query?: never;
@@ -405,6 +428,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/investigacion/predicciones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Auditar Predicciones
+         * @description Predicciones auditables, de la más reciente a la más antigua.
+         */
+        get: operations["auditar_predicciones_investigacion_predicciones_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/casos/{caso_id}/inferencias/{inferencia_id}/decision": {
         parameters: {
             query?: never;
@@ -423,6 +466,50 @@ export interface paths {
          * @description Registra una única conclusión por inferencia; la segunda responde 409.
          */
         post: operations["registrar_decision_casos__caso_id__inferencias__inferencia_id__decision_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/investigacion/datasets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Listar Datasets
+         * @description Metadatos de los datasets de la institución, del más reciente al más antiguo.
+         */
+        get: operations["listar_datasets_investigacion_datasets_get"];
+        put?: never;
+        /**
+         * Crear Dataset
+         * @description Anonimiza los casos que cumplen el filtro y guarda la versión fija.
+         */
+        post: operations["crear_dataset_investigacion_datasets_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/investigacion/datasets/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Obtener Dataset
+         * @description Fila anonimizada por caso; un dataset ajeno responde 404.
+         */
+        get: operations["obtener_dataset_investigacion_datasets__id__get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -790,6 +877,50 @@ export interface components {
             /** Version */
             version: string;
         };
+        /**
+         * CasoAnonimizadoOut
+         * @description Una fila publicable: sin identificadores ni vínculo con el caso.
+         */
+        CasoAnonimizadoOut: {
+            /** Sujeto */
+            sujeto: string;
+            /** Edad Rango */
+            edad_rango: string | null;
+            /** Mes Caso */
+            mes_caso: string | null;
+            /** Mes Tsh */
+            mes_tsh: string | null;
+            /** Tsh */
+            tsh: number | null;
+            /** Tsh Unidad */
+            tsh_unidad: string | null;
+            /** Mes T3 */
+            mes_t3: string | null;
+            /** T3 */
+            t3: number | null;
+            /** T3 Unidad */
+            t3_unidad: string | null;
+            /** Mes T4 */
+            mes_t4: string | null;
+            /** T4 */
+            t4: number | null;
+            /** T4 Unidad */
+            t4_unidad: string | null;
+            /** Tamano Nodulo Mm */
+            tamano_nodulo_mm: number | null;
+            /** Lateralidad */
+            lateralidad: string | null;
+            /** Tirads */
+            tirads: string | null;
+            /** Bethesda */
+            bethesda: string | null;
+            /** Cie10 */
+            cie10: string | null;
+            /** Tipo Diagnostico */
+            tipo_diagnostico: string | null;
+            /** Tipo Consulta */
+            tipo_consulta: string | null;
+        };
         /** ConfiguracionIn */
         ConfiguracionIn: {
             /** Host */
@@ -856,6 +987,19 @@ export interface components {
             /** Otorgado En */
             otorgado_en?: string | null;
         };
+        /** CrearDatasetRequest */
+        CrearDatasetRequest: {
+            /** Nombre */
+            nombre: string;
+            /** Descripcion */
+            descripcion?: string | null;
+            /**
+             * K
+             * @default 5
+             */
+            k: number;
+            filtro?: components["schemas"]["FiltroCasos"];
+        };
         /** CrearInstitucionRequest */
         CrearInstitucionRequest: {
             /** Nombre */
@@ -905,6 +1049,63 @@ export interface components {
             /** Password */
             password: string;
         };
+        /** DatasetOut */
+        DatasetOut: {
+            /** Id */
+            id: string;
+            /** Nombre */
+            nombre: string;
+            /** Descripcion */
+            descripcion: string | null;
+            /** Total Casos */
+            total_casos: number;
+            /** K */
+            k: number;
+            /** Huella */
+            huella: string;
+            /** Criterios */
+            criterios: {
+                [key: string]: unknown;
+            };
+            /**
+             * Creado En
+             * Format: date-time
+             */
+            creado_en: string;
+            /** Items */
+            items: components["schemas"]["CasoAnonimizadoOut"][];
+        };
+        /** DatasetResumenOut */
+        DatasetResumenOut: {
+            /** Id */
+            id: string;
+            /** Nombre */
+            nombre: string;
+            /** Descripcion */
+            descripcion: string | null;
+            /** Total Casos */
+            total_casos: number;
+            /** K */
+            k: number;
+            /** Huella */
+            huella: string;
+            /** Criterios */
+            criterios: {
+                [key: string]: unknown;
+            };
+            /**
+             * Creado En
+             * Format: date-time
+             */
+            creado_en: string;
+        };
+        /** DatasetsListOut */
+        DatasetsListOut: {
+            /** Total */
+            total: number;
+            /** Items */
+            items: components["schemas"]["DatasetResumenOut"][];
+        };
         /**
          * DecisionIn
          * @description Conclusión del médico; las observaciones son opcionales y acotadas.
@@ -917,6 +1118,26 @@ export interface components {
             decision: "acepta" | "corrige" | "descarta";
             /** Observaciones */
             observaciones?: string | null;
+        };
+        /**
+         * FiltroCasos
+         * @description Criterios clínicos del conjunto; nunca identificadores de pacientes.
+         */
+        FiltroCasos: {
+            /** Desde */
+            desde?: string | null;
+            /** Hasta */
+            hasta?: string | null;
+            /** Tipo Diagnostico */
+            tipo_diagnostico?: string | null;
+            /** Tipo Consulta */
+            tipo_consulta?: string | null;
+            /** Tirads */
+            tirads?: string | null;
+            /** Bethesda */
+            bethesda?: string | null;
+            /** Cie10 */
+            cie10?: string | null;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -1164,6 +1385,41 @@ export interface operations {
                 recurso?: string | null;
                 limite?: number;
                 desplazamiento?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    exportar_bitacora_auditoria_exportar_get: {
+        parameters: {
+            query?: {
+                usuario?: string | null;
+                accion?: string | null;
+                desde?: string | null;
+                hasta?: string | null;
+                recurso?: string | null;
             };
             header?: never;
             path?: never;
@@ -2034,6 +2290,44 @@ export interface operations {
             };
         };
     };
+    auditar_predicciones_investigacion_predicciones_get: {
+        parameters: {
+            query?: {
+                desde?: string | null;
+                hasta?: string | null;
+                resultado?: string | null;
+                decision?: string | null;
+                caso?: string | null;
+                modelo?: string | null;
+                limite?: number;
+                desplazamiento?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     consultar_decision_casos__caso_id__inferencias__inferencia_id__decision_get: {
         parameters: {
             query?: never;
@@ -2089,6 +2383,90 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listar_datasets_investigacion_datasets_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DatasetsListOut"];
+                };
+            };
+        };
+    };
+    crear_dataset_investigacion_datasets_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CrearDatasetRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DatasetOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    obtener_dataset_investigacion_datasets__id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DatasetOut"];
                 };
             };
             /** @description Validation Error */

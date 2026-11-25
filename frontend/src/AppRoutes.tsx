@@ -14,6 +14,7 @@ import { PacientesPage } from './pages/medico/PacientesPage';
 import { ResultadosPage } from './pages/medico/ResultadosPage';
 import { CasoPage } from './pages/medico/CasoPage';
 import { HistorialInferenciasPage } from './pages/medico/HistorialInferenciasPage';
+import { AuditoriaPrediccionesPage } from './pages/investigador/AuditoriaPrediccionesPage';
 import { InferenciaPacientePage } from './pages/medico/InferenciaPacientePage';
 import { RootRedirect, RoleRoute } from './session/RoleRoute';
 
@@ -52,6 +53,7 @@ export function AppRoutes() {
         }
       >
         <Route index element={<PlaceholderPage titulo="Cohortes" />} />
+        <Route path="predicciones" element={<AuditoriaPrediccionesPage />} />
         <Route path="cohortes" element={<PlaceholderPage titulo="Cohortes" />} />
         <Route path="exportaciones" element={<PlaceholderPage titulo="Exportaciones" />} />
       </Route>
