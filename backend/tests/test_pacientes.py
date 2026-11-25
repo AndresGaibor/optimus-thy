@@ -263,3 +263,156 @@ def test_crear_y_leer_casos_queda_en_la_bitacora(client, mundo, db_session):
     client.get(f"/casos/{caso['id']}")
     assert _veces(db_session, "PATIENTS.CASE_CREATE") == 1
     assert _veces(db_session, "PATIENTS.RECORD_READ") == 1
+
+
+# ------------------------------------------------------------- TES-327 ----
+
+
+def test_patch_corrige_la_identidad_y_no_la_devuelve(client, mundo, test_engine):
+    _entrar(client, mundo["medico"])
+    paciente = _alta(client)
+    nuevos = {
+        "nombres": "Ana Isabel",
+        "apellidos": "Pérez Cando",
+        "documento": "0601234568",
+        "fecha_nacimiento": "1981-06-18",
+    }
+    respuesta = client.patch(f"/pacientes/{paciente['id']}", json=nuevos)
+    assert respuesta.status_code == 200, respuesta.text
+    datos = respuesta.json()
+    assert set(datos) == {"id", "codigo", "creado_en", "total_casos"}
+    assert datos["id"] == paciente["id"] and datos["codigo"] == paciente["codigo"]
+    for valor in nuevos.values():
+        assert valor not in respuesta.text
+    with test_engine.connect() as conn:
+        (fila,) = conn.exec_driver_sql(
+            "select nombres_cifrados, documento_cifrado from identidades_paciente"
+        ).all()
+    for valor, original in zip(fila, (nuevos["nombres"], nuevos["documento"]), strict=True):
+        assert bytes(valor) != original.encode()
+        assert original.encode() not in bytes(valor)
+    assert client.get(f"/pacientes/{paciente['id']}/identidad").json() == nuevos
+
+
+def test_patch_solo_cambia_los_campos_enviados(client, mundo):
+    _entrar(client, mundo["medico"])
+    paciente = _alta(client)
+    respuesta = client.patch(f"/pacientes/{paciente['id']}", json={"nombres": "Ana Isabel"})
+    assert respuesta.status_code == 200
+    identidad = client.get(f"/pacientes/{paciente['id']}/identidad").json()
+    assert identidad == {**PACIENTE, "nombres": "Ana Isabel"}
+
+
+@pytest.mark.parametrize(
+    "cambios",
+    [
+        {"nombres": ""},
+        {"apellidos": "   "},
+        {"documento": "12"},
+        {"documento": "06 0123 45; DROP"},
+        {"fecha_nacimiento": "2999-01-01"},
+        {"fecha_nacimiento": "1850-01-01"},
+        {"fecha_nacimiento": "no-es-fecha"},
+        {"nombres": None},
+    ],
+)
+def test_patch_rechaza_datos_no_validos(client, mundo, cambios):
+    _entrar(client, mundo["medico"])
+    paciente = _alta(client)
+    assert client.patch(f"/pacientes/{paciente['id']}", json=cambios).status_code == 422
+
+
+def test_patch_sin_campos_da_422(client, mundo):
+    _entrar(client, mundo["medico"])
+    paciente = _alta(client)
+    assert client.patch(f"/pacientes/{paciente['id']}", json={}).status_code == 422
+
+
+def test_patch_documento_duplicado_da_409_sin_revelarlo(client, mundo):
+    _entrar(client, mundo["medico"])
+    primero = _alta(client)
+    _alta(client, documento="0607654321")
+    respuesta = client.patch(f"/pacientes/{primero['id']}", json={"documento": "0607654321"})
+    assert respuesta.status_code == 409
+    assert "0607654321" not in respuesta.text
+    assert respuesta.json()["error"]["code"] == "conflict"
+
+
+def test_el_documento_duplicado_solo_se_compara_dentro_de_la_institucion(client, mundo):
+    _entrar(client, mundo["medico"])
+    _alta(client, documento="0607654321")
+    _entrar(client, mundo["medico_solca"])
+    paciente = _alta(client)
+    respuesta = client.patch(f"/pacientes/{paciente['id']}", json={"documento": "0607654321"})
+    assert respuesta.status_code == 200, respuesta.text
+
+
+@pytest.mark.parametrize("quien", ["admin", "investigador"])
+def test_solo_el_medico_corrige_pacientes(client, mundo, quien):
+    _entrar(client, mundo["medico"])
+    paciente = _alta(client)
+    _entrar(client, mundo[quien])
+    respuesta = client.patch(f"/pacientes/{paciente['id']}", json={"nombres": "Ana Isabel"})
+    assert respuesta.status_code == 403
+
+
+def test_patch_de_otra_institucion_o_inexistente_da_404(client, mundo):
+    _entrar(client, mundo["medico"])
+    paciente = _alta(client)
+    _entrar(client, mundo["medico_solca"])
+    assert client.patch(f"/pacientes/{paciente['id']}", json={"nombres": "Otra"}).status_code == 404
+    _entrar(client, mundo["medico"])
+    assert client.patch(f"/pacientes/{uuid.uuid4()}", json={"nombres": "Otra"}).status_code == 404
+    assert client.patch("/pacientes/no-es-uuid", json={"nombres": "Otra"}).status_code == 404
+
+
+def test_patch_audita_los_campos_cambiados_sin_valores(client, mundo, db_session):
+    _entrar(client, mundo["medico"])
+    paciente = _alta(client)
+    respuesta = client.patch(
+        f"/pacientes/{paciente['id']}",
+        json={"nombres": "Ana Isabel", "documento": "0601234568"},
+    )
+    assert respuesta.status_code == 200
+    assert _veces(db_session, "PATIENTS.PATIENT_UPDATE") == 1
+    db_session.expire_all()
+    (detalles,) = (
+        db_session.query(Auditoria.detalles)
+        .filter(Auditoria.accion == "PATIENTS.PATIENT_UPDATE")
+        .one()
+    )
+    assert detalles["changed_fields"] == "nombres.documento"
+    for valor in ("Ana Isabel", "0601234568"):
+        assert valor not in str(detalles)
+
+
+def test_patch_sin_cambios_reales_no_audita(client, mundo, db_session):
+    _entrar(client, mundo["medico"])
+    paciente = _alta(client)
+    respuesta = client.patch(f"/pacientes/{paciente['id']}", json={"nombres": PACIENTE["nombres"]})
+    assert respuesta.status_code == 200
+    assert _veces(db_session, "PATIENTS.PATIENT_UPDATE") == 0
+
+
+def test_la_identidad_solo_se_revela_en_su_ruta_y_queda_auditada(client, mundo, db_session):
+    _entrar(client, mundo["medico"])
+    paciente = _alta(client)
+    respuesta = client.get(f"/pacientes/{paciente['id']}/identidad")
+    assert respuesta.status_code == 200
+    assert respuesta.json() == PACIENTE
+    assert _veces(db_session, "PATIENTS.PII_REVEAL") == 1
+    for url in ("/pacientes", f"/pacientes/{paciente['id']}"):
+        texto = client.get(url).text
+        for valor in PACIENTE.values():
+            assert valor not in texto
+
+
+def test_la_identidad_exige_permiso_y_respeta_la_institucion(client, mundo):
+    _entrar(client, mundo["medico"])
+    paciente = _alta(client)
+    assert client.get(f"/pacientes/{paciente['id']}/identidad").status_code == 200
+    assert client.get(f"/pacientes/{uuid.uuid4()}/identidad").status_code == 404
+    _entrar(client, mundo["medico_solca"])
+    assert client.get(f"/pacientes/{paciente['id']}/identidad").status_code == 404
+    _entrar(client, mundo["admin"])
+    assert client.get(f"/pacientes/{paciente['id']}/identidad").status_code == 403

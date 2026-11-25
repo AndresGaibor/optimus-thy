@@ -289,12 +289,110 @@
       }
     },
     "/pacientes/{id}": {
+      "patch": {
+        "tags": [
+          "pacientes"
+        ],
+        "summary": "Actualizar Paciente",
+        "operationId": "actualizar_paciente_pacientes__id__patch",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchPacienteRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
       "get": {
         "tags": [
           "pacientes"
         ],
         "summary": "Obtener Paciente",
         "operationId": "obtener_paciente_pacientes__id__get",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pacientes/{id}/identidad": {
+      "get": {
+        "tags": [
+          "pacientes"
+        ],
+        "summary": "Obtener Identidad",
+        "operationId": "obtener_identidad_pacientes__id__identidad_get",
         "security": [
           {
             "SessionCookie": []
@@ -1483,6 +1581,124 @@
         }
       }
     },
+    "/casos/{caso_id}/inferencias/{inferencia_id}/decision": {
+      "post": {
+        "tags": [
+          "decisiones"
+        ],
+        "summary": "Registrar Decision",
+        "description": "Registra una única conclusión por inferencia; la segunda responde 409.",
+        "operationId": "registrar_decision_casos__caso_id__inferencias__inferencia_id__decision_post",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "caso_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Caso Id"
+            }
+          },
+          {
+            "name": "inferencia_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Inferencia Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DecisionIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "decisiones"
+        ],
+        "summary": "Consultar Decision",
+        "description": "Decisión registrada, con fecha y autor sin datos personales.",
+        "operationId": "consultar_decision_casos__caso_id__inferencias__inferencia_id__decision_get",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "caso_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Caso Id"
+            }
+          },
+          {
+            "name": "inferencia_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Inferencia Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/casos/{caso_id}/inferencias/{inferencia_id}/reporte.pdf": {
       "get": {
         "tags": [
@@ -1610,6 +1826,192 @@
             "SessionCookie": []
           }
         ]
+      }
+    },
+    "/modelos-ia/paquetes": {
+      "post": {
+        "tags": [
+          "modelos-ia"
+        ],
+        "summary": "Iniciar Paquete",
+        "description": "Abre una subida por trozos para un paquete que supera el límite del proxy.",
+        "operationId": "iniciar_paquete_modelos_ia_paquetes_post",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_iniciar_paquete_modelos_ia_paquetes_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubidaOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
+      }
+    },
+    "/modelos-ia/paquetes/{subida_id}/trozos/{indice}": {
+      "put": {
+        "tags": [
+          "modelos-ia"
+        ],
+        "summary": "Subir Trozo",
+        "operationId": "subir_trozo_modelos_ia_paquetes__subida_id__trozos__indice__put",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "subida_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Subida Id"
+            }
+          },
+          {
+            "name": "indice",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Indice"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/modelos-ia/paquetes/{subida_id}/cerrar": {
+      "post": {
+        "tags": [
+          "modelos-ia"
+        ],
+        "summary": "Cerrar Paquete",
+        "operationId": "cerrar_paquete_modelos_ia_paquetes__subida_id__cerrar_post",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "subida_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Subida Id"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModeloOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/modelos-ia/paquetes/{subida_id}": {
+      "delete": {
+        "tags": [
+          "modelos-ia"
+        ],
+        "summary": "Cancelar Paquete",
+        "operationId": "cancelar_paquete_modelos_ia_paquetes__subida_id__delete",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "subida_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Subida Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/modelos-ia/{id}/activar": {
@@ -2204,6 +2606,24 @@
         ],
         "title": "Body_cargar_modelo_modelos_ia_post"
       },
+      "Body_iniciar_paquete_modelos_ia_paquetes_post": {
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          }
+        },
+        "type": "object",
+        "required": [
+          "nombre",
+          "version"
+        ],
+        "title": "Body_iniciar_paquete_modelos_ia_paquetes_post"
+      },
       "ConfiguracionIn": {
         "properties": {
           "host": {
@@ -2526,6 +2946,38 @@
         ],
         "title": "CrearUsuarioRequest"
       },
+      "DecisionIn": {
+        "properties": {
+          "decision": {
+            "type": "string",
+            "enum": [
+              "acepta",
+              "corrige",
+              "descarta"
+            ],
+            "title": "Decision"
+          },
+          "observaciones": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000,
+                "minLength": 10
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Observaciones"
+          }
+        },
+        "type": "object",
+        "required": [
+          "decision"
+        ],
+        "title": "DecisionIn",
+        "description": "Conclusión del médico; las observaciones son opcionales y acotadas."
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -2746,6 +3198,65 @@
         },
         "type": "object",
         "title": "PatchInstitucionRequest"
+      },
+      "PatchPacienteRequest": {
+        "properties": {
+          "nombres": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nombres"
+          },
+          "apellidos": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Apellidos"
+          },
+          "documento": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20,
+                "minLength": 5,
+                "pattern": "^[A-Za-z0-9-]+$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Documento"
+          },
+          "fecha_nacimiento": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fecha Nacimiento"
+          }
+        },
+        "type": "object",
+        "title": "PatchPacienteRequest",
+        "description": "Corrección de la identidad (TES-327); solo se aplica lo enviado."
       },
       "PatchUsuarioRequest": {
         "properties": {
@@ -2985,6 +3496,20 @@
           "roles"
         ],
         "title": "RolesRequest"
+      },
+      "SubidaOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "title": "SubidaOut"
       },
       "ValidationError": {
         "properties": {

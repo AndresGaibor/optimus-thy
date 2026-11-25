@@ -14,6 +14,7 @@ from app.db import Base
 
 if TYPE_CHECKING:
     from app.models.fichas import Caso
+    from app.models.usuarios import Usuario
 
 
 class Imagen(Base):
@@ -191,6 +192,12 @@ class DecisionMedica(Base):
         unique=True,
         index=True,
     )
+    usuario_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        sa.ForeignKey("usuarios.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
+    )
     decision: Mapped[str] = mapped_column(sa.String(32), nullable=False)
     observaciones: Mapped[str | None] = mapped_column(sa.Text)
     creado_en: Mapped[datetime] = mapped_column(
@@ -203,3 +210,4 @@ class DecisionMedica(Base):
         onupdate=sa.func.now(),
     )
     inferencia: Mapped[Inferencia] = relationship(back_populates="decision_medica")
+    autor: Mapped[Usuario] = relationship()

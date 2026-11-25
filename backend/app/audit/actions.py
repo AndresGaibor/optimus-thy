@@ -21,8 +21,9 @@ class AuditAction(StrEnum):
     IMAGE_READ = "IMAGE_READ"
     INFERENCE_READ = "INFERENCE_READ"
 
-    # Altas del registro clínico
+    # Altas y correcciones del registro clínico
     PATIENT_CREATE = "PATIENT_CREATE"
+    PATIENT_UPDATE = "PATIENT_UPDATE"
     CASE_CREATE = "CASE_CREATE"
 
     # Cargas (RF-AUD-03)
@@ -60,6 +61,9 @@ class AuditAction(StrEnum):
 
     # Recuperación de contraseña (TES-377)
     PASSWORD_RESET = "PASSWORD_RESET"
+
+    # Decisión médica sobre una inferencia (TES-337)
+    INFERENCE_DECISION = "INFERENCE_DECISION"
 
 
 class AuditModule(StrEnum):
