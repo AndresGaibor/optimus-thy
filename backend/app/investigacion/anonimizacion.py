@@ -33,6 +33,7 @@ import json
 import re
 import secrets
 import uuid
+from collections.abc import Mapping
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from typing import Any, Final
@@ -44,6 +45,24 @@ _FORMATO_MES: Final[str] = "%Y-%m"
 _DIAS_DESPLAZAMIENTO: Final[int] = 365
 _CATEGORIA_RE: Final[re.Pattern[str]] = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
 _UNIDAD_RE: Final[re.Pattern[str]] = re.compile(r"^[A-Za-z0-9µμ/%^.\- ]{1,16}$")
+_CUASI_IDENTIFICADORES: Final[tuple[str, ...]] = (
+    "edad_rango",
+    "mes_caso",
+    "mes_tsh",
+    "mes_t3",
+    "mes_t4",
+    "lateralidad",
+    "tirads",
+    "bethesda",
+    "cie10",
+    "tipo_diagnostico",
+    "tipo_consulta",
+)
+
+
+def cuasi_identificadores(fila: Mapping[str, Any]) -> tuple[Any, ...]:
+    """Devuelve la clave de equivalencia publicada, sin atributos sensibles."""
+    return tuple(fila.get(campo) for campo in _CUASI_IDENTIFICADORES)
 
 
 def _clave() -> bytes:

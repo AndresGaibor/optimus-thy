@@ -3883,6 +3883,10 @@
             "type": "integer",
             "title": "K"
           },
+          "k_efectivo": {
+            "type": "integer",
+            "title": "K Efectivo"
+          },
           "huella": {
             "type": "string",
             "title": "Huella"
@@ -3912,6 +3916,7 @@
           "descripcion",
           "total_casos",
           "k",
+          "k_efectivo",
           "huella",
           "criterios",
           "creado_en",
@@ -3948,6 +3953,10 @@
             "type": "integer",
             "title": "K"
           },
+          "k_efectivo": {
+            "type": "integer",
+            "title": "K Efectivo"
+          },
           "huella": {
             "type": "string",
             "title": "Huella"
@@ -3970,6 +3979,7 @@
           "descripcion",
           "total_casos",
           "k",
+          "k_efectivo",
           "huella",
           "criterios",
           "creado_en"

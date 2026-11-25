@@ -13,6 +13,7 @@ const RESUMEN_A: DatasetResumen = {
   descripcion: 'Casos con consentimiento de investigación.',
   total_casos: 12,
   k: 5,
+  k_efectivo: 5,
   huella: HUELLA_A,
   criterios: { edad_min: 18 },
   creado_en: '2026-06-10T14:32:00Z',
@@ -104,7 +105,8 @@ describe('consulta de datasets anonimizados', () => {
 
     const tarjeta = tarjetaDe('Cohorte tiroides 2026');
     expect(within(tarjeta).getByText('12')).toBeInTheDocument();
-    expect(within(tarjeta).getByText('5')).toBeInTheDocument();
+    expect(within(tarjeta).getByText('k efectivo')).toBeInTheDocument();
+    expect(within(tarjeta).getAllByText('5')).toHaveLength(2);
     expect(within(tarjeta).getByText(/jun 2026/)).toBeInTheDocument();
     expect(screen.getByText('2 conjuntos · más reciente primero')).toBeInTheDocument();
   });

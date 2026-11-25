@@ -73,6 +73,7 @@ export function DetalleDataset({
           <div className="flex flex-wrap items-center gap-2">
             <Badge tone="neutral">{dataset.total_casos} casos</Badge>
             <Badge tone="neutral">k = {dataset.k}</Badge>
+            <Badge tone="neutral">k efectivo = {dataset.k_efectivo}</Badge>
           </div>
         </div>
         <CardDescription>{dataset.descripcion ?? 'Sin descripción.'}</CardDescription>

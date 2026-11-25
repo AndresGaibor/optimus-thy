@@ -9,8 +9,8 @@ from decimal import Decimal
 
 import pytest
 from fastapi.testclient import TestClient
-from app.investigacion.anonimizacion import _desplazamiento_dias
 
+from app.investigacion.anonimizacion import _desplazamiento_dias
 from app.models.auditoria import Auditoria
 from app.models.consentimientos import Consentimiento
 from app.models.fichas import Caso, FichaClinica
@@ -195,6 +195,7 @@ def test_listar_datasets(client, mundo, db_session) -> None:
     assert cuerpo["total"] == 2
     assert {item["nombre"] for item in cuerpo["items"]} == {"cohorte-a", "cohorte-b"}
     assert all("items" not in item for item in cuerpo["items"])
+    assert all(item["k_efectivo"] >= 5 for item in cuerpo["items"])
 
 
 def test_detalle_dataset(client, mundo, db_session) -> None:
@@ -208,6 +209,7 @@ def test_detalle_dataset(client, mundo, db_session) -> None:
     detalle = respuesta.json()
     assert detalle["id"] == creado["id"]
     assert detalle["huella"] == creado["huella"]
+    assert detalle["k_efectivo"] == creado["k_efectivo"]
     assert len(detalle["items"]) == 5
 
     assert client.get(f"/investigacion/datasets/{uuid.uuid4()}").status_code == 404
@@ -229,6 +231,7 @@ def test_clase_bajo_k_es_422_sin_exponer_valores(client, mundo, db_session) -> N
     assert error["code"] == "k_no_alcanzado"
     assert "1 clase" in error["message"]
     assert "en_estudio" not in respuesta.text
+
 
 def test_k_menor_que_cinco_es_422(client, mundo, db_session) -> None:
     _entrar(client, mundo["investigador"])

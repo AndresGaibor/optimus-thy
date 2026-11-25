@@ -1154,6 +1154,8 @@ export interface components {
             total_casos: number;
             /** K */
             k: number;
+            /** K Efectivo */
+            k_efectivo: number;
             /** Huella */
             huella: string;
             /** Criterios */
@@ -1180,6 +1182,8 @@ export interface components {
             total_casos: number;
             /** K */
             k: number;
+            /** K Efectivo */
+            k_efectivo: number;
             /** Huella */
             huella: string;
             /** Criterios */

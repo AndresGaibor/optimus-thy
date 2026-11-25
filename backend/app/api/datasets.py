@@ -13,6 +13,7 @@
 from __future__ import annotations
 
 import uuid
+from collections.abc import Iterable, Mapping
 from datetime import UTC, date, datetime, time, timedelta
 from typing import Annotated, Any
 
@@ -26,7 +27,12 @@ from app.audit.actions import AuditAction, AuditModule, AuditObjectType
 from app.audit.http import registrar
 from app.auth.deps import SesionActual, requiere_permiso
 from app.db import session_dep
-from app.investigacion.anonimizacion import anonimizar_caso, huella_de, sujeto_nuevo
+from app.investigacion.anonimizacion import (
+    anonimizar_caso,
+    cuasi_identificadores,
+    huella_de,
+    sujeto_nuevo,
+)
 from app.models.consentimientos import Consentimiento
 from app.models.datasets import Dataset, DatasetCaso
 from app.models.fichas import Caso, FichaClinica
@@ -100,6 +106,7 @@ class DatasetResumenOut(BaseModel):
     descripcion: str | None
     total_casos: int
     k: int
+    k_efectivo: int
     huella: str
     criterios: dict[str, Any]
     creado_en: datetime
@@ -182,13 +189,28 @@ def _consulta_casos(db: Session, actual: SesionActual, filtro: FiltroCasos) -> l
     )
 
 
-def _resumen(dataset: Dataset) -> DatasetResumenOut:
+def _frecuencias_cuasi_identificadores(
+    filas: Iterable[Mapping[str, Any]],
+) -> dict[tuple[Any, ...], int]:
+    frecuencias: dict[tuple[Any, ...], int] = {}
+    for fila in filas:
+        clave = cuasi_identificadores(fila)
+        frecuencias[clave] = frecuencias.get(clave, 0) + 1
+    return frecuencias
+
+
+def _k_efectivo(filas: Iterable[Mapping[str, Any]]) -> int:
+    return min(_frecuencias_cuasi_identificadores(filas).values())
+
+
+def _resumen(dataset: Dataset, k_efectivo: int) -> DatasetResumenOut:
     return DatasetResumenOut(
         id=str(dataset.id),
         nombre=dataset.nombre,
         descripcion=dataset.descripcion,
         total_casos=dataset.total_casos,
         k=dataset.k,
+        k_efectivo=k_efectivo,
         huella=dataset.huella,
         criterios=dataset.criterios,
         creado_en=dataset.creado_en,
@@ -199,9 +221,11 @@ def _fila(fila: DatasetCaso) -> CasoAnonimizadoOut:
     return CasoAnonimizadoOut.model_validate({"sujeto": fila.sujeto, **fila.datos})
 
 
-def _vista(dataset: Dataset) -> DatasetOut:
+def _vista(dataset: Dataset, k_efectivo: int | None = None) -> DatasetOut:
+    if k_efectivo is None:
+        k_efectivo = _k_efectivo(fila.datos for fila in dataset.casos)
     return DatasetOut(
-        **_resumen(dataset).model_dump(), items=[_fila(fila) for fila in dataset.casos]
+        **_resumen(dataset, k_efectivo).model_dump(), items=[_fila(fila) for fila in dataset.casos]
     )
 
 
@@ -249,6 +273,21 @@ def crear_dataset(
         )
 
     datos = [anonimizar_caso(caso) for caso in casos]
+    frecuencias = _frecuencias_cuasi_identificadores(datos)
+    clases_bajo_k = sum(conteo < body.k for conteo in frecuencias.values())
+    if clases_bajo_k:
+        mensaje = (
+            f"{clases_bajo_k} clase de equivalencia no alcanza k."
+            if clases_bajo_k == 1
+            else f"{clases_bajo_k} clases de equivalencia no alcanzan k."
+        )
+        return _error(
+            request,
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
+            "k_no_alcanzado",
+            mensaje,
+        )
+    k_efectivo = min(frecuencias.values())
     dataset = Dataset(
         institucion_id=actual.usuario.institucion_id,
         creado_por_id=actual.usuario.id,
@@ -284,7 +323,7 @@ def crear_dataset(
         objeto_id=dataset.id,
         detalles={"resource_count": dataset.total_casos},
     )
-    return _vista(dataset)
+    return _vista(dataset, k_efectivo)
 
 
 @router.get("/investigacion/datasets", response_model=DatasetsListOut)
@@ -296,7 +335,11 @@ def listar_datasets(
     """Metadatos de los datasets de la institución, del más reciente al más antiguo."""
     consulta = db.query(Dataset).filter(Dataset.institucion_id == actual.usuario.institucion_id)
     total = consulta.count()
-    filas = consulta.order_by(Dataset.creado_en.desc(), Dataset.id).all()
+    filas = (
+        consulta.options(joinedload(Dataset.casos))
+        .order_by(Dataset.creado_en.desc(), Dataset.id)
+        .all()
+    )
     registrar(
         db,
         request,
@@ -307,7 +350,10 @@ def listar_datasets(
         tipo_objeto=AuditObjectType.DATASET,
         detalles={"resource_count": len(filas)},
     )
-    return DatasetsListOut(total=total, items=[_resumen(fila) for fila in filas])
+    return DatasetsListOut(
+        total=total,
+        items=[_resumen(fila, _k_efectivo(caso.datos for caso in fila.casos)) for fila in filas],
+    )
 
 
 @router.get("/investigacion/datasets/{id}", response_model=DatasetOut)
