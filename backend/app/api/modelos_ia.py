@@ -238,7 +238,9 @@ def iniciar_paquete(
     return SubidaOut(id=subida_id)
 
 
-@router.put("/modelos-ia/paquetes/{subida_id}/trozos/{indice}", status_code=status.HTTP_204_NO_CONTENT)
+@router.put(
+    "/modelos-ia/paquetes/{subida_id}/trozos/{indice}", status_code=status.HTTP_204_NO_CONTENT
+)
 async def subir_trozo(
     subida_id: uuid.UUID,
     indice: int,
