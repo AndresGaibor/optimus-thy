@@ -65,16 +65,6 @@ export function PacientesPage() {
   const [cargando, setCargando] = useState(true);
   const [errorListado, setErrorListado] = useState<string | null>(null);
 
-  const [dialogoCrearAbierto, setDialogoCrearAbierto] = useState(false);
-  const [formCrear, setFormCrear] = useState<FormularioCrearPaciente>({
-    nombres: '',
-    apellidos: '',
-    documento: '',
-    fecha_nacimiento: '',
-  });
-  const [erroresCrear, setErroresCrear] = useState<Record<string, string>>({});
-  const [errorCrear, setErrorCrear] = useState<string | null>(null);
-  const [guardandoCrear, setGuardandoCrear] = useState(false);
   const [avisoExito, setAvisoExito] = useState<string | null>(null);
 
   const [dialogoDetalleAbierto, setDialogoDetalleAbierto] = useState(false);
@@ -129,69 +119,6 @@ export function PacientesPage() {
     const temporizador = setTimeout(() => setAvisoExito(null), 4000);
     return () => clearTimeout(temporizador);
   }, [avisoExito]);
-
-  const abrirCrear = useCallback(() => {
-    setFormCrear({
-      nombres: '',
-      apellidos: '',
-      documento: '',
-      fecha_nacimiento: '',
-    });
-    setErroresCrear({});
-    setErrorCrear(null);
-    setDialogoCrearAbierto(true);
-  }, []);
-
-  const validarCrear = useCallback((): boolean => {
-    const errores: Record<string, string> = {};
-    const nombres = formCrear.nombres.trim();
-    const apellidos = formCrear.apellidos.trim();
-    const documento = formCrear.documento.trim();
-    const fechaNacimiento = formCrear.fecha_nacimiento;
-
-    if (nombres === '') {
-      errores.nombres = 'El nombre es obligatorio.';
-    } else if (nombres.length > 120) {
-      errores.nombres = 'El nombre no puede superar los 120 caracteres.';
-    }
-
-    if (apellidos === '') {
-      errores.apellidos = 'Los apellidos son obligatorios.';
-    } else if (apellidos.length > 120) {
-      errores.apellidos = 'Los apellidos no pueden superar los 120 caracteres.';
-    }
-
-    if (documento === '') {
-      errores.documento = 'El documento es obligatorio.';
-    } else if (!/^[A-Za-z0-9-]{5,20}$/.test(documento)) {
-      errores.documento =
-        'El documento debe tener entre 5 y 20 caracteres alfanuméricos o guiones.';
-    }
-
-    if (fechaNacimiento === '') {
-      errores.fecha_nacimiento = 'La fecha de nacimiento es obligatoria.';
-    } else {
-      const fecha = new Date(fechaNacimiento);
-      const hoy = new Date();
-      if (Number.isNaN(fecha.getTime())) {
-        errores.fecha_nacimiento = 'La fecha de nacimiento no es válida.';
-      } else {
-        if (fecha > hoy) {
-          errores.fecha_nacimiento = 'La fecha de nacimiento no puede ser futura.';
-        }
-        const año = fecha.getFullYear();
-        if (año < 1900) {
-          errores.fecha_nacimiento = 'El año de nacimiento debe ser mayor o igual a 1900.';
-        }
-      }
-    }
-
-    setErroresCrear(errores);
-    return Object.keys(errores).length === 0;
-  }, [formCrear]);
-
-      }
-      setGuardandoCrear(false);
 
   const verDetalle = useCallback(async (paciente: Paciente) => {
     setDialogoDetalleAbierto(true);
