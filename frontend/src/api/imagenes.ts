@@ -36,6 +36,9 @@ export async function subirImagen(casoId: string, archivo: File): Promise<Imagen
     // openapi-typescript declara el archivo multipart como texto.
     body: cuerpo as unknown as components['schemas']['Body_cargar_imagen_casos__caso_id__imagenes_post'],
   });
-  if (error || !data) throw new Error('No se pudo subir la ecografía.');
+  if (error || !data) {
+    const mensaje = (error as { error?: { message?: string } } | undefined)?.error?.message;
+    throw new Error(mensaje ?? 'No se pudo subir la ecografía.');
+  }
   return data as unknown as ImagenCaso;
 }
