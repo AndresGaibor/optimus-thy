@@ -233,7 +233,6 @@ def crear_aplicacion(cargador: Cargador = cargar_modelos) -> FastAPI:
                 "La imagen no parece una ecografía tiroidea. Selecciona una ecografía.",
             )
 
-
         try:
             resultado = await run_in_threadpool(
                 analizar_imagen,
