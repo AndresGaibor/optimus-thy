@@ -198,11 +198,7 @@ describe('varias imágenes por caso', () => {
     );
     await user.click(within(dialogo).getByRole('button', { name: 'Subir ecografía' }));
 
-    expect(
-      await screen.findByText(
-        'No se pudo subir este archivo. Revisa que sea PNG o JPEG de hasta 15 MB y reintenta.',
-      ),
-    ).toBeInTheDocument();
+    expect(await screen.findByText('No se pudo subir la ecografía.')).toBeInTheDocument();
     const reintento = screen.getByRole('button', { name: 'Reintentar subida' });
     expect(reintento).toBeEnabled();
 
