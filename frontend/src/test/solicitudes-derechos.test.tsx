@@ -70,6 +70,21 @@ describe('solicitudes de derechos', () => {
     expect(await screen.findByText('No hay solicitudes de derechos')).toBeInTheDocument();
   });
 
+  it('mantiene el filtro visible cuando no hay resultados para ese estado', async () => {
+    fetchMock
+      .mockResolvedValueOnce(responder(DATOS))
+      .mockResolvedValueOnce(responder({ total: 0, pendientes: 0, vencidas: 0, items: [] }));
+    const user = userEvent.setup();
+    render(<SolicitudesDerechosPage />);
+
+    await screen.findByText('titular-123');
+    await user.selectOptions(screen.getByLabelText(/^Filtrar por estado/), 'atendida');
+
+    expect(await screen.findByText('No hay solicitudes con ese estado')).toBeInTheDocument();
+    await user.selectOptions(screen.getByLabelText(/^Filtrar por estado/), 'todas');
+    expect(await screen.findByText('titular-123')).toBeInTheDocument();
+  });
+
   it('registra una solicitud con POST y el cuerpo del formulario', async () => {
     fetchMock
       .mockResolvedValueOnce(responder(DATOS))

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { EstadoSolicitud } from '../../api/solicitudes-derechos';
 import { Button } from '../../design-system/components/atoms/Button';
+import { Select } from '../../design-system/components/atoms/Select';
 import {
   Card,
   CardContent,
@@ -9,6 +10,7 @@ import {
 } from '../../design-system/components/atoms/Card';
 import { Callout } from '../../design-system/components/molecules/Callout';
 import { EmptyState } from '../../design-system/components/molecules/EmptyState';
+import { Field } from '../../design-system/components/molecules/Field';
 import { PageHeader } from '../../design-system/components/molecules/PageHeader';
 import { FormularioSolicitud } from './solicitudes/FormularioSolicitud';
 import { TablaSolicitudes } from './solicitudes/TablaSolicitudes';
@@ -68,6 +70,22 @@ export function SolicitudesDerechosPage() {
           <CardTitle>Solicitudes registradas</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="flex flex-col gap-2 sm:max-w-xs">
+            <Field label="Filtrar por estado">
+              <Select
+                value={filtro ?? 'todas'}
+                onChange={(evento) => {
+                  const valor = evento.target.value;
+                  setFiltro(valor === 'todas' ? undefined : (valor as EstadoSolicitud));
+                }}
+              >
+                <option value="todas">Todos los estados</option>
+                <option value="pendiente">Pendientes</option>
+                <option value="atendida">Atendidas</option>
+                <option value="rechazada">Rechazadas</option>
+              </Select>
+            </Field>
+          </div>
           {solicitudes.estado === 'cargando' ? (
             <p role="status" aria-live="polite" className="text-sm text-muted-foreground">
               Cargando solicitudes…
@@ -83,17 +101,18 @@ export function SolicitudesDerechosPage() {
           ) : null}
           {solicitudes.estado === 'datos' && solicitudes.datos.items.length === 0 ? (
             <EmptyState
-              title="No hay solicitudes de derechos"
-              description="Registra una solicitud para comenzar su seguimiento."
+              title={
+                filtro ? 'No hay solicitudes con ese estado' : 'No hay solicitudes de derechos'
+              }
+              description={
+                filtro
+                  ? 'Cambia el filtro para ver otras solicitudes.'
+                  : 'Registra una solicitud para comenzar su seguimiento.'
+              }
             />
           ) : null}
           {solicitudes.estado === 'datos' && solicitudes.datos.items.length > 0 ? (
-            <TablaSolicitudes
-              items={solicitudes.datos.items}
-              filtro={filtro}
-              onFiltroChange={setFiltro}
-              onCerrada={solicitudes.recargar}
-            />
+            <TablaSolicitudes items={solicitudes.datos.items} onCerrada={solicitudes.recargar} />
           ) : null}
         </CardContent>
       </Card>
