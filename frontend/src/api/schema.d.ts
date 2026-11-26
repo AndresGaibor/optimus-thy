@@ -206,6 +206,40 @@ export interface paths {
         patch: operations["actualizar_paciente_pacientes__id__patch"];
         trace?: never;
     };
+    "/pacientes/{id}/archivar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Archivar Paciente */
+        post: operations["archivar_paciente_pacientes__id__archivar_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/pacientes/{id}/desarchivar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Desarchivar Paciente */
+        post: operations["desarchivar_paciente_pacientes__id__desarchivar_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/pacientes/{id}/identidad": {
         parameters: {
             query?: never;
@@ -1846,6 +1880,8 @@ export interface components {
             creado_en: string;
             /** Total Casos */
             total_casos: number;
+            /** Archivado En */
+            archivado_en: string | null;
         };
         /** PacientesListOut */
         PacientesListOut: {
@@ -2389,6 +2425,7 @@ export interface operations {
                 q?: string | null;
                 limite?: number;
                 desplazamiento?: number;
+                incluir_archivados?: boolean;
             };
             header?: never;
             path?: never;
@@ -2521,6 +2558,82 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ErrorDuplicado"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    archivar_paciente_pacientes__id__archivar_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PacienteOut"];
+                };
+            };
+            /** @description El paciente ya está archivado. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    desarchivar_paciente_pacientes__id__desarchivar_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PacienteOut"];
+                };
+            };
+            /** @description El paciente no está archivado. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

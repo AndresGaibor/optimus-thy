@@ -717,6 +717,16 @@
               "default": 0,
               "title": "Desplazamiento"
             }
+          },
+          {
+            "name": "incluir_archivados",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Incluir Archivados"
+            }
           }
         ],
         "responses": {
@@ -837,6 +847,106 @@
                 "schema": {}
               }
             }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pacientes/{id}/archivar": {
+      "post": {
+        "tags": [
+          "pacientes"
+        ],
+        "summary": "Archivar Paciente",
+        "operationId": "archivar_paciente_pacientes__id__archivar_post",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PacienteOut"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "El paciente ya está archivado."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pacientes/{id}/desarchivar": {
+      "post": {
+        "tags": [
+          "pacientes"
+        ],
+        "summary": "Desarchivar Paciente",
+        "operationId": "desarchivar_paciente_pacientes__id__desarchivar_post",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PacienteOut"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "El paciente no está archivado."
           },
           "422": {
             "description": "Validation Error",
@@ -6043,6 +6153,18 @@
           "total_casos": {
             "type": "integer",
             "title": "Total Casos"
+          },
+          "archivado_en": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Archivado En"
           }
         },
         "type": "object",
@@ -6050,7 +6172,8 @@
           "id",
           "codigo",
           "creado_en",
-          "total_casos"
+          "total_casos",
+          "archivado_en"
         ],
         "title": "PacienteOut"
       },

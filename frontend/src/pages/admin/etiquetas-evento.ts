@@ -12,6 +12,8 @@ const ACCIONES: Record<string, string> = {
   ROLE_SWITCH: 'Cambió de rol activo',
   PATIENT_READ: 'Consultó pacientes',
   PATIENT_CREATE: 'Registró un paciente',
+  PATIENT_ARCHIVE: 'Archivó un paciente',
+  PATIENT_UNARCHIVE: 'Reactivó un paciente',
   RECORD_READ: 'Consultó una ficha clínica',
   CASE_CREATE: 'Creó un caso',
   CONSENT_CREATE: 'Registró un consentimiento',
