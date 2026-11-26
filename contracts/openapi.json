@@ -612,6 +612,37 @@
         }
       }
     },
+    "/seguridad/alertas": {
+      "get": {
+        "tags": [
+          "alertas"
+        ],
+        "summary": "Consultar Alertas",
+        "description": "Devuelve patrones detectados en la bitácora reciente de la institución.",
+        "operationId": "consultar_alertas_seguridad_alertas_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AlertaOut"
+                  },
+                  "type": "array",
+                  "title": "Response Consultar Alertas Seguridad Alertas Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
+      }
+    },
     "/pacientes": {
       "post": {
         "tags": [
@@ -4374,6 +4405,59 @@
   },
   "components": {
     "schemas": {
+      "AlertaOut": {
+        "properties": {
+          "tipo": {
+            "type": "string",
+            "title": "Tipo"
+          },
+          "severidad": {
+            "type": "string",
+            "title": "Severidad"
+          },
+          "cantidad": {
+            "type": "integer",
+            "title": "Cantidad"
+          },
+          "usuario_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Usuario Id"
+          },
+          "desde": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Desde"
+          },
+          "hasta": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Hasta"
+          },
+          "detalle": {
+            "type": "string",
+            "title": "Detalle"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tipo",
+          "severidad",
+          "cantidad",
+          "usuario_id",
+          "desde",
+          "hasta",
+          "detalle"
+        ],
+        "title": "AlertaOut"
+      },
       "Body_cargar_imagen_casos__caso_id__imagenes_post": {
         "properties": {
           "archivo": {
