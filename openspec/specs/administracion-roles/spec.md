@@ -23,7 +23,7 @@ El sistema SHALL excluir el rol `admin` de la matriz de permisos y SHALL rechaza
 
 ### Requirement: Permisos asignables por dominio del rol
 
-El sistema SHALL exponer, para cada rol, únicamente los permisos de su dominio y SHALL rechazar la asignación de un permiso fuera de ese dominio.
+El sistema SHALL exponer, para cada rol, únicamente los permisos de su dominio y SHALL rechazar la asignación de un permiso fuera de ese dominio. El dominio del administrador SHALL incluir `derechos.gestionar`, que habilita el registro y la atención de solicitudes de derechos de los titulares.
 
 #### Scenario: Interruptores por rol
 
@@ -36,6 +36,12 @@ El sistema SHALL exponer, para cada rol, únicamente los permisos de su dominio 
 - **WHEN** se envía `PUT /roles/{id}/permisos` con un código que no pertenece al dominio del rol, por ejemplo `usuario.gestionar` para `researcher`
 - **THEN** la API responde 422 `unprocessable_entity`
 - **AND** la matriz del rol no cambia
+
+#### Scenario: Derechos en el dominio del administrador
+
+- **WHEN** se consulta la matriz del rol administrador
+- **THEN** `derechos.gestionar` aparece entre sus permisos asignables
+- **AND** el médico y el investigador no pueden recibirlo
 
 ### Requirement: Guardado atómico de la matriz de permisos
 

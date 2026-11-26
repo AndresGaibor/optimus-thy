@@ -6,6 +6,7 @@ from app.db import Base
 from app.models.auditoria import Auditoria, AuditoriaAncla
 from app.models.consentimientos import Consentimiento
 from app.models.correo import ConfiguracionCorreo, PlantillaCorreo, TokenRecuperacion
+from app.models.cumplimiento import SolicitudDerecho
 from app.models.datasets import Dataset, DatasetCaso
 from app.models.documentos import Documento
 from app.models.fichas import Caso, FichaClinica, FichaVersion
@@ -41,6 +42,7 @@ __all__ = [
     "Rol",
     "RolPermiso",
     "Sesion",
+    "SolicitudDerecho",
     "TokenRecuperacion",
     "Trabajo",
     "Usuario",
@@ -75,4 +77,5 @@ TABLAS: list[str] = [
     "configuracion_correo",
     "plantillas_correo",
     "tokens_recuperacion",
+    "solicitudes_derechos",
 ]

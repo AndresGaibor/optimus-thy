@@ -51,6 +51,8 @@ CLAVES_DE_DETALLE: Final[frozenset[str]] = frozenset(
         "setting_key",
         "error_code",
         "format",
+        "request_type",
+        "deadline_days",
     }
 )
 

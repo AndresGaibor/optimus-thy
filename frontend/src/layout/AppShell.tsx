@@ -8,6 +8,7 @@ import {
   Cpu,
   FileText,
   LayoutDashboard,
+  Scale,
   Mail,
   ShieldCheck,
   UserRound,
@@ -48,6 +49,7 @@ const NAV_BY_ROLE: Record<Role, SidebarNavItem[]> = {
     { to: '/administrador/modelos', label: 'Modelos de IA', icon: Cpu },
     { to: '/administrador/correo', label: 'Correo', icon: Mail },
     { to: '/administrador/auditoria', label: 'Auditoría', icon: ClipboardList },
+    { to: '/administrador/derechos', label: 'Derechos', icon: Scale },
   ],
 };
 

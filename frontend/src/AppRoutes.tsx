@@ -19,6 +19,7 @@ import { AuditoriaPrediccionesPage } from './pages/investigador/AuditoriaPredicc
 import { DatasetsPage } from './pages/investigador/DatasetsPage';
 import { MetricasPage } from './pages/investigador/MetricasPage';
 import { ErroresPage } from './pages/investigador/ErroresPage';
+import { SolicitudesDerechosPage } from './pages/admin/SolicitudesDerechosPage';
 import { InferenciaPacientePage } from './pages/medico/InferenciaPacientePage';
 import { ExplicacionModeloPage } from './pages/medico/ExplicacionModeloPage';
 import { PerfilPage } from './pages/PerfilPage';
@@ -84,6 +85,7 @@ export function AppRoutes() {
         <Route path="modelos" element={<ModelosPage />} />
         <Route path="correo" element={<CorreoPage />} />
         <Route path="auditoria" element={<AuditoriaPage />} />
+        <Route path="derechos" element={<SolicitudesDerechosPage />} />
       </Route>
       <Route
         path="/perfil"

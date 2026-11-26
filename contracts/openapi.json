@@ -3332,6 +3332,188 @@
           }
         }
       }
+    },
+    "/administrador/solicitudes-derechos": {
+      "get": {
+        "tags": [
+          "cumplimiento"
+        ],
+        "summary": "Listar Solicitudes",
+        "description": "Solicitudes de la institución, con el plazo restante de cada una.",
+        "operationId": "listar_solicitudes_administrador_solicitudes_derechos_get",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "estado",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "pendiente",
+                    "atendida",
+                    "rechazada"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Estado"
+            }
+          },
+          {
+            "name": "limite",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limite"
+            }
+          },
+          {
+            "name": "desplazamiento",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Desplazamiento"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SolicitudesOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "cumplimiento"
+        ],
+        "summary": "Crear Solicitud",
+        "description": "Registra una solicitud con el administrador de la sesión como responsable.",
+        "operationId": "crear_solicitud_administrador_solicitudes_derechos_post",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CrearSolicitudRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/administrador/solicitudes-derechos/{solicitud_id}": {
+      "patch": {
+        "tags": [
+          "cumplimiento"
+        ],
+        "summary": "Actualizar Solicitud",
+        "description": "Cierra o reabre la solicitud; reabrir borra la respuesta anterior.",
+        "operationId": "actualizar_solicitud_administrador_solicitudes_derechos__solicitud_id__patch",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "solicitud_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Solicitud Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchSolicitudRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -3982,6 +4164,52 @@
         ],
         "title": "CrearPacienteRequest",
         "description": "Solo los datos mínimos para identificar a la persona (RF-PAC-01)."
+      },
+      "CrearSolicitudRequest": {
+        "properties": {
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "acceso",
+              "rectificacion",
+              "cancelacion",
+              "oposicion"
+            ],
+            "title": "Tipo"
+          },
+          "referencia_titular": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 3,
+            "pattern": "^[A-Za-z0-9._-]+$",
+            "title": "Referencia Titular"
+          },
+          "solicitada_en": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Solicitada En"
+          },
+          "plazo_dias": {
+            "type": "integer",
+            "maximum": 60.0,
+            "minimum": 1.0,
+            "title": "Plazo Dias",
+            "default": 15
+          }
+        },
+        "type": "object",
+        "required": [
+          "tipo",
+          "referencia_titular"
+        ],
+        "title": "CrearSolicitudRequest"
       },
       "CrearTrabajoRequest": {
         "properties": {
@@ -4925,6 +5153,37 @@
         "title": "PatchPacienteRequest",
         "description": "Corrección de la identidad (TES-327); solo se aplica lo enviado."
       },
+      "PatchSolicitudRequest": {
+        "properties": {
+          "estado": {
+            "type": "string",
+            "enum": [
+              "pendiente",
+              "atendida",
+              "rechazada"
+            ],
+            "title": "Estado"
+          },
+          "respuesta": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000,
+                "minLength": 10
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Respuesta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "estado"
+        ],
+        "title": "PatchSolicitudRequest"
+      },
       "PatchUsuarioRequest": {
         "properties": {
           "nombre": {
@@ -5135,6 +5394,31 @@
         ],
         "title": "RecuperacionRequest"
       },
+      "ResponsableOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "rol": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rol"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "rol"
+        ],
+        "title": "ResponsableOut"
+      },
       "RolActivoRequest": {
         "properties": {
           "rol": {
@@ -5163,6 +5447,120 @@
           "roles"
         ],
         "title": "RolesRequest"
+      },
+      "SolicitudOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "tipo": {
+            "type": "string",
+            "title": "Tipo"
+          },
+          "referencia_titular": {
+            "type": "string",
+            "title": "Referencia Titular"
+          },
+          "solicitada_en": {
+            "type": "string",
+            "format": "date",
+            "title": "Solicitada En"
+          },
+          "plazo_dias": {
+            "type": "integer",
+            "title": "Plazo Dias"
+          },
+          "fecha_limite": {
+            "type": "string",
+            "format": "date",
+            "title": "Fecha Limite"
+          },
+          "dias_restantes": {
+            "type": "integer",
+            "title": "Dias Restantes"
+          },
+          "vencida": {
+            "type": "boolean",
+            "title": "Vencida"
+          },
+          "estado": {
+            "type": "string",
+            "title": "Estado"
+          },
+          "respuesta": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Respuesta"
+          },
+          "responsable": {
+            "$ref": "#/components/schemas/ResponsableOut"
+          },
+          "creado_en": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Creado En"
+          },
+          "actualizado_en": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Actualizado En"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "tipo",
+          "referencia_titular",
+          "solicitada_en",
+          "plazo_dias",
+          "fecha_limite",
+          "dias_restantes",
+          "vencida",
+          "estado",
+          "respuesta",
+          "responsable",
+          "creado_en",
+          "actualizado_en"
+        ],
+        "title": "SolicitudOut"
+      },
+      "SolicitudesOut": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "pendientes": {
+            "type": "integer",
+            "title": "Pendientes"
+          },
+          "vencidas": {
+            "type": "integer",
+            "title": "Vencidas"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SolicitudOut"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "pendientes",
+          "vencidas",
+          "items"
+        ],
+        "title": "SolicitudesOut"
       },
       "SubidaOut": {
         "properties": {

@@ -31,6 +31,7 @@ PERMISOS: Final[dict[str, str]] = {
     "usuario.gestionar": "Crear, editar y desactivar usuarios",
     "rol.gestionar": "Editar la matriz de roles y permisos",
     "ajustes.gestionar": "Cambiar los ajustes del sistema",
+    "derechos.gestionar": "Registrar y atender solicitudes de derechos de titulares",
 }
 
 ROLES_BASE: Final[dict[str, str]] = {
@@ -43,6 +44,7 @@ PERMISOS_POR_ROL: Final[dict[str, tuple[str, ...]]] = {
     "admin": (
         "ajustes.gestionar",
         "auditoria.leer",
+        "derechos.gestionar",
         "rol.gestionar",
         "usuario.gestionar",
     ),
@@ -70,6 +72,7 @@ PERMISOS_ASIGNABLES_POR_ROL: Final[dict[str, tuple[str, ...]]] = {
     "admin": (
         "ajustes.gestionar",
         "auditoria.leer",
+        "derechos.gestionar",
         "rol.gestionar",
         "usuario.gestionar",
     ),
