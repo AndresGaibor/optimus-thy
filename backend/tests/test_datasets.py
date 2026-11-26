@@ -407,3 +407,113 @@ def test_cada_consulta_queda_en_la_bitacora(client, mundo, db_session) -> None:
     assert "Nombre Secreto" not in detalles
     assert "06012345" not in detalles
     assert "CASO-SECRETO" not in detalles
+
+
+def _filas_csv(cuerpo: str) -> list[str]:
+    return [linea for linea in cuerpo.splitlines() if linea and not linea.startswith("#")]
+
+
+def test_exportar_csv_trae_ficha_y_ningun_identificador(client, mundo, db_session) -> None:
+    _entrar(client, mundo["investigador"])
+    _sembrar_casos(db_session, mundo["institucion"], 5)
+    creado = _crear(client)
+
+    respuesta = client.get(f"/investigacion/datasets/{creado['id']}/exportar")
+
+    assert respuesta.status_code == 200, respuesta.text
+    assert respuesta.headers["content-type"].startswith("text/csv")
+    assert "attachment" in respuesta.headers["content-disposition"]
+    assert respuesta.headers["content-disposition"].endswith('.csv"')
+    cuerpo = respuesta.text
+    assert "# nombre: cohorte-tiroides" in cuerpo
+    assert f"# huella: {creado['huella']}" in cuerpo
+    assert "# k_efectivo: 5" in cuerpo
+    assert "# criterios: {}" in cuerpo
+    filas = _filas_csv(cuerpo)
+    assert filas[0].startswith("sujeto,edad_rango,mes_caso,")
+    assert len(filas) == 6
+    for secreto in (
+        "Nombre Secreto",
+        "Apellido Secreto",
+        "06012345",
+        "PAC-SECRETO",
+        "CASO-SECRETO",
+    ):
+        assert secreto not in cuerpo
+
+
+def test_exportar_json_devuelve_ficha_y_filas(client, mundo, db_session) -> None:
+    _entrar(client, mundo["investigador"])
+    _sembrar_casos(db_session, mundo["institucion"], 5)
+    creado = _crear(client)
+
+    respuesta = client.get(f"/investigacion/datasets/{creado['id']}/exportar?formato=json")
+
+    assert respuesta.status_code == 200, respuesta.text
+    assert respuesta.headers["content-type"].startswith("application/json")
+    cuerpo = respuesta.json()
+    ficha = cuerpo["ficha"]
+    assert ficha["id"] == creado["id"]
+    assert ficha["k_efectivo"] == 5
+    assert ficha["formato"] == "json"
+    assert ficha["huella"] == creado["huella"]
+    assert "sujeto" in ficha["columnas"]
+    assert len(cuerpo["filas"]) == 5
+    texto = json.dumps(cuerpo, ensure_ascii=False)
+    assert "Nombre Secreto" not in texto
+    assert "06012345" not in texto
+
+
+def test_exportar_queda_en_la_bitacora(client, mundo, db_session) -> None:
+    _entrar(client, mundo["investigador"])
+    _sembrar_casos(db_session, mundo["institucion"], 5)
+    creado = _crear(client)
+
+    client.get(f"/investigacion/datasets/{creado['id']}/exportar?formato=json")
+
+    db_session.expire_all()
+    eventos = [
+        evento
+        for evento in db_session.query(Auditoria).all()
+        if evento.accion == "RESEARCH.DATASET_EXPORT"
+    ]
+    assert len(eventos) == 1
+    assert eventos[0].entidad == "DATASET"
+    assert eventos[0].entidad_id == creado["id"]
+    assert eventos[0].detalles["resource_count"] == 5
+    assert eventos[0].detalles["format"] == "json"
+    texto = json.dumps(eventos[0].detalles, ensure_ascii=False)
+    assert "Nombre Secreto" not in texto
+    assert "06012345" not in texto
+
+
+def test_exportar_sin_permiso_deniega(client, mundo, db_session) -> None:
+    _entrar(client, mundo["investigador"])
+    _sembrar_casos(db_session, mundo["institucion"], 5)
+    creado = _crear(client)
+    client.post("/auth/logout")
+    _entrar(client, mundo["doctor"])
+
+    respuesta = client.get(f"/investigacion/datasets/{creado['id']}/exportar")
+
+    assert respuesta.status_code == 403
+    assert respuesta.json()["error"]["code"] == "forbidden"
+
+
+def test_exportar_formato_invalido_es_422(client, mundo, db_session) -> None:
+    _entrar(client, mundo["investigador"])
+    _sembrar_casos(db_session, mundo["institucion"], 5)
+    creado = _crear(client)
+
+    respuesta = client.get(f"/investigacion/datasets/{creado['id']}/exportar?formato=xlsx")
+
+    assert respuesta.status_code == 422
+    assert respuesta.json()["error"]["code"] == "formato_invalido"
+
+
+def test_exportar_dataset_inexistente_es_404(client, mundo) -> None:
+    _entrar(client, mundo["investigador"])
+
+    respuesta = client.get(f"/investigacion/datasets/{uuid.uuid4()}/exportar")
+
+    assert respuesta.status_code == 404

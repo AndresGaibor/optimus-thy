@@ -556,6 +556,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/investigacion/datasets/{id}/exportar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Exportar Dataset
+         * @description Descarga el dataset con su ficha técnica; queda como `DATASET_EXPORT`.
+         *
+         *     El archivo no trae identificadores: solo las filas anonimizadas ya
+         *     persistidas. La bitácora guarda el número de filas y el formato, nunca el
+         *     contenido.
+         */
+        get: operations["exportar_dataset_investigacion_datasets__id__exportar_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/casos/{caso_id}/inferencias/{inferencia_id}/reporte.pdf": {
         parameters: {
             query?: never;
@@ -2686,6 +2710,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DatasetOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    exportar_dataset_investigacion_datasets__id__exportar_get: {
+        parameters: {
+            query?: {
+                formato?: string;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
