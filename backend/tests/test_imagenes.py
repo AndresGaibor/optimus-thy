@@ -145,7 +145,6 @@ def test_carga_png_y_jpeg_elimina_exif_y_guarda_sha256(client, mundo, db_session
                 assert getattr(copia, "text", {}) == {}
 
 
-
 def test_rechaza_duplicado_solo_dentro_del_mismo_caso(client, mundo, db_session, almacen) -> None:
     _, s3 = almacen
     _entrar(client, mundo["medico"])
@@ -170,7 +169,9 @@ def test_rechaza_duplicado_solo_dentro_del_mismo_caso(client, mundo, db_session,
     assert db_session.query(Imagen).count() == 3
 
 
-def test_rechaza_la_misma_imagen_con_metadatos_distintos(client, mundo, db_session, almacen) -> None:
+def test_rechaza_la_misma_imagen_con_metadatos_distintos(
+    client, mundo, db_session, almacen
+) -> None:
     _, s3 = almacen
     _entrar(client, mundo["medico"])
     caso_id = _caso(client)
