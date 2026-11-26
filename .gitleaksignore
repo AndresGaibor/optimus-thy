@@ -1,0 +1,4 @@
+# Huellas aceptadas a mano. gitleaks 8.24.3 no aplica la lista de permitidos
+# por `regexTarget = "line"` a hallazgos de commits antiguos, así que el falso
+# positivo de este commit, ya corregido en el código actual, se ignora aquí.
+c7e54281cd0f3c3966dd4e2aee4d0eb7c33127ba:backend/tests/test_alertas.py:generic-api-key:175
