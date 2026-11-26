@@ -23,6 +23,54 @@
         }
       }
     },
+    "/casos/{caso_id}/cronologia": {
+      "get": {
+        "tags": [
+          "pacientes"
+        ],
+        "summary": "Obtener Cronologia",
+        "operationId": "obtener_cronologia_casos__caso_id__cronologia_get",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "caso_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Caso Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CronologiaOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/auditoria": {
       "get": {
         "tags": [
@@ -4278,6 +4326,22 @@
         ],
         "title": "CrearUsuarioRequest"
       },
+      "CronologiaOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/HitoCronologia"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "CronologiaOut"
+      },
       "DatasetOut": {
         "properties": {
           "id": {
@@ -4739,6 +4803,60 @@
         ],
         "title": "Health",
         "description": "Estado del servicio."
+      },
+      "HitoCronologia": {
+        "properties": {
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "imagen",
+              "inferencia",
+              "consentimiento",
+              "decision",
+              "ficha",
+              "cambio_ficha"
+            ],
+            "title": "Tipo"
+          },
+          "ocurrido_en": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Ocurrido En"
+          },
+          "titulo": {
+            "type": "string",
+            "title": "Titulo"
+          },
+          "detalle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detalle"
+          },
+          "actor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tipo",
+          "ocurrido_en",
+          "titulo"
+        ],
+        "title": "HitoCronologia"
       },
       "ImagenPrediccionOut": {
         "properties": {

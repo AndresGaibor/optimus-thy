@@ -21,6 +21,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/casos/{caso_id}/cronologia": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Obtener Cronologia */
+        get: operations["obtener_cronologia_casos__caso_id__cronologia_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auditoria": {
         parameters: {
             query?: never;
@@ -1248,6 +1265,11 @@ export interface components {
             /** Password */
             password: string;
         };
+        /** CronologiaOut */
+        CronologiaOut: {
+            /** Items */
+            items: components["schemas"]["HitoCronologia"][];
+        };
         /** DatasetOut */
         DatasetOut: {
             /** Id */
@@ -1418,6 +1440,25 @@ export interface components {
              * @constant
              */
             status: "ok";
+        };
+        /** HitoCronologia */
+        HitoCronologia: {
+            /**
+             * Tipo
+             * @enum {string}
+             */
+            tipo: "imagen" | "inferencia" | "consentimiento" | "decision" | "ficha" | "cambio_ficha";
+            /**
+             * Ocurrido En
+             * Format: date-time
+             */
+            ocurrido_en: string;
+            /** Titulo */
+            titulo: string;
+            /** Detalle */
+            detalle?: string | null;
+            /** Actor */
+            actor?: string | null;
         };
         /** ImagenPrediccionOut */
         ImagenPrediccionOut: {
@@ -1759,6 +1800,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Health"];
+                };
+            };
+        };
+    };
+    obtener_cronologia_casos__caso_id__cronologia_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                caso_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CronologiaOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

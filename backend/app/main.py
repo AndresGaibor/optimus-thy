@@ -12,6 +12,7 @@ from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, Response
 
+from app.api.cronologia import router as cronologia_router
 from app.api.auditoria import router as auditoria_router
 from app.api.consentimientos import router as consentimientos_router
 from app.api.correo import router as correo_router
@@ -180,6 +181,7 @@ def create_app() -> FastAPI:
     async def health() -> Health:
         return Health(status="ok")
 
+    app.include_router(cronologia_router)
     app.include_router(auditoria_router)
     app.include_router(pacientes_router)
     app.include_router(roles_router)
