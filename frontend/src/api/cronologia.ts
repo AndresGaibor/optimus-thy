@@ -1,12 +1,7 @@
 import { client } from './client';
 
 export type TipoHitoCronologia =
-  | 'imagen'
-  | 'inferencia'
-  | 'consentimiento'
-  | 'decision'
-  | 'ficha'
-  | 'cambio_ficha';
+  'imagen' | 'inferencia' | 'consentimiento' | 'decision' | 'ficha' | 'cambio_ficha';
 
 export interface HitoCronologia {
   tipo: TipoHitoCronologia;

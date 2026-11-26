@@ -40,7 +40,10 @@ export function CronologiaCaso({ casoId }: { casoId: string }) {
       {!cargando && !error && items.length > 0 ? (
         <ol className="flex flex-col gap-3">
           {items.map((item, indice) => (
-            <li key={`${item.tipo}-${item.ocurrido_en}-${indice}`} className="border-s border-border ps-4">
+            <li
+              key={`${item.tipo}-${item.ocurrido_en}-${indice}`}
+              className="border-s border-border ps-4"
+            >
               <p className="font-medium">{item.titulo}</p>
               <time dateTime={item.ocurrido_en} className="text-sm text-muted-foreground">
                 {new Date(item.ocurrido_en).toLocaleString('es-EC')}
