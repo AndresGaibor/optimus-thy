@@ -7,7 +7,7 @@ TBD - created by archiving change decisiones-medicas. Update Purpose after archi
 
 ### Requirement: Registro de la conclusión médica
 
-La API SHALL permitir registrar una única conclusión por inferencia, con `acepta`, `corrige` o `descarta`, observaciones opcionales y el usuario del token como autor.
+La API SHALL permitir registrar una única conclusión por inferencia, con `acepta`, `corrige` o `descarta`, observaciones opcionales y el usuario del token como autor. La conclusión no SHALL modificar la inferencia. Cuando sea `corrige`, SHALL exigir `resultado_corregido` (`benigno`, `maligno` o `sin_nodulo`) distinto del resultado del modelo y SHALL devolverlo junto al resultado predicho.
 
 #### Scenario: Conclusión registrada
 
@@ -18,6 +18,16 @@ La API SHALL permitir registrar una única conclusión por inferencia, con `acep
 
 - **WHEN** ya existe una decisión para esa inferencia
 - **THEN** la respuesta es `409` y la decisión original se conserva
+
+#### Scenario: Corrección sin resultado clínico
+
+- **WHEN** el médico envía `corrige` sin `resultado_corregido`, o con el mismo resultado del modelo
+- **THEN** la respuesta es `422` y no se guarda la decisión
+
+#### Scenario: Resultado corregido aceptado
+
+- **WHEN** el médico corrige una predicción `benigno` a `maligno`
+- **THEN** la decisión guarda `resultado_corregido = maligno` y lo devuelve con el resultado del modelo
 
 #### Scenario: Inferencia de otro caso
 

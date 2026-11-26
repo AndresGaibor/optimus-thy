@@ -1911,6 +1911,135 @@
         }
       }
     },
+    "/investigacion/errores": {
+      "get": {
+        "tags": [
+          "investigacion"
+        ],
+        "summary": "Analizar Errores",
+        "description": "Falsos positivos y negativos según la corrección médica (RF-INV-07).\n\nUn falso positivo es una predicción de malignidad que el médico corrigió a\nun resultado no maligno; un falso negativo, al revés. Solo cuentan las\ninferencias con corrección registrada y resultado corregido.",
+        "operationId": "analizar_errores_investigacion_errores_get",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "desde",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Desde"
+            }
+          },
+          {
+            "name": "hasta",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Hasta"
+            }
+          },
+          {
+            "name": "tipo",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^(falso_positivo|falso_negativo|todos)$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tipo"
+            }
+          },
+          {
+            "name": "modelo",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 36
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Modelo"
+            }
+          },
+          {
+            "name": "limite",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 25,
+              "title": "Limite"
+            }
+          },
+          {
+            "name": "desplazamiento",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Desplazamiento"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErroresOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/investigacion/metricas": {
       "get": {
         "tags": [
@@ -4085,6 +4214,22 @@
             ],
             "title": "Decision"
           },
+          "resultado_corregido": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "benigno",
+                  "maligno",
+                  "sin_nodulo"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resultado Corregido"
+          },
           "observaciones": {
             "anyOf": [
               {
@@ -4141,6 +4286,111 @@
           "message"
         ],
         "title": "ErrorDuplicadoDetalle"
+      },
+      "ErrorPrediccionOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "falso_positivo",
+              "falso_negativo"
+            ],
+            "title": "Tipo"
+          },
+          "creado_en": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Creado En"
+          },
+          "caso_id": {
+            "type": "string",
+            "title": "Caso Id"
+          },
+          "caso_codigo": {
+            "type": "string",
+            "title": "Caso Codigo"
+          },
+          "paciente_codigo": {
+            "type": "string",
+            "title": "Paciente Codigo"
+          },
+          "modelo": {
+            "$ref": "#/components/schemas/ModeloPrediccionOut"
+          },
+          "imagen": {
+            "$ref": "#/components/schemas/ImagenPrediccionOut"
+          },
+          "resultado": {
+            "type": "string",
+            "title": "Resultado"
+          },
+          "resultado_corregido": {
+            "type": "string",
+            "title": "Resultado Corregido"
+          },
+          "confianza": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confianza"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "tipo",
+          "creado_en",
+          "caso_id",
+          "caso_codigo",
+          "paciente_codigo",
+          "modelo",
+          "imagen",
+          "resultado",
+          "resultado_corregido",
+          "confianza"
+        ],
+        "title": "ErrorPrediccionOut",
+        "description": "Predicción corregida, clasificada como falso positivo o falso negativo."
+      },
+      "ErroresOut": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "falsos_positivos": {
+            "type": "integer",
+            "title": "Falsos Positivos"
+          },
+          "falsos_negativos": {
+            "type": "integer",
+            "title": "Falsos Negativos"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ErrorPrediccionOut"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "falsos_positivos",
+          "falsos_negativos",
+          "items"
+        ],
+        "title": "ErroresOut"
       },
       "FiltroCasos": {
         "properties": {
@@ -4261,6 +4511,24 @@
         ],
         "title": "Health",
         "description": "Estado del servicio."
+      },
+      "ImagenPrediccionOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "hash_sha256": {
+            "type": "string",
+            "title": "Hash Sha256"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "hash_sha256"
+        ],
+        "title": "ImagenPrediccionOut"
       },
       "IntegridadOut": {
         "properties": {
@@ -4477,6 +4745,34 @@
           "creado_en"
         ],
         "title": "ModeloOut"
+      },
+      "ModeloPrediccionOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "hash_pesos": {
+            "type": "string",
+            "title": "Hash Pesos"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "nombre",
+          "version",
+          "hash_pesos"
+        ],
+        "title": "ModeloPrediccionOut"
       },
       "PacienteOut": {
         "properties": {

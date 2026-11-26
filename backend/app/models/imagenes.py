@@ -199,6 +199,9 @@ class DecisionMedica(Base):
         index=True,
     )
     decision: Mapped[str] = mapped_column(sa.String(32), nullable=False)
+    # Resultado clínico que el médico considera correcto cuando corrige la
+    # predicción; separa falsos positivos de falsos negativos (RF-INV-07).
+    resultado_corregido: Mapped[str | None] = mapped_column(sa.String(16))
     observaciones: Mapped[str | None] = mapped_column(sa.Text)
     creado_en: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.func.now()

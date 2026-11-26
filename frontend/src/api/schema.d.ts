@@ -468,6 +468,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/investigacion/errores": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Analizar Errores
+         * @description Falsos positivos y negativos según la corrección médica (RF-INV-07).
+         *
+         *     Un falso positivo es una predicción de malignidad que el médico corrigió a
+         *     un resultado no maligno; un falso negativo, al revés. Solo cuentan las
+         *     inferencias con corrección registrada y resultado corregido.
+         */
+        get: operations["analizar_errores_investigacion_errores_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/investigacion/metricas": {
         parameters: {
             query?: never;
@@ -1234,6 +1258,8 @@ export interface components {
              * @enum {string}
              */
             decision: "acepta" | "corrige" | "descarta";
+            /** Resultado Corregido */
+            resultado_corregido?: ("benigno" | "maligno" | "sin_nodulo") | null;
             /** Observaciones */
             observaciones?: string | null;
         };
@@ -1252,6 +1278,49 @@ export interface components {
             code: "posible_duplicado";
             /** Message */
             message: string;
+        };
+        /**
+         * ErrorPrediccionOut
+         * @description Predicción corregida, clasificada como falso positivo o falso negativo.
+         */
+        ErrorPrediccionOut: {
+            /** Id */
+            id: string;
+            /**
+             * Tipo
+             * @enum {string}
+             */
+            tipo: "falso_positivo" | "falso_negativo";
+            /**
+             * Creado En
+             * Format: date-time
+             */
+            creado_en: string;
+            /** Caso Id */
+            caso_id: string;
+            /** Caso Codigo */
+            caso_codigo: string;
+            /** Paciente Codigo */
+            paciente_codigo: string;
+            modelo: components["schemas"]["ModeloPrediccionOut"];
+            imagen: components["schemas"]["ImagenPrediccionOut"];
+            /** Resultado */
+            resultado: string;
+            /** Resultado Corregido */
+            resultado_corregido: string;
+            /** Confianza */
+            confianza: number | null;
+        };
+        /** ErroresOut */
+        ErroresOut: {
+            /** Total */
+            total: number;
+            /** Falsos Positivos */
+            falsos_positivos: number;
+            /** Falsos Negativos */
+            falsos_negativos: number;
+            /** Items */
+            items: components["schemas"]["ErrorPrediccionOut"][];
         };
         /**
          * FiltroCasos
@@ -1288,6 +1357,13 @@ export interface components {
              * @constant
              */
             status: "ok";
+        };
+        /** ImagenPrediccionOut */
+        ImagenPrediccionOut: {
+            /** Id */
+            id: string;
+            /** Hash Sha256 */
+            hash_sha256: string;
         };
         /** IntegridadOut */
         IntegridadOut: {
@@ -1370,6 +1446,17 @@ export interface components {
              * Format: date-time
              */
             creado_en: string;
+        };
+        /** ModeloPrediccionOut */
+        ModeloPrediccionOut: {
+            /** Id */
+            id: string;
+            /** Nombre */
+            nombre: string;
+            /** Version */
+            version: string;
+            /** Hash Pesos */
+            hash_pesos: string;
         };
         /** PacienteOut */
         PacienteOut: {
@@ -2525,6 +2612,42 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    analizar_errores_investigacion_errores_get: {
+        parameters: {
+            query?: {
+                desde?: string | null;
+                hasta?: string | null;
+                tipo?: string | null;
+                modelo?: string | null;
+                limite?: number;
+                desplazamiento?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErroresOut"];
                 };
             };
             /** @description Validation Error */

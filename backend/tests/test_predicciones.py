@@ -83,6 +83,7 @@ def _inferencia(
     resultado: str = "benigno",
     creado_en: datetime | None = None,
     decision: str | None = None,
+    resultado_corregido: str | None = None,
     autor_id: uuid.UUID | None = None,
     lanzada_por: uuid.UUID | None = None,
 ) -> Inferencia:
@@ -123,6 +124,7 @@ def _inferencia(
                 inferencia_id=inferencia.id,
                 usuario_id=autor_id or uuid.uuid4(),
                 decision=decision,
+                resultado_corregido=resultado_corregido,
             )
         )
         db.commit()
@@ -275,3 +277,117 @@ def test_registra_la_consulta_en_la_bitacora(client, mundo, db_session) -> None:
     assert evento is not None
     assert evento.usuario_id == mundo["investigador"].id
     assert evento.detalles == {"resource_count": 1, "role_code": "researcher"}
+
+
+def _errores(client: TestClient, params: dict[str, Any] | None = None):
+    return client.get("/investigacion/errores", params=params or {})
+
+
+def _sembrar_errores(db, caso_id: str, medico) -> tuple[Inferencia, Inferencia]:
+    """Un falso positivo (dijo maligno, era benigno) y un falso negativo (al revés)."""
+    falso_positivo = _inferencia(
+        db,
+        caso_id,
+        resultado="maligno",
+        decision="corrige",
+        resultado_corregido="benigno",
+        autor_id=medico,
+    )
+    falso_negativo = _inferencia(
+        db,
+        caso_id,
+        resultado="benigno",
+        decision="corrige",
+        resultado_corregido="maligno",
+        autor_id=medico,
+    )
+    _inferencia(db, caso_id, resultado="maligno", decision="acepta", autor_id=medico)
+    _inferencia(db, caso_id, resultado="sin_nodulo", decision="descarta", autor_id=medico)
+    return falso_positivo, falso_negativo
+
+
+def test_errores_separa_falsos_positivos_y_negativos(client, mundo, db_session) -> None:
+    caso_id = _caso(client, mundo["medico"].email)
+    falso_positivo, falso_negativo = _sembrar_errores(db_session, caso_id, mundo["medico"].id)
+    _entrar(client, mundo["investigador"].email)
+
+    respuesta = _errores(client)
+
+    assert respuesta.status_code == 200, respuesta.text
+    cuerpo = respuesta.json()
+    assert cuerpo["total"] == 2
+    assert cuerpo["falsos_positivos"] == 1
+    assert cuerpo["falsos_negativos"] == 1
+    tipos = {item["id"]: item["tipo"] for item in cuerpo["items"]}
+    assert tipos[str(falso_positivo.id)] == "falso_positivo"
+    assert tipos[str(falso_negativo.id)] == "falso_negativo"
+    item = next(item for item in cuerpo["items"] if item["id"] == str(falso_negativo.id))
+    assert item["resultado"] == "benigno"
+    assert item["resultado_corregido"] == "maligno"
+    assert item["modelo"]["nombre"] == "Swin"
+    assert item["paciente_codigo"].startswith("PAC-")
+
+
+@pytest.mark.parametrize(
+    ("filtro", "esperado"),
+    [("falso_positivo", 1), ("falso_negativo", 1), ("todos", 2)],
+)
+def test_errores_filtra_por_tipo(client, mundo, db_session, filtro: str, esperado: int) -> None:
+    caso_id = _caso(client, mundo["medico"].email)
+    _sembrar_errores(db_session, caso_id, mundo["medico"].id)
+    _entrar(client, mundo["investigador"].email)
+
+    respuesta = _errores(client, {"tipo": filtro})
+
+    assert respuesta.status_code == 200, respuesta.text
+    assert respuesta.json()["total"] == esperado
+
+
+def test_errores_respeta_la_institucion(client, mundo, db_session) -> None:
+    caso_id = _caso(client, mundo["medico"].email)
+    _sembrar_errores(db_session, caso_id, mundo["medico"].id)
+    _entrar(client, mundo["medico_solca"].email)
+
+    respuesta = _errores(client)
+
+    assert respuesta.status_code == 403
+
+
+def test_errores_exige_permiso_de_investigacion(client, mundo) -> None:
+    _entrar(client, mundo["medico"].email)
+
+    respuesta = _errores(client)
+
+    assert respuesta.status_code == 403
+    assert respuesta.json()["error"]["code"] == "forbidden"
+
+
+def test_errores_acota_por_fecha(client, mundo, db_session) -> None:
+    caso_id = _caso(client, mundo["medico"].email)
+    _inferencia(
+        db_session,
+        caso_id,
+        resultado="maligno",
+        decision="corrige",
+        resultado_corregido="benigno",
+        autor_id=mundo["medico"].id,
+        creado_en=datetime(2025, 1, 10, 12, 0, tzinfo=UTC),
+    )
+    _inferencia(
+        db_session,
+        caso_id,
+        resultado="maligno",
+        decision="corrige",
+        resultado_corregido="benigno",
+        autor_id=mundo["medico"].id,
+        creado_en=datetime(2025, 6, 10, 12, 0, tzinfo=UTC),
+    )
+    _entrar(client, mundo["investigador"].email)
+
+    respuesta = _errores(
+        client,
+        {"desde": "2025-05-01", "hasta": "2025-07-01"},
+    )
+
+    assert respuesta.status_code == 200, respuesta.text
+    assert respuesta.json()["total"] == 1
