@@ -46,6 +46,7 @@ class AuditAction(StrEnum):
     # Investigación (HT-070, HU-090)
     DATASET_CREATE = "DATASET_CREATE"
     DATASET_READ = "DATASET_READ"
+    DATASET_EXPORT = "DATASET_EXPORT"
 
     # Administración (RF-AUD-06)
     USER_CREATE = "USER_CREATE"

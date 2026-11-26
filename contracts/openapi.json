@@ -2243,6 +2243,62 @@
         }
       }
     },
+    "/investigacion/datasets/{id}/exportar": {
+      "get": {
+        "tags": [
+          "investigacion"
+        ],
+        "summary": "Exportar Dataset",
+        "description": "Descarga el dataset con su ficha técnica; queda como `DATASET_EXPORT`.\n\nEl archivo no trae identificadores: solo las filas anonimizadas ya\npersistidas. La bitácora guarda el número de filas y el formato, nunca el\ncontenido.",
+        "operationId": "exportar_dataset_investigacion_datasets__id__exportar_get",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          },
+          {
+            "name": "formato",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "csv",
+              "title": "Formato"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/casos/{caso_id}/inferencias/{inferencia_id}/reporte.pdf": {
       "get": {
         "tags": [
