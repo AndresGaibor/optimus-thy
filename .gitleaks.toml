@@ -23,8 +23,11 @@ paths = [
 condition = "AND"
 [[allowlists]]
 description = "Contraseña sintética del test de acceso entre instituciones (TES-349)"
-regexTarget = "match"
-regexes = ['''claveSuficientemente12''']
+regexTarget = "line"
+regexes = [
+  '''claveSuficientemente12''',
+  '''clave-sintetica-de-prueba''',
+]
 paths = ['''backend/tests/test_acceso_objetos\.py''']
 condition = "AND"
 [[allowlists]]
