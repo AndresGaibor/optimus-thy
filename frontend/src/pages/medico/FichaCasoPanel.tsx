@@ -39,7 +39,31 @@ const ETIQUETA_CONFIRMAR: Record<Accion, string> = {
   reabrir: 'Confirmar reapertura',
 };
 
-/** Historial de versiones y estado de cierre de la ficha clínica de un caso. */
+/**
+ * Historial de versiones y estado de cierre de la ficha clínica de un caso.
+ *
+ * ## Cuándo usarlo
+ * En la página e historia clínica de un caso, para consultar quién cambió qué y
+ * para cerrar o reabrir la ficha. Requiere el identificador del caso ya cargado.
+ *
+ * ## Cuándo no usarlo
+ * Fuera de la ficha de un caso, ni como historial de auditoría general: la
+ * bitácora del sistema cubre ese alcance.
+ *
+ * ## Anatomía
+ * Cabecera con el título y el botón de cerrar o reabrir; cuerpo con el aviso de
+ * ficha cerrada, la lista de versiones (autor, fecha y valores antes → después)
+ * y un diálogo de confirmación antes de cada acción.
+ *
+ * ## Accesibilidad
+ * Cada acción pasa por un diálogo con título y descripción propios; el estado de
+ * carga se anuncia con `role="status"` y el cierre se comunica con un `Callout`,
+ * no solo con color. Los botones se deshabilitan mientras la petición está en curso.
+ *
+ * ## Responsive
+ * La cabecera envuelve el botón debajo del título en pantallas estrechas; la lista
+ * de versiones es una columna que se apila sin desplazamiento horizontal.
+ */
 export function FichaCasoPanel({ casoId }: { casoId: string }) {
   const [estado, setEstado] = useState<EstadoFicha | null>(null);
   const [versiones, setVersiones] = useState<VersionFicha[]>([]);
