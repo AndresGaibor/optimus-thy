@@ -219,7 +219,14 @@ def test_lectura_posterior_de_la_decision(client, mundo, db_session) -> None:
     assert sin_decision.status_code == 404
     assert sin_decision.json()["error"]["code"] == "decision_no_encontrada"
 
-    creada = client.post(url, json={"decision": "corrige", "observaciones": OBSERVACIONES})
+    creada = client.post(
+        url,
+        json={
+            "decision": "corrige",
+            "resultado_corregido": "maligno",
+            "observaciones": OBSERVACIONES,
+        },
+    )
     assert creada.status_code == 201, creada.text
 
     respuesta = client.get(url)
@@ -227,6 +234,8 @@ def test_lectura_posterior_de_la_decision(client, mundo, db_session) -> None:
     assert respuesta.status_code == 200, respuesta.text
     cuerpo = respuesta.json()
     assert cuerpo["decision"] == "corrige"
+    assert cuerpo["resultado"] == "benigno"
+    assert cuerpo["resultado_corregido"] == "maligno"
     assert cuerpo["observaciones"] == OBSERVACIONES
     assert cuerpo["creado_en"] == creada.json()["creado_en"]
     assert cuerpo["autor"] == {
@@ -272,3 +281,68 @@ def test_auditoria_registra_decision_sin_observaciones(client, mundo, db_session
     assert evento.detalles is not None
     assert evento.detalles["decision_code"] == "descarta"
     assert OBSERVACIONES not in str(evento.detalles)
+
+
+def test_corregir_sin_resultado_corregido_es_422(client, mundo, db_session) -> None:
+    _entrar(client, mundo["medico"])
+    caso_id = _caso(client)
+    inferencia = _inferencia(db_session, caso_id)
+
+    respuesta = client.post(_url(caso_id, inferencia.id), json={"decision": "corrige"})
+
+    assert respuesta.status_code == 422, respuesta.text
+    assert (
+        db_session.query(DecisionMedica)
+        .filter(DecisionMedica.inferencia_id == inferencia.id)
+        .count()
+        == 0
+    )
+
+
+def test_aceptar_con_resultado_corregido_es_422(client, mundo, db_session) -> None:
+    _entrar(client, mundo["medico"])
+    caso_id = _caso(client)
+    inferencia = _inferencia(db_session, caso_id)
+
+    respuesta = client.post(
+        _url(caso_id, inferencia.id),
+        json={"decision": "acepta", "resultado_corregido": "maligno"},
+    )
+
+    assert respuesta.status_code == 422, respuesta.text
+
+
+def test_correccion_igual_al_modelo_es_422(client, mundo, db_session) -> None:
+    _entrar(client, mundo["medico"])
+    caso_id = _caso(client)
+    inferencia = _inferencia(db_session, caso_id)
+
+    respuesta = client.post(
+        _url(caso_id, inferencia.id),
+        json={"decision": "corrige", "resultado_corregido": "benigno"},
+    )
+
+    assert respuesta.status_code == 422, respuesta.text
+    assert respuesta.json()["error"]["code"] == "correccion_sin_cambio"
+
+
+def test_correccion_guarda_el_resultado_clinico(client, mundo, db_session) -> None:
+    _entrar(client, mundo["medico"])
+    caso_id = _caso(client)
+    inferencia = _inferencia(db_session, caso_id)
+
+    respuesta = client.post(
+        _url(caso_id, inferencia.id),
+        json={
+            "decision": "corrige",
+            "resultado_corregido": "maligno",
+            "observaciones": OBSERVACIONES,
+        },
+    )
+
+    assert respuesta.status_code == 201, respuesta.text
+    assert respuesta.json()["resultado_corregido"] == "maligno"
+    fila = (
+        db_session.query(DecisionMedica).filter(DecisionMedica.inferencia_id == inferencia.id).one()
+    )
+    assert fila.resultado_corregido == "maligno"

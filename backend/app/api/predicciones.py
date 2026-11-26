@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import UTC, date, datetime, time, timedelta
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
 import sqlalchemy as sa
 from fastapi import APIRouter, Depends, Query, Request, status
@@ -268,3 +268,156 @@ def auditar_predicciones(
         detalles={"resource_count": len(items)},
     )
     return PrediccionesOut(total=total, items=items)
+
+
+_MALIGNO = "maligno"
+
+
+def _contar(db: Session, consulta: OrmQuery[Any]) -> int:
+    """Cuenta inferencias distintas: el join con trabajos puede duplicar filas."""
+    subconsulta = consulta.with_entities(Inferencia.id).distinct().subquery()
+    return db.query(sa.func.count()).select_from(subconsulta).scalar() or 0
+
+
+class ErrorPrediccionOut(BaseModel):
+    """Predicción corregida, clasificada como falso positivo o falso negativo."""
+
+    id: str
+    tipo: Literal["falso_positivo", "falso_negativo"]
+    creado_en: datetime
+    caso_id: str
+    caso_codigo: str
+    paciente_codigo: str
+    modelo: ModeloPrediccionOut
+    imagen: ImagenPrediccionOut
+    resultado: str
+    resultado_corregido: str
+    confianza: float | None
+
+
+class ErroresOut(BaseModel):
+    total: int
+    falsos_positivos: int
+    falsos_negativos: int
+    items: list[ErrorPrediccionOut]
+
+
+@router.get("/investigacion/errores", response_model=ErroresOut)
+def analizar_errores(
+    request: Request,
+    db: Annotated[Session, Depends(session_dep)],
+    actual: Annotated[SesionActual, Depends(requiere_permiso("investigacion.leer"))],
+    desde: Annotated[date | None, Query()] = None,
+    hasta: Annotated[date | None, Query()] = None,
+    tipo: Annotated[str | None, Query(pattern="^(falso_positivo|falso_negativo|todos)$")] = None,
+    modelo: Annotated[str | None, Query(max_length=36)] = None,
+    limite: Annotated[int, Query(ge=1)] = 25,
+    desplazamiento: Annotated[int, Query(ge=0)] = 0,
+) -> ErroresOut | JSONResponse:
+    """Falsos positivos y negativos según la corrección médica (RF-INV-07).
+
+    Un falso positivo es una predicción de malignidad que el médico corrigió a
+    un resultado no maligno; un falso negativo, al revés. Solo cuentan las
+    inferencias con corrección registrada y resultado corregido.
+    """
+    if desde and hasta and desde > hasta:
+        return _error(
+            request,
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
+            "validation_error",
+            "La fecha inicial no puede ser posterior a la final.",
+        )
+    consulta = _consulta(db, actual.usuario.institucion_id).filter(
+        DecisionMedica.decision == "corrige",
+        DecisionMedica.resultado_corregido.is_not(None),
+    )
+    if desde:
+        consulta = consulta.filter(
+            Inferencia.creado_en >= datetime.combine(desde, time.min, tzinfo=UTC)
+        )
+    if hasta:
+        consulta = consulta.filter(
+            Inferencia.creado_en < datetime.combine(hasta + timedelta(days=1), time.min, tzinfo=UTC)
+        )
+    if modelo:
+        modelo_id = _uuid(modelo)
+        if modelo_id is None:
+            return _error(
+                request,
+                status.HTTP_422_UNPROCESSABLE_CONTENT,
+                "validation_error",
+                "El modelo no es un identificador válido.",
+            )
+        consulta = consulta.filter(ModeloIA.id == modelo_id)
+
+    falsos_positivos = _contar(db, consulta.filter(Inferencia.resultado == _MALIGNO))
+    falsos_negativos = _contar(db, consulta.filter(Inferencia.resultado != _MALIGNO))
+    if tipo == "falso_positivo":
+        consulta = consulta.filter(
+            Inferencia.resultado == _MALIGNO,
+            DecisionMedica.resultado_corregido != _MALIGNO,
+        )
+    elif tipo == "falso_negativo":
+        consulta = consulta.filter(
+            Inferencia.resultado != _MALIGNO,
+            DecisionMedica.resultado_corregido == _MALIGNO,
+        )
+    else:
+        consulta = consulta.filter(
+            sa.or_(
+                sa.and_(
+                    Inferencia.resultado == _MALIGNO,
+                    DecisionMedica.resultado_corregido != _MALIGNO,
+                ),
+                sa.and_(
+                    Inferencia.resultado != _MALIGNO,
+                    DecisionMedica.resultado_corregido == _MALIGNO,
+                ),
+            )
+        )
+
+    subconsulta = consulta.with_entities(Inferencia.id).distinct().subquery()
+    total = db.query(sa.func.count()).select_from(subconsulta).scalar() or 0
+    filas = (
+        consulta.order_by(Inferencia.creado_en.desc(), Inferencia.id.desc())
+        .offset(desplazamiento)
+        .limit(min(limite, _LIMITE_MAXIMO))
+        .all()
+    )
+    items = [
+        ErrorPrediccionOut(
+            id=str(inferencia.id),
+            tipo=("falso_positivo" if inferencia.resultado == _MALIGNO else "falso_negativo"),
+            creado_en=inferencia.creado_en,
+            caso_id=str(caso_fila.id),
+            caso_codigo=caso_fila.codigo_caso,
+            paciente_codigo=caso_fila.paciente.seudonimo,
+            modelo=ModeloPrediccionOut(
+                id=str(modelo_fila.id),
+                nombre=modelo_fila.nombre,
+                version=modelo_fila.version,
+                hash_pesos=modelo_fila.hash_pesos,
+            ),
+            imagen=ImagenPrediccionOut(id=str(imagen.id), hash_sha256=imagen.hash_sha256),
+            resultado=inferencia.resultado,
+            resultado_corregido=str(referencia.resultado_corregido),
+            confianza=inferencia.confianza,
+        )
+        for inferencia, caso_fila, imagen, modelo_fila, referencia, _creado_por in filas
+    ]
+    registrar(
+        db,
+        request,
+        AuditAction.INFERENCE_READ,
+        AuditModule.INFERENCE,
+        usuario=actual.usuario,
+        rol=actual.rol_activo.nombre if actual.rol_activo else None,
+        tipo_objeto=AuditObjectType.INFERENCE,
+        detalles={"resource_count": len(items)},
+    )
+    return ErroresOut(
+        total=total,
+        falsos_positivos=falsos_positivos,
+        falsos_negativos=falsos_negativos,
+        items=items,
+    )

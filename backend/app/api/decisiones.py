@@ -15,7 +15,7 @@ from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, Request, status
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -34,7 +34,16 @@ class DecisionIn(BaseModel):
     """Conclusión del médico; las observaciones son opcionales y acotadas."""
 
     decision: Literal["acepta", "corrige", "descarta"]
+    resultado_corregido: Literal["benigno", "maligno", "sin_nodulo"] | None = None
     observaciones: str | None = Field(default=None, min_length=10, max_length=2000)
+
+    @model_validator(mode="after")
+    def _correccion_coherente(self) -> DecisionIn:
+        if self.decision == "corrige" and self.resultado_corregido is None:
+            raise ValueError("una corrección exige el resultado clínico correcto")
+        if self.decision != "corrige" and self.resultado_corregido is not None:
+            raise ValueError("solo una corrección lleva resultado corregido")
+        return self
 
 
 class AutorOut(BaseModel):
@@ -46,6 +55,8 @@ class AutorOut(BaseModel):
 
 class DecisionOut(BaseModel):
     decision: str
+    resultado: str
+    resultado_corregido: str | None
     observaciones: str | None
     creado_en: datetime
     autor: AutorOut
@@ -129,11 +140,22 @@ def registrar_decision(
             "decision_existente",
             "Esta inferencia ya tiene una decisión registrada.",
         )
+    if (
+        cuerpo.resultado_corregido is not None
+        and cuerpo.resultado_corregido == inferencia.resultado
+    ):
+        return _error(
+            request,
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
+            "correccion_sin_cambio",
+            "El resultado corregido debe ser distinto del resultado del modelo.",
+        )
 
     fila = DecisionMedica(
         inferencia_id=inferencia.id,
         usuario_id=actual.usuario.id,
         decision=cuerpo.decision,
+        resultado_corregido=cuerpo.resultado_corregido,
         observaciones=cuerpo.observaciones,
     )
     db.add(fila)
@@ -162,6 +184,8 @@ def registrar_decision(
     db.refresh(fila)
     return DecisionOut(
         decision=fila.decision,
+        resultado=inferencia.resultado,
+        resultado_corregido=fila.resultado_corregido,
         observaciones=fila.observaciones,
         creado_en=fila.creado_en,
         autor=AutorOut(
@@ -196,6 +220,8 @@ def consultar_decision(
         )
     salida = DecisionOut(
         decision=fila.decision,
+        resultado=inferencia.resultado,
+        resultado_corregido=fila.resultado_corregido,
         observaciones=fila.observaciones,
         creado_en=fila.creado_en,
         autor=AutorOut(id=str(fila.usuario_id), rol=_rol_de(db, fila.usuario_id)),

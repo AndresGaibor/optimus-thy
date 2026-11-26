@@ -1,5 +1,6 @@
 import {
   Activity,
+  AlertTriangle,
   Building2,
   ClipboardList,
   Database,
@@ -37,6 +38,7 @@ const NAV_BY_ROLE: Record<Role, SidebarNavItem[]> = {
     { to: '/investigador/predicciones', label: 'Predicciones', icon: FileText },
     { to: '/investigador/datasets', label: 'Datasets', icon: Database },
     { to: '/investigador/metricas', label: 'Métricas', icon: Activity },
+    { to: '/investigador/errores', label: 'Errores', icon: AlertTriangle },
     { to: '/investigador/exportaciones', label: 'Exportaciones', icon: Download },
   ],
   administrador: [
