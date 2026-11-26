@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import uuid
+from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
@@ -42,10 +43,10 @@ class Caso(Base):
         index=True,
     )
     codigo_caso: Mapped[str] = mapped_column(sa.String(64), nullable=False)
-    creado_en: Mapped[sa.DateTime] = mapped_column(
+    creado_en: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.func.now()
     )
-    actualizado_en: Mapped[sa.DateTime] = mapped_column(
+    actualizado_en: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True),
         nullable=False,
         server_default=sa.func.now(),
@@ -102,10 +103,10 @@ class FichaClinica(Base):
     cie10: Mapped[str | None] = mapped_column(sa.String(16))
     tipo_diagnostico: Mapped[str | None] = mapped_column(sa.String(64))
     tipo_consulta: Mapped[str | None] = mapped_column(sa.String(64))
-    creado_en: Mapped[sa.DateTime] = mapped_column(
+    creado_en: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.func.now()
     )
-    actualizado_en: Mapped[sa.DateTime] = mapped_column(
+    actualizado_en: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True),
         nullable=False,
         server_default=sa.func.now(),
@@ -142,7 +143,7 @@ class FichaVersion(Base):
         index=True,
     )
     motivo_cambio: Mapped[str | None] = mapped_column(sa.String(255))
-    creado_en: Mapped[sa.DateTime] = mapped_column(
+    creado_en: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.func.now()
     )
 

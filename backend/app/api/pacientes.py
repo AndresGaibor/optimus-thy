@@ -225,7 +225,7 @@ def _caso_out(caso: Caso, paciente: Paciente) -> CasoOut:
         codigo=caso.codigo_caso,
         paciente_id=str(paciente.id),
         paciente_codigo=paciente.seudonimo,
-        creado_en=cast(datetime, caso.creado_en),
+        creado_en=caso.creado_en,
     )
 
 

@@ -19,6 +19,7 @@ import { ResultadosDelCaso } from './ResultadosDelCaso';
 import { DialogoSubida } from './inferencia/DialogoSubida';
 import { useSubidaEcografia } from './inferencia/useSubidaEcografia';
 import { AbrirVisor } from './visor/AbrirVisor';
+import { CronologiaCaso } from './CronologiaCaso';
 
 const INTERVALO_MS = 3000;
 
@@ -175,6 +176,7 @@ export function CasoPage() {
         onArchivo={subida.elegir}
         onSubir={() => void subida.subir()}
       />
+      <CronologiaCaso casoId={casoId} />
     </main>
   );
 }
