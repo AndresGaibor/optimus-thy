@@ -72,7 +72,13 @@ export function FormularioSolicitud({ onCreada }: FormularioSolicitudProps) {
     const resultado = await crearSolicitud(cuerpo);
     setEnviando(false);
     if (!resultado.ok) {
-      setMensaje({ exito: false, texto: resultado.error });
+      setMensaje({
+        exito: false,
+        texto:
+          resultado.codigo === 'solicitud_duplicada'
+            ? 'Ya existe una solicitud de ese tipo para el titular en esa fecha.'
+            : resultado.error,
+      });
       return;
     }
     setMensaje({ exito: true, texto: 'La solicitud se registró correctamente.' });

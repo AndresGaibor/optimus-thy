@@ -56,10 +56,17 @@ function esSolicitudes(valor: unknown): valor is Solicitudes {
 }
 
 function extraerCodigo(error: unknown): string | undefined {
-  if (typeof error !== 'object' || error === null || !('detail' in error)) return undefined;
-  const detail: unknown = error.detail;
-  if (typeof detail !== 'object' || detail === null || !('codigo' in detail)) return undefined;
-  return typeof detail.codigo === 'string' ? detail.codigo : undefined;
+  if (typeof error !== 'object' || error === null) return undefined;
+  const cuerpo = error as Record<string, unknown>;
+  const anidado =
+    typeof cuerpo.error === 'object' && cuerpo.error !== null
+      ? (cuerpo.error as Record<string, unknown>)
+      : typeof cuerpo.detail === 'object' && cuerpo.detail !== null
+        ? (cuerpo.detail as Record<string, unknown>)
+        : null;
+  if (anidado === null) return undefined;
+  const codigo = anidado.code ?? anidado.codigo;
+  return typeof codigo === 'string' ? codigo : undefined;
 }
 
 /** Solicitudes administrativas de derechos de titulares; nunca incluye datos clínicos. */
