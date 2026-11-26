@@ -54,26 +54,6 @@ export interface SolicitudDerecho {
   titular: string;
 }
 
-export type UnuqAtributo =
-  | 'Utilidad'
-  | 'Facilidad de uso'
-  | 'Claridad'
-  | 'Confianza'
-  | 'Eficiencia'
-  | 'Control'
-  | 'Satisfacción';
-
-export interface UnuqItem {
-  id: number;
-  atributo: UnuqAtributo;
-  enunciado: string;
-}
-
-export interface UnuqAtributoResumen {
-  atributo: UnuqAtributo;
-  promedio: number;
-}
-
 export const casosClinicos: CasoClinico[] = [
   {
     id: 'DEMO-CASO-001',
@@ -183,77 +163,3 @@ export const solicitudesDerechos: SolicitudDerecho[] = [
     titular: 'Titular demo 003',
   },
 ];
-
-export const unuqAtributos: UnuqAtributo[] = [
-  'Utilidad',
-  'Facilidad de uso',
-  'Claridad',
-  'Confianza',
-  'Eficiencia',
-  'Control',
-  'Satisfacción',
-];
-
-const unuqEnunciados = [
-  'La herramienta apoya las tareas principales del rol.',
-  'Puedo completar una tarea sin pasos innecesarios.',
-  'Los términos clínicos y técnicos son comprensibles.',
-  'La información presentada inspira confianza para revisar.',
-  'La interfaz permite avanzar con rapidez en tareas frecuentes.',
-  'Siento control sobre las acciones que ejecuto.',
-  'La experiencia general resulta satisfactoria.',
-  'Los resultados ayudan a tomar decisiones informadas.',
-  'Las opciones disponibles son fáciles de ubicar.',
-  'Los mensajes y etiquetas son claros.',
-  'Puedo verificar el origen de la información mostrada.',
-  'La secuencia de trabajo es eficiente.',
-  'Puedo corregir o revisar acciones antes de confirmar.',
-  'Recomendaría esta experiencia para tareas similares.',
-  'La pantalla responde a lo que necesito hacer.',
-  'La navegación entre secciones es sencilla.',
-  'Comprendo qué significa cada estado o indicador.',
-  'Confío en que los datos se presentan de forma consistente.',
-  'El tiempo para completar la tarea es razonable.',
-  'Puedo entender las consecuencias de mis acciones.',
-  'La presentación reduce dudas durante la tarea.',
-  'El flujo general cumple mis expectativas.',
-] as const;
-
-export const unuqItems: UnuqItem[] = unuqEnunciados.map((enunciado, index) => ({
-  id: index + 1,
-  atributo: unuqAtributos[index % unuqAtributos.length]!,
-  enunciado,
-}));
-
-export const unuqRespuestasAlta = unuqItems.map(() => 4);
-export const unuqRespuestasBaja = unuqItems.map((_, index) => (index % 3 === 0 ? 2 : 3));
-
-export function calcularPuntajeUnuq(respuestas: number[]): number {
-  if (!respuestas.length) return 0;
-  const maximo = respuestas.length * 5;
-  const suma = respuestas.reduce((total, valor) => total + valor, 0);
-  return Math.round((suma / maximo) * 100);
-}
-
-export function resumirAtributosUnuq(respuestas: number[]): UnuqAtributoResumen[] {
-  return unuqAtributos.map((atributo) => {
-    const valores = unuqItems
-      .filter((item) => item.atributo === atributo)
-      .map((item) => respuestas[item.id - 1] ?? 0);
-    const promedio = valores.length
-      ? Number((valores.reduce((total, valor) => total + valor, 0) / valores.length).toFixed(1))
-      : 0;
-    return { atributo, promedio };
-  });
-}
-
-export const casosExtraFixtures = {
-  casosClinicos,
-  solicitudesDerechos,
-  unuqItems,
-  unuqAtributos,
-  unuqRespuestasAlta,
-  unuqRespuestasBaja,
-  calcularPuntajeUnuq,
-  resumirAtributosUnuq,
-};

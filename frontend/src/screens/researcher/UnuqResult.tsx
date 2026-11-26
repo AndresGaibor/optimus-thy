@@ -14,13 +14,18 @@ import {
   TableHeader,
   TableRow,
 } from '../../design-system';
-import { calcularPuntajeUnuq, resumirAtributosUnuq, unuqFormula } from '../fixtures/unuq-extra';
+import {
+  calcularPuntajeUnuq,
+  resumirAtributosUnuq,
+  sumaContribucionesUnuq,
+  unuqFormula,
+} from '../fixtures/unuq-extra';
 
 export function UnuqResult({ values }: { values: number[] }) {
   const score = calcularPuntajeUnuq(values);
   const resumen = resumirAtributosUnuq(values);
   const ok = score >= 70;
-  const suma = useMemo(() => values.reduce((t, v) => t + v, 0), [values]);
+  const suma = useMemo(() => sumaContribucionesUnuq(values), [values]);
   return (
     <Card>
       <CardHeader>
@@ -40,7 +45,7 @@ export function UnuqResult({ values }: { values: number[] }) {
           representa evaluación real.
         </Callout>
         <p className="text-sm">
-          <strong>Fórmula:</strong> {unuqFormula}. Cálculo: ({suma} / (22 × 5)) × 100 = {score}.
+          <strong>Fórmula:</strong> {unuqFormula}. Cálculo: ({suma} / 88) × 100 = {score}.
         </p>
         <Progress
           label={`Puntuación total ${score} de 100`}
@@ -52,7 +57,7 @@ export function UnuqResult({ values }: { values: number[] }) {
             <TableRow>
               <TableHead>Atributo</TableHead>
               <TableHead>Peso</TableHead>
-              <TableHead>Promedio (1–5)</TableHead>
+              <TableHead>Promedio (0–4)</TableHead>
               <TableHead>Puntaje</TableHead>
               <TableHead>Visual</TableHead>
             </TableRow>
