@@ -178,6 +178,35 @@ jobs:
       - name: Build
         run: bun run build
 
+  e2e-flujos:
+    name: E2E flujos (Playwright)
+    runs-on: ubuntu-latest
+    needs: cambios
+    if: needs.cambios.outputs.frontend == 'true'
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: oven-sh/setup-bun@v2
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('frontend/bun.lock') }}
+      - name: Instalar dependencias
+        run: bun install --frozen-lockfile
+      - uses: actions/cache@v4
+        id: cache-chromium
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('frontend/bun.lock') }}
+      - name: Instalar Chromium para E2E
+        if: steps.cache-chromium.outputs.cache-hit != 'true'
+        run: bun x playwright install --with-deps chromium
+      - name: Recorridos E2E de médico e investigador
+        run: bun run e2e:flujos
+
   catalogo:
     name: Catálogo (Storybook)
     runs-on: ubuntu-latest
@@ -410,7 +439,7 @@ jobs:
     name: CI OK
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    needs: [cambios, backend, frontend, catalogo, compose, deploy, secrets, deps, e2e, integracion]
+    needs: [cambios, backend, frontend, e2e-flujos, catalogo, compose, deploy, secrets, deps, e2e, integracion]
     if: always()
     steps:
       - name: Comprobar que todos los trabajos pasaron
