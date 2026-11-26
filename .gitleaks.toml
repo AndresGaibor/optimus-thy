@@ -23,7 +23,7 @@ paths = [
 condition = "AND"
 [[allowlists]]
 description = "Contraseña sintética del test de acceso entre instituciones (TES-349)"
-regexTarget = "line"
+regexTarget = "match"
 regexes = [
   '''claveSuficientemente12''',
   '''clave-sintetica-de-prueba''',

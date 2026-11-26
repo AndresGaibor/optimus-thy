@@ -1,0 +1,3 @@
+# Huellas aceptadas a mano. gitleaks 8.24.3 no aplica la lista de permitidos a
+# este hallazgo histórico; la contraseña es sintética y solo existe en tests.
+427dbba573c9e6a422b517b25e99643862b703ad:backend/tests/test_acceso_objetos.py:generic-api-key:253
