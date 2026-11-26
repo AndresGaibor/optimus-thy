@@ -80,7 +80,7 @@ export function AppRoutes() {
           </RoleRoute>
         }
       >
-        <Route index element={<TableroPage />} />
+        <Route index element={<UsuariosPage />} />
         <Route path="tablero" element={<TableroPage />} />
         <Route path="usuarios" element={<UsuariosPage />} />
         <Route path="instituciones" element={<InstitucionesPage />} />

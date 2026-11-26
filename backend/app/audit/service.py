@@ -45,6 +45,7 @@ CLAVES_DE_DETALLE: Final[frozenset[str]] = frozenset(
         "content_sha256",
         "attempt_count",
         "file_kind",
+        "changed_fields",
         "from_status",
         "to_status",
         "role_code",
