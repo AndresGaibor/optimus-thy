@@ -14,6 +14,7 @@ DEV_PII_ENCRYPTION_KEY = "cambiar-en-local-no-usar-fuera-de-desarrollo"
 
 ENTORNOS_DE_DESARROLLO = frozenset({"local", "development", "test"})
 
+
 def _database_es_local(database_url: str) -> bool:
     """Reconoce direcciones locales sin resolver DNS ni exponer la URL."""
     try:
@@ -121,6 +122,9 @@ class Settings(BaseSettings):
         description="Clave de cifrado de datos personales; nunca se guarda en el repositorio.",
         repr=False,
     )
+    retencion_trabajos_dias: int = Field(default=90, alias="RETENCION_TRABAJOS_DIAS", ge=1)
+    retencion_alertas_dias: int = Field(default=365, alias="RETENCION_ALERTAS_DIAS", ge=1)
+    purga_habilitada: bool = Field(default=False, alias="PURGA_HABILITADA")
     modelos_dir: str = Field(default="/modelos", alias="MODELOS_DIR")
     ia_url: str = Field(default="http://ia:8002", alias="IA_URL")
     ia_timeout_segundos: float = Field(
@@ -177,6 +181,19 @@ class Settings(BaseSettings):
         ):
             raise ValueError(
                 "PII_ENCRYPTION_KEY debe configurarse fuera del repositorio en este entorno"
+            )
+        if entorno == "production":
+            if not self.pii_encryption_key.strip():
+                raise ValueError("PII_ENCRYPTION_KEY es obligatoria en producción")
+            if not self.session_cookie_secure:
+                raise ValueError("SESSION_COOKIE_SECURE debe ser true en producción")
+            if _database_es_local(self.database_url):
+                raise ValueError("DATABASE_URL no puede apuntar a una base local en producción")
+        elif entorno in ENTORNOS_DE_DESARROLLO and _database_parece_produccion(self.database_url):
+            warnings.warn(
+                "La DATABASE_URL de desarrollo parece apuntar a una base de producción.",
+                UserWarning,
+                stacklevel=2,
             )
         return self
 
