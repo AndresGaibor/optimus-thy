@@ -23,7 +23,7 @@ paths = [
 condition = "AND"
 [[allowlists]]
 description = "Contraseña sintética del test de alertas (TES-351)"
-regexTarget = "match"
+regexTarget = "line"
 regexes = ['''ClavePrueba-123''']
 paths = ['''backend/tests/test_alertas\.py''']
 condition = "AND"
@@ -33,8 +33,3 @@ regexTarget = "line"
 regexes = ['''TAILSCALE_IP=100\.107\.225\.79''']
 paths = ['''docs/operacion/despliegue-produccion\.md''']
 condition = "AND"
-
-[allowlist]
-description = "IP privada Tailscale en runbook, no credencial"
-regexTarget = "line"
-regexes = ['''TAILSCALE_IP=100\.107\.225\.79''']
