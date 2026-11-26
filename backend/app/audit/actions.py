@@ -24,6 +24,8 @@ class AuditAction(StrEnum):
     # Altas y correcciones del registro clínico
     PATIENT_CREATE = "PATIENT_CREATE"
     PATIENT_UPDATE = "PATIENT_UPDATE"
+    PATIENT_ARCHIVE = "PATIENT_ARCHIVE"
+    PATIENT_UNARCHIVE = "PATIENT_UNARCHIVE"
     CASE_CREATE = "CASE_CREATE"
     # Cambios y ciclo de vida de la ficha clínica (CA-12)
     RECORD_UPDATE = "RECORD_UPDATE"

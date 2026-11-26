@@ -5,6 +5,7 @@ export interface Paciente {
   codigo: string;
   creado_en: string;
   total_casos: number;
+  archivado_en: string | null;
 }
 
 /** Caso asociado al paciente en el detalle (`GET /pacientes/{id}`). */
@@ -42,7 +43,8 @@ function esPaciente(valor: unknown): valor is Paciente {
     typeof v.id === 'string' &&
     typeof v.codigo === 'string' &&
     typeof v.creado_en === 'string' &&
-    typeof v.total_casos === 'number'
+    typeof v.total_casos === 'number' &&
+    (typeof v.archivado_en === 'string' || v.archivado_en === null)
   );
 }
 
@@ -68,8 +70,9 @@ export async function listarPacientes(params?: {
   q?: string;
   limite?: number;
   desplazamiento?: number;
+  incluir_archivados?: boolean;
 }): Promise<ApiResult<ListaPacientes>> {
-  const query: Record<string, string | number> = {};
+  const query: Record<string, string | number | boolean> = {};
   if (params?.q && params.q.trim() !== '') {
     query.q = params.q.trim();
   }
@@ -79,7 +82,9 @@ export async function listarPacientes(params?: {
   if (typeof params?.desplazamiento === 'number') {
     query.desplazamiento = params.desplazamiento;
   }
-
+  if (typeof params?.incluir_archivados === 'boolean') {
+    query.incluir_archivados = params.incluir_archivados;
+  }
   const { data, error, response } = await client.GET('/pacientes', {
     params: {
       query,
@@ -176,4 +181,43 @@ export async function obtenerPaciente(id: string): Promise<ApiResult<PacienteDet
   }
 
   return { ok: false, status: 422 };
+}
+type RutaTransicionPaciente = '/pacientes/{id}/archivar' | '/pacientes/{id}/desarchivar';
+
+async function transicionarPaciente(
+  id: string,
+  ruta: RutaTransicionPaciente,
+): Promise<ApiResult<Paciente>> {
+  const { data, error, response } = await client.POST(ruta, {
+    params: { path: { id } },
+  });
+
+  if (data && esPaciente(data)) {
+    return { ok: true, data };
+  }
+
+  if (error !== undefined && response) {
+    const status = response.status;
+    if (esErrorStatus(status)) {
+      return { ok: false, status, error };
+    }
+    return { ok: false, status: 422, error };
+  }
+
+  if (response) {
+    const status = response.status;
+    if (esErrorStatus(status)) {
+      return { ok: false, status };
+    }
+  }
+
+  return { ok: false, status: 422 };
+}
+
+export function archivarPaciente(id: string): Promise<ApiResult<Paciente>> {
+  return transicionarPaciente(id, '/pacientes/{id}/archivar');
+}
+
+export function desarchivarPaciente(id: string): Promise<ApiResult<Paciente>> {
+  return transicionarPaciente(id, '/pacientes/{id}/desarchivar');
 }

@@ -97,6 +97,7 @@ class PacienteOut(BaseModel):
     codigo: str
     creado_en: datetime
     total_casos: int
+    archivado_en: datetime | None
 
 
 class PacientesListOut(BaseModel):
@@ -165,19 +166,20 @@ def _codigo_nuevo(prefijo: str, existe: Callable[[str], bool]) -> str:
     raise RuntimeError("no se pudo generar un código único")  # pragma: no cover
 
 
-def _paciente_de(db: Session, actual: SesionActual, id_texto: str) -> Paciente | None:
+def _paciente_de(
+    db: Session, actual: SesionActual, id_texto: str, *, bloquear: bool = False
+) -> Paciente | None:
     """El paciente solo si existe y es de la institución de quien consulta (RS-ACC-04)."""
     paciente_id = _id(id_texto)
     if paciente_id is None:
         return None
-    return (
-        db.query(Paciente)
-        .filter(
-            Paciente.id == paciente_id,
-            Paciente.institucion_id == actual.usuario.institucion_id,
-        )
-        .first()
+    consulta = db.query(Paciente).filter(
+        Paciente.id == paciente_id,
+        Paciente.institucion_id == actual.usuario.institucion_id,
     )
+    if bloquear:
+        consulta = consulta.with_for_update()
+    return consulta.first()
 
 
 def _total_casos(db: Session, paciente_id: uuid.UUID) -> int:
@@ -219,6 +221,7 @@ def _paciente_out(db: Session, paciente: Paciente) -> PacienteOut:
         codigo=paciente.seudonimo,
         creado_en=cast(datetime, paciente.creado_en),
         total_casos=_total_casos(db, paciente.id),
+        archivado_en=paciente.archivado_en,
     )
 
 
@@ -385,8 +388,11 @@ def listar_pacientes(
     q: Annotated[str | None, Query(max_length=64)] = None,
     limite: Annotated[int, Query(ge=1)] = 25,
     desplazamiento: Annotated[int, Query(ge=0)] = 0,
+    incluir_archivados: bool = False,
 ) -> PacientesListOut:
     consulta = db.query(Paciente).filter(Paciente.institucion_id == actual.usuario.institucion_id)
+    if not incluir_archivados:
+        consulta = consulta.filter(Paciente.archivado_en.is_(None))
     if q:
         patron = "%" + q.strip().replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
         consulta = consulta.filter(Paciente.seudonimo.ilike(patron, escape="\\"))
@@ -408,6 +414,80 @@ def listar_pacientes(
         detalles={"resource_count": len(filas)},
     )
     return PacientesListOut(total=total, items=[_paciente_out(db, p) for p in filas])
+
+
+@router.post(
+    "/pacientes/{id}/archivar",
+    response_model=PacienteOut,
+    responses={409: {"description": "El paciente ya está archivado."}},
+)
+def archivar_paciente(
+    request: Request,
+    id: str,
+    db: Annotated[Session, Depends(session_dep)],
+    actual: Annotated[SesionActual, Depends(requiere_permiso("paciente.archivar"))],
+) -> PacienteOut | JSONResponse:
+    paciente = _paciente_de(db, actual, id, bloquear=True)
+    if paciente is None:
+        return _no_encontrado(request)
+    if paciente.archivado_en is not None:
+        return _error(
+            request,
+            status.HTTP_409_CONFLICT,
+            "paciente_ya_archivado",
+            "El paciente ya está archivado",
+        )
+    paciente.archivado_en = func.now()
+    paciente.archivado_por_id = actual.usuario.id
+    db.commit()
+    db.refresh(paciente)
+    registrar(
+        db,
+        request,
+        AuditAction.PATIENT_ARCHIVE,
+        AuditModule.PATIENTS,
+        usuario=actual.usuario,
+        tipo_objeto=AuditObjectType.PATIENT,
+        objeto_id=paciente.id,
+    )
+    return _paciente_out(db, paciente)
+
+
+@router.post(
+    "/pacientes/{id}/desarchivar",
+    response_model=PacienteOut,
+    responses={409: {"description": "El paciente no está archivado."}},
+)
+def desarchivar_paciente(
+    request: Request,
+    id: str,
+    db: Annotated[Session, Depends(session_dep)],
+    actual: Annotated[SesionActual, Depends(requiere_permiso("paciente.archivar"))],
+) -> PacienteOut | JSONResponse:
+    paciente = _paciente_de(db, actual, id, bloquear=True)
+    if paciente is None:
+        return _no_encontrado(request)
+    if paciente.archivado_en is None:
+        return _error(
+            request,
+            status.HTTP_409_CONFLICT,
+            "paciente_no_archivado",
+            "El paciente no está archivado",
+        )
+    paciente.archivado_en = None
+    paciente.archivado_por_id = None
+    db.commit()
+    db.refresh(paciente)
+    registrar(
+        db,
+        request,
+        AuditAction.PATIENT_UNARCHIVE,
+        AuditModule.PATIENTS,
+        usuario=actual.usuario,
+        tipo_objeto=AuditObjectType.PATIENT,
+        objeto_id=paciente.id,
+    )
+    return _paciente_out(db, paciente)
 
 
 @router.get("/pacientes/{id}", response_model=None)
@@ -602,9 +682,16 @@ def crear_caso(
     db: Annotated[Session, Depends(session_dep)],
     actual: Annotated[SesionActual, Depends(requiere_permiso("paciente.escribir"))],
 ) -> CasoOut | JSONResponse:
-    paciente = _paciente_de(db, actual, id)
+    paciente = _paciente_de(db, actual, id, bloquear=True)
     if paciente is None:
         return _no_encontrado(request)
+    if paciente.archivado_en is not None:
+        return _error(
+            request,
+            status.HTTP_409_CONFLICT,
+            "paciente_archivado",
+            "No se pueden crear casos para un paciente archivado",
+        )
     codigo = _codigo_nuevo(
         "CASO",
         lambda c: (
