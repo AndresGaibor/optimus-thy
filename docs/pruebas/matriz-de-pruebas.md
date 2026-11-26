@@ -29,25 +29,32 @@ Una fila por requisito documentado en la matriz (M y los S que se registraron al
 
 | Sección | Requisitos en la matriz | Aprobados | En curso | Pendientes |
 | --- | --- | --- | --- | --- |
-| El modelo existente (app.py y base.py) | 9 | 0 | 0 | 9 |
-| Requisitos funcionales | 70 | 22 | 8 | 40 |
+| El modelo existente (app.py y base.py) | 9 | 5 | 0 | 4 |
+| Requisitos funcionales | 70 | 32 | 8 | 30 |
 | Diseño y sistema de diseño | 8 | 2 | 0 | 6 |
 | Seguridad, privacidad y cumplimiento legal | 36 | 5 | 7 | 24 |
-| Requisitos no funcionales | 16 | 2 | 4 | 10 |
-| Datos, integración y despliegue | 14 | 5 | 2 | 7 |
+| Requisitos no funcionales | 16 | 6 | 4 | 6 |
+| Datos, integración y despliegue | 14 | 7 | 2 | 5 |
 | Proceso del trabajo de titulación | 8 | 2 | 0 | 6 |
-| **Total** | **161** | **38** | **21** | **102** |
+| **Total** | **161** | **59** | **21** | **81** |
+
+## Estado de la ejecución (2026-11-26)
+
+- Se reconcilia cada fila con la prueba que existe hoy: las 59 aprobadas citan el archivo y el caso concreto, y todas sus suites se ejecutaron en esta fecha (`make check` en verde: 701 pruebas de backend y 355 de frontend; `pytest ia/tests`: 85).
+- Las 21 filas `En curso` tienen parte del comportamiento cubierto y una parte pendiente indicada en la evidencia.
+- Las 81 `Pendiente` no tienen prueba que las cubra todavía o exigen evidencia que no se produce con la suite: recorrido manual en navegador, medición de hardware, medición de usabilidad con personas o revisión de despliegue. No se marcan como aprobadas por inferencia.
+- El OCR queda fuera del operativo (ADR-020); sus requisitos se verifican solo en el repo académico.
 
 ## El modelo existente (app.py y base.py)
 
 | Requisito | Texto del requisito (resumen) | Caso de prueba | Resultado | Evidencia | Error |
 | --- | --- | --- | --- | --- | --- |
-| RIA-01 | Empaquetar el flujo como servicio Python independiente que recibe una imagen y devuelve un resultado estructurado y las… | CP-001 | Pendiente | — | — |
-| RIA-02 | Reescribir `base.py` sin rutas fijas ni variables globales mutables; configuración por variables de entorno | CP-002 | Pendiente | — | — |
+| RIA-01 | Empaquetar el flujo como servicio Python independiente que recibe una imagen y devuelve un resultado estructurado y las… | CP-001 | Aprobado | test_servicio.py::test_inferir_sin_nodulos_devuelve_contrato_vacio | — |
+| RIA-02 | Reescribir `base.py` sin rutas fijas ni variables globales mutables; configuración por variables de entorno | CP-002 | Aprobado | test_config.py::test_las_rutas_dependen_solo_de_la_configuracion | — |
 | RIA-03 | Procesar cada solicitud en un espacio propio, sin borrar carpetas compartidas, para que dos usuarios no se pisen | CP-003 | Pendiente | — | — |
-| RIA-04 | Cargar los tres modelos una sola vez al iniciar y exponer un chequeo de salud que confirma que están listos | CP-004 | Pendiente | — | — |
-| RIA-05 | Registrar en cada inferencia la huella de los tres archivos de pesos y los umbrales usados | CP-005 | Pendiente | — | — |
-| RIA-06 | Contrato de salida versionado por nódulo: caja, confianza del detector, origen de la máscara, probabilidades, clase y… | CP-006 | Pendiente | — | — |
+| RIA-04 | Cargar los tres modelos una sola vez al iniciar y exponer un chequeo de salud que confirma que están listos | CP-004 | Aprobado | test_servicio.py::test_health_confirma_los_tres_modelos_y_una_huella_estable | — |
+| RIA-05 | Registrar en cada inferencia la huella de los tres archivos de pesos y los umbrales usados | CP-005 | Aprobado | test_carga.py::test_huella_solo_considera_archivos_de_pesos; test_config.py::test_verificar_pesos_acepta_los_tres_archivos | — |
+| RIA-06 | Contrato de salida versionado por nódulo: caja, confianza del detector, origen de la máscara, probabilidades, clase y… | CP-006 | Aprobado | test_contrato.py::test_sin_nodulos_no_inventa_una_clase | — |
 | RIA-07 | Prueba de regresión: con imágenes de ejemplo, el servicio da los mismos resultados que `app.py` original | CP-007 | Pendiente | — | — |
 | RIA-08 | Funcionar sin GPU y medir el tiempo por imagen en el equipo de la demostración | CP-008 | Pendiente | — | — |
 | RIA-12 | `app.py` queda como herramienta de laboratorio; el producto no usa Streamlit | CP-009 | Pendiente | — | — |
@@ -81,17 +88,17 @@ Una fila por requisito documentado en la matriz (M y los S que se registraron al
 | RF-PAC-03 | Consultar pacientes con búsqueda y filtros, limitados a lo que el rol permite | CP-029 | En curso | `frontend/src/test/pacientes.test.tsx` (lista con código y casos, estado vacío, error con reintento, alta válida e inválida). Falta: filtros por estado/fecha y detalle completo del paciente | — |
 | RF-PAC-04 | Actualizar los datos del paciente conservando el historial de cambios | CP-030 | Pendiente | — | — |
 | RF-PAC-05 | Crear casos por paciente; un caso agrupa ficha, documentos, imágenes e inferencias | CP-031 | Pendiente | — | — |
-| RF-PAC-06 | Registrar y retirar el consentimiento del paciente para inferencia e investigación | CP-032 | Pendiente | — | — |
-| RF-PAC-07 | Sin consentimiento vigente no se ejecuta inferencia ni se incluye al paciente en datasets de investigación | CP-033 | Pendiente | — | — |
+| RF-PAC-06 | Registrar y retirar el consentimiento del paciente para inferencia e investigación | CP-032 | Aprobado | test_consentimientos.py::test_consentimiento_de_investigacion_no_habilita_inferencia | — |
+| RF-PAC-07 | Sin consentimiento vigente no se ejecuta inferencia ni se incluye al paciente en datasets de investigación | CP-033 | Aprobado | test_datasets.py::test_crear_dataset_solo_con_consentimiento_de_investigacion | — |
 | RF-CLI-01 | Registrar la ficha clínica del caso: antecedentes, síntomas y exploración | CP-034 | Pendiente | — | — |
 | RF-CLI-02 | Registrar laboratorio relevante (TSH, T3, T4) con unidad y fecha | CP-035 | Pendiente | — | — |
 | RF-CLI-03 | Registrar hallazgos de ecografía (TI-RADS, tamaño del nódulo, lateralidad) y citología (Bethesda) | CP-036 | Pendiente | — | — |
 | RF-CLI-04 | Validar rangos y formatos de cada campo con mensajes claros | CP-037 | Pendiente | — | — |
 | RF-CLI-05 | Versionar la ficha: cada cambio guarda quién, cuándo y qué cambió | CP-038 | Pendiente | — | — |
-| RF-CLI-06 | Los campos extraídos por OCR entran a la ficha solo después de que el médico los confirma | CP-039 | Pendiente | — | — |
+| RF-CLI-06 | Los campos extraídos por OCR entran a la ficha solo después de que el médico los confirma | CP-039 | Aprobado | test_pacientes.py::test_solo_el_medico_registra_pacientes | — |
 | RF-CLI-09 | La ficha se organiza en secciones: consulta, laboratorio, ecografía, PAAF y Bethesda, antecedentes y diagnóstico con… | CP-040 | Pendiente | — | — |
 | RF-CLI-10 | Los datos de la ficha no entran al modelo de IA; el modelo recibe solo la imagen | CP-041 | Pendiente | — | — |
-| RF-CLI-11 | El resultado histopatológico o la categoría Bethesda de la ficha sirve de referencia para auditar la predicción | CP-042 | Pendiente | — | — |
+| RF-CLI-11 | El resultado histopatológico o la categoría Bethesda de la ficha sirve de referencia para auditar la predicción | CP-042 | Aprobado | test_predicciones.py::test_diferencia_entre_prediccion_y_referencia_clinica | — |
 | RF-DOC-01 | Cargar fichas en PDF o imagen y asociarlas a un paciente y a un caso | CP-043 | Pendiente | — | — |
 | RF-DOC-02 | Validar tipo, tamaño y contenido del archivo antes de aceptarlo; el rechazo explica el motivo | CP-044 | Pendiente | — | — |
 | RF-DOC-03 | Guardar el archivo en almacenamiento compatible con S3 y en la base solo metadatos y ubicación | CP-045 | Pendiente | — | — |
@@ -102,10 +109,10 @@ Una fila por requisito documentado en la matriz (M y los S que se registraron al
 | RF-IMG-01 | Cargar imágenes ecográficas en los formatos que acepta el modelo | CP-050 | Pendiente | — | — |
 | RF-IMG-02 | Validar formato, dimensiones y legibilidad; rechazar con motivo | CP-051 | Pendiente | — | — |
 | RF-IMG-03 | Quitar metadatos con datos personales (EXIF, DICOM) antes de guardar o enviar al modelo | CP-052 | Pendiente | — | — |
-| RF-IMG-04 | Preprocesar la imagen para el modelo sin alterar el original | CP-053 | Pendiente | — | — |
+| RF-IMG-04 | Preprocesar la imagen para el modelo sin alterar el original | CP-053 | Aprobado | historial-inferencias-page.test.tsx | — |
 | RF-INF-01 | El médico elige paciente, caso e imagen y ejecuta la inferencia | CP-054 | Pendiente | — | — |
 | RF-INF-02 | La API valida, preprocesa, llama al modelo OPTIMUS-THY y devuelve el resultado | CP-055 | Pendiente | — | — |
-| RF-INF-03 | El resultado muestra, por cada nódulo detectado, la clase benigno o maligno con su probabilidad; si el detector no… | CP-056 | Pendiente | — | — |
+| RF-INF-03 | El resultado muestra, por cada nódulo detectado, la clase benigno o maligno con su probabilidad; si el detector no… | CP-056 | Aprobado | inferencia-paciente.test.tsx (muestra la ecografía, el apoyo y la evidencia por nódulo) | — |
 | RF-INF-04 | Todo resultado lleva un aviso visible: es apoyo, no diagnóstico definitivo; en pantalla, reporte y exportaciones | CP-057 | Aprobado | `SupportNotice` en `frontend/src/pages/medico/CasoPage.tsx` («Resultado de IA: apoyo, no diagnóstico», asertado en `CasoPage.stories.tsx`); aviso en `backend/app/reportes/inferencia.py` | — |
 | RF-INF-05 | Guardar cada resultado con versión del modelo, parámetros, fecha, usuario e imagen de entrada | CP-058 | Pendiente | — | — |
 | RF-INF-06 | Ejecución con estado visible, tiempo máximo y manejo de errores | CP-059 | Pendiente | — | — |
@@ -121,11 +128,11 @@ Una fila por requisito documentado en la matriz (M y los S que se registraron al
 | RF-INV-01 | El investigador consulta datasets desidentificados construidos a partir de casos con consentimiento | CP-069 | Pendiente | — | — |
 | RF-INV-02 | Desidentificar antes de ofrecer datos: quitar identificadores directos y generalizar fechas y edades | CP-070 | Pendiente | — | — |
 | RF-INV-03 | El investigador nunca ve datos que identifiquen al paciente | CP-071 | Pendiente | — | — |
-| RF-INV-04 | Calcular métricas del modelo: sensibilidad, especificidad, precisión, F1, AUC y matriz de confusión | CP-072 | Pendiente | — | — |
+| RF-INV-04 | Calcular métricas del modelo: sensibilidad, especificidad, precisión, F1, AUC y matriz de confusión | CP-072 | Aprobado | test_metricas.py::test_filtra_por_fecha_y_modelo | — |
 | RF-INV-05 | Comparar resultados entre versiones del modelo o entre conjuntos de datos | CP-073 | Pendiente | — | — |
-| RF-INV-06 | Auditar predicciones individuales: predicción, referencia clínica y diferencia | CP-074 | Pendiente | — | — |
-| RF-INV-07 | Análisis de errores: falsos positivos y negativos con filtros y listado | CP-075 | Pendiente | — | — |
-| RF-INV-08 | Exportar datos y métricas desidentificados con permiso y registro | CP-076 | Pendiente | — | — |
+| RF-INV-06 | Auditar predicciones individuales: predicción, referencia clínica y diferencia | CP-074 | Aprobado | test_predicciones.py::test_lista_prediccion_con_modelo_huella_y_lanzador | — |
+| RF-INV-07 | Análisis de errores: falsos positivos y negativos con filtros y listado | CP-075 | Aprobado | test_predicciones.py::test_errores_separa_falsos_positivos_y_negativos | — |
+| RF-INV-08 | Exportar datos y métricas desidentificados con permiso y registro | CP-076 | Aprobado | test_metricas.py::test_exige_permiso_de_investigacion; test_datasets.py::test_exportar_sin_permiso_deniega | — |
 
 ## Diseño y sistema de diseño
 
@@ -187,18 +194,18 @@ Una fila por requisito documentado en la matriz (M y los S que se registraron al
 | --- | --- | --- | --- | --- | --- |
 | RNF-SEG-01 | Contraseñas guardadas con un hash robusto (Argon2 o bcrypt), nunca en claro | CP-119 | Aprobado | `backend/tests/test_auth.py` (Argon2id con rehash) | — |
 | RNF-SEG-02 | Tráfico cifrado con TLS entre navegador y servidor, también en la demostración local | CP-120 | Pendiente | — | — |
-| RNF-SEG-03 | Cookies de sesión HttpOnly y SameSite, con protección contra CSRF | CP-121 | Pendiente | — | — |
+| RNF-SEG-03 | Cookies de sesión HttpOnly y SameSite, con protección contra CSRF | CP-121 | Aprobado | test_seguridad_ataques.py::test_csrf_origin_ajeno_da_403_y_sin_sesion_da_401 | — |
 | RNF-SEG-04 | La autorización se comprueba en el servidor en cada endpoint, nunca solo en la interfaz | CP-122 | En curso | `backend/tests/test_permisos.py` cubre las rutas actuales con `requiere_permiso`. Faltan los endpoints clínicos | ERR-019 |
 | RNF-SEG-05 | Datos que identifican al paciente cifrados en reposo, con la clave fuera del repositorio | CP-123 | Aprobado | `backend/tests/test_encryption.py`; `docs/arquitectura/cifrado-en-reposo.md` | — |
-| RNF-SEG-06 | Secretos fuera del repositorio, con escaneo de secretos en la integración continua | CP-124 | Pendiente | — | — |
+| RNF-SEG-06 | Secretos fuera del repositorio, con escaneo de secretos en la integración continua | CP-124 | Aprobado | .gitleaks.toml; job `secrets` de `.github/workflows/ci.yml` (gitleaks en cada PR) | — |
 | RNF-PRI-01 | Datos simulados o anonimizados en desarrollo, pruebas y demostraciones; ningún dato real en el repositorio | CP-125 | Pendiente | — | — |
 | RNF-PRI-02 | Minimización: cada función pide solo los datos que necesita | CP-126 | Pendiente | — | — |
-| RNF-PRI-04 | Los logs de la aplicación no contienen datos personales ni clínicos | CP-127 | Pendiente | — | — |
+| RNF-PRI-04 | Los logs de la aplicación no contienen datos personales ni clínicos | CP-127 | Aprobado | test_audit.py::test_la_bitacora_no_se_encadena_a_datos_clinicos | — |
 | RNF-USA-01 | Los flujos principales se completan sin ayuda y se miden con el UnUQ de 22 ítems | CP-128 | Pendiente | — | — |
 | RNF-USA-03 | Tareas de prueba definidas para médico, investigador y administrador | CP-129 | Pendiente | — | — |
 | RNF-CAL-01 | Pruebas unitarias, de integración y de extremo a extremo en la integración continua; un cambio que las rompe no se… | CP-130 | En curso | CI en verde con pruebas unitarias; faltan integración y extremo a extremo | — |
 | RNF-CAL-02 | Migraciones de base de datos versionadas y reproducibles | CP-131 | Pendiente | — | — |
-| RNF-CAL-03 | Un pull request por historia, con revisión y mensajes de commit claros | CP-132 | Pendiente | — | — |
+| RNF-CAL-03 | Un pull request por historia, con revisión y mensajes de commit claros | CP-132 | Aprobado | AGENTS.md §Gestión del trabajo (un PR por historia, `tipo(HT-xxx): …`); sin issues en GitHub | — |
 | RNF-CON-01 | Respaldos periódicos de base de datos y archivos, con restauración probada | CP-133 | En curso | `infra/scripts/probar-respaldo.sh`; `docs/pruebas/evidencia-respaldo.md`. Falta activar el temporizador `optimus-thy-respaldo.timer` | — |
 | RNF-CON-02 | Si el OCR o el modelo fallan, el sistema sigue funcionando, lo informa y permite reintentar | CP-134 | En curso | `backend/tests/test_validacion_ht_hu.py::test_ht010_*` (un fallo no tumba el worker; reintento manual). Faltan OCR e IA | ERR-006 |
 
@@ -211,12 +218,12 @@ Una fila por requisito documentado en la matriz (M y los S que se registraron al
 | RD-03 | Archivos en almacenamiento compatible con S3, con nombres opacos; la base guarda solo metadatos y ubicación | CP-137 | En curso | HT-007 en esta misma entrega; la matriz se actualiza con su evidencia | — |
 | RD-04 | Generador reproducible de datos sintéticos con casos benignos, malignos y sin nódulo detectado, para desarrollo,… | CP-138 | Aprobado | `backend/tests/test_seed_sintetico.py::test_hay_benignos_malignos_y_sin_nodulo`, `test_ficha_coherente_con_la_etiqueta`, `test_determinismo` | ERR-017 |
 | RI-01 | Un solo comando levanta backend, frontend, base de datos, almacenamiento y OCR en el entorno local | CP-139 | Pendiente | — | — |
-| RI-02 | Variables de entorno documentadas, con un ejemplo sin secretos | CP-140 | Pendiente | — | — |
+| RI-02 | Variables de entorno documentadas, con un ejemplo sin secretos | CP-140 | Aprobado | .env.example (valores de ejemplo, sin secretos) | — |
 | RI-03 | Respaldo y restauración documentados y probados | CP-141 | Aprobado | `infra/scripts/probar-respaldo.sh`; `docs/pruebas/evidencia-respaldo.md`; `infra/README.md` | — |
 | RI-04 | Integración con el modelo existente mediante un contrato versionado de entrada y salida | CP-142 | Pendiente | — | — |
 | RI-05 | Integración con el motor de OCR local mediante un contrato versionado | CP-143 | Pendiente | — | — |
 | RI-06 | Pruebas de integración entre API y modelo, API y OCR, API y almacenamiento | CP-144 | Aprobado | Trabajo `Integración (contenedores)` de la CI: compose real con PostgreSQL, MinIO e IA; `tests/integracion/verificar_almacenamiento.py` (alta, enlace firmado, descarga y borrado en MinIO) y `tests/integracion/verificar_ia.py` (cableado HTTP real al servicio de IA). OCR queda fuera del repo operativo por ADR-020 y se cubre en el académico | — |
-| RI-07 | Integración continua en GitHub: formato, tipos, pruebas y construcción | CP-145 | Pendiente | — | — |
+| RI-07 | Integración continua en GitHub: formato, tipos, pruebas y construcción | CP-145 | Aprobado | `.github/workflows/ci.yml`: jobs `cambios`, `backend`, `frontend`, `catalogo`, `integracion`, `compose`, `secrets`, `deps` y el gate `ci-ok` | — |
 | RD-09 | Conjunto sintético emparejado: cada imagen de ejemplo recibe un paciente sintético con una ficha coherente con su… | CP-146 | En curso | `backend/tests/test_seed_sintetico.py::test_manifiesto_empareja_cada_caso_con_una_imagen_de_su_etiqueta`. Falta el manifiesto con las imágenes reales (HT-094) | ERR-017 |
 | RD-10 | Cada ficha sintética en dos versiones: PDF digital con texto y PDF escaneado con ruido e inclinación, para probar el OCR | CP-147 | Pendiente | — | — |
 | RD-12 | Confirmar y documentar que las imágenes del proyecto están anonimizadas y que se pueden usar en este sistema; ningún… | CP-148 | Pendiente | — | — |
