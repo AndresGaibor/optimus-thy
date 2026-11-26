@@ -26,6 +26,7 @@ from app.api.predicciones import router as predicciones_router
 from app.api.reportes import router as reportes_router
 from app.api.resultados import router as resultados_router
 from app.api.roles import router as roles_router
+from app.api.solicitudes_derechos import router as solicitudes_derechos_router
 from app.api.trabajos import router as trabajos_router
 from app.api.usuarios import router as usuarios_router
 from app.auth.errors import NoAutenticado, Prohibido
@@ -196,6 +197,7 @@ def create_app() -> FastAPI:
     app.include_router(modelos_ia_router)
     app.include_router(auth_router)
     app.include_router(correo_router)
+    app.include_router(solicitudes_derechos_router)
 
     @app.exception_handler(RequestValidationError)
     async def validation_exception_handler(

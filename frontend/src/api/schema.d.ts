@@ -960,6 +960,50 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/administrador/solicitudes-derechos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Listar Solicitudes
+         * @description Solicitudes de la institución, con el plazo restante de cada una.
+         */
+        get: operations["listar_solicitudes_administrador_solicitudes_derechos_get"];
+        put?: never;
+        /**
+         * Crear Solicitud
+         * @description Registra una solicitud con el administrador de la sesión como responsable.
+         */
+        post: operations["crear_solicitud_administrador_solicitudes_derechos_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/administrador/solicitudes-derechos/{solicitud_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Actualizar Solicitud
+         * @description Cierra o reabre la solicitud; reabrir borra la respuesta anterior.
+         */
+        patch: operations["actualizar_solicitud_administrador_solicitudes_derechos__solicitud_id__patch"];
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1161,6 +1205,23 @@ export interface components {
             fecha_nacimiento: string;
             /** Confirmar Duplicado */
             confirmar_duplicado?: boolean;
+        };
+        /** CrearSolicitudRequest */
+        CrearSolicitudRequest: {
+            /**
+             * Tipo
+             * @enum {string}
+             */
+            tipo: "acceso" | "rectificacion" | "cancelacion" | "oposicion";
+            /** Referencia Titular */
+            referencia_titular: string;
+            /** Solicitada En */
+            solicitada_en?: string | null;
+            /**
+             * Plazo Dias
+             * @default 15
+             */
+            plazo_dias: number;
         };
         /** CrearTrabajoRequest */
         CrearTrabajoRequest: {
@@ -1502,6 +1563,16 @@ export interface components {
             /** Fecha Nacimiento */
             fecha_nacimiento?: string | null;
         };
+        /** PatchSolicitudRequest */
+        PatchSolicitudRequest: {
+            /**
+             * Estado
+             * @enum {string}
+             */
+            estado: "pendiente" | "atendida" | "rechazada";
+            /** Respuesta */
+            respuesta?: string | null;
+        };
         /** PatchUsuarioRequest */
         PatchUsuarioRequest: {
             /** Nombre */
@@ -1574,6 +1645,13 @@ export interface components {
             /** Correo */
             correo: string;
         };
+        /** ResponsableOut */
+        ResponsableOut: {
+            /** Id */
+            id: string;
+            /** Rol */
+            rol: string | null;
+        };
         /** RolActivoRequest */
         RolActivoRequest: {
             /** Rol */
@@ -1583,6 +1661,57 @@ export interface components {
         RolesRequest: {
             /** Roles */
             roles: string[];
+        };
+        /** SolicitudOut */
+        SolicitudOut: {
+            /** Id */
+            id: string;
+            /** Tipo */
+            tipo: string;
+            /** Referencia Titular */
+            referencia_titular: string;
+            /**
+             * Solicitada En
+             * Format: date
+             */
+            solicitada_en: string;
+            /** Plazo Dias */
+            plazo_dias: number;
+            /**
+             * Fecha Limite
+             * Format: date
+             */
+            fecha_limite: string;
+            /** Dias Restantes */
+            dias_restantes: number;
+            /** Vencida */
+            vencida: boolean;
+            /** Estado */
+            estado: string;
+            /** Respuesta */
+            respuesta: string | null;
+            responsable: components["schemas"]["ResponsableOut"];
+            /**
+             * Creado En
+             * Format: date-time
+             */
+            creado_en: string;
+            /**
+             * Actualizado En
+             * Format: date-time
+             */
+            actualizado_en: string;
+        };
+        /** SolicitudesOut */
+        SolicitudesOut: {
+            /** Total */
+            total: number;
+            /** Pendientes */
+            pendientes: number;
+            /** Vencidas */
+            vencidas: number;
+            /** Items */
+            items: components["schemas"]["SolicitudOut"][];
         };
         /** SubidaOut */
         SubidaOut: {
@@ -3509,6 +3638,107 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PlantillaOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listar_solicitudes_administrador_solicitudes_derechos_get: {
+        parameters: {
+            query?: {
+                estado?: ("pendiente" | "atendida" | "rechazada") | null;
+                limite?: number;
+                desplazamiento?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SolicitudesOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    crear_solicitud_administrador_solicitudes_derechos_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CrearSolicitudRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    actualizar_solicitud_administrador_solicitudes_derechos__solicitud_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                solicitud_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PatchSolicitudRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */

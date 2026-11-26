@@ -72,6 +72,11 @@ class AuditAction(StrEnum):
     # Decisión médica sobre una inferencia (TES-337)
     INFERENCE_DECISION = "INFERENCE_DECISION"
 
+    # Solicitudes de derechos de los titulares (RS-DER-07)
+    RIGHTS_REQUEST_READ = "RIGHTS_REQUEST_READ"
+    RIGHTS_REQUEST_CREATE = "RIGHTS_REQUEST_CREATE"
+    RIGHTS_REQUEST_UPDATE = "RIGHTS_REQUEST_UPDATE"
+
 
 class AuditModule(StrEnum):
     """Módulo que originó el evento."""
@@ -104,3 +109,4 @@ class AuditObjectType(StrEnum):
     DATASET = "DATASET"
     REPORT = "REPORT"
     AUDIT = "AUDIT"
+    RIGHTS_REQUEST = "RIGHTS_REQUEST"
