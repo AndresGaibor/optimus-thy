@@ -19,7 +19,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cambiar-en-local}
       POSTGRES_DB: ${POSTGRES_DB:-optimus}
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - ${POSTGRES_DATA_DIR:-pgdata}:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-optimus} -d ${POSTGRES_DB:-optimus}"]
       interval: 10s
@@ -38,7 +38,7 @@ services:
       # SSE-S3 exige KMS; la clave por defecto es solo para desarrollo local.
       MINIO_KMS_SECRET_KEY: ${MINIO_KMS_SECRET_KEY:-optimus:b3B0aW11cy1kZXYta21zLWtleS0zMi1ieXRlcyEhISE=}
     volumes:
-      - miniodata:/data
+      - ${MINIO_DATA_DIR:-miniodata}:/data
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 10s
@@ -65,7 +65,7 @@ services:
     volumes:
       - ${IA_MODELOS_DIR:-./var/modelos}:/modelos
     ports:
-      - "127.0.0.1:8000:8000"
+      - "127.0.0.1:${API_PORT:-8000}:8000"
     expose:
       - "8000"
     depends_on:

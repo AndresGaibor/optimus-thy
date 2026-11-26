@@ -145,9 +145,13 @@ def listar_usuarios(
     if limite > 100:
         limite = 100
 
-    query = db.query(Usuario).options(
-        joinedload(Usuario.institucion),
-        joinedload(Usuario.usuarios_roles).joinedload(UsuarioRol.rol),
+    query = (
+        db.query(Usuario)
+        .filter(Usuario.institucion_id == actual.usuario.institucion_id)
+        .options(
+            joinedload(Usuario.institucion),
+            joinedload(Usuario.usuarios_roles).joinedload(UsuarioRol.rol),
+        )
     )
 
     if institucion_id is not None:
@@ -205,7 +209,14 @@ def crear_usuario(
     except Exception:
         return _error(request, "not_found", "Institución no encontrada", status.HTTP_404_NOT_FOUND)
 
-    institucion = db.query(Institucion).filter(Institucion.id == inst_id).first()
+    institucion = (
+        db.query(Institucion)
+        .filter(
+            Institucion.id == inst_id,
+            Institucion.id == actual.usuario.institucion_id,
+        )
+        .first()
+    )
     if institucion is None:
         return _error(request, "not_found", "Institución no encontrada", status.HTTP_404_NOT_FOUND)
 
@@ -295,7 +306,14 @@ def patch_usuario(
     except Exception:
         return _error(request, "not_found", "Usuario no encontrado", status.HTTP_404_NOT_FOUND)
 
-    usuario = db.query(Usuario).filter(Usuario.id == usuario_id).first()
+    usuario = (
+        db.query(Usuario)
+        .filter(
+            Usuario.id == usuario_id,
+            Usuario.institucion_id == actual.usuario.institucion_id,
+        )
+        .first()
+    )
     if usuario is None:
         return _error(request, "not_found", "Usuario no encontrado", status.HTTP_404_NOT_FOUND)
 
@@ -316,7 +334,14 @@ def patch_usuario(
             return _error(
                 request, "not_found", "Institución no encontrada", status.HTTP_404_NOT_FOUND
             )
-        institucion = db.query(Institucion).filter(Institucion.id == inst_id).first()
+        institucion = (
+            db.query(Institucion)
+            .filter(
+                Institucion.id == inst_id,
+                Institucion.id == actual.usuario.institucion_id,
+            )
+            .first()
+        )
         if institucion is None:
             return _error(
                 request, "not_found", "Institución no encontrada", status.HTTP_404_NOT_FOUND
@@ -371,7 +396,14 @@ def put_roles_usuario(
     except Exception:
         return _error(request, "not_found", "Usuario no encontrado", status.HTTP_404_NOT_FOUND)
 
-    usuario = db.query(Usuario).filter(Usuario.id == usuario_id).first()
+    usuario = (
+        db.query(Usuario)
+        .filter(
+            Usuario.id == usuario_id,
+            Usuario.institucion_id == actual.usuario.institucion_id,
+        )
+        .first()
+    )
     if usuario is None:
         return _error(request, "not_found", "Usuario no encontrado", status.HTTP_404_NOT_FOUND)
 
@@ -407,7 +439,12 @@ def put_roles_usuario(
             db.query(Usuario.id)
             .join(UsuarioRol, UsuarioRol.usuario_id == Usuario.id)
             .join(Rol, Rol.id == UsuarioRol.rol_id)
-            .filter(Rol.nombre == "admin", Usuario.activo.is_(True), Usuario.id != usuario.id)
+            .filter(
+                Rol.nombre == "admin",
+                Usuario.activo.is_(True),
+                Usuario.id != usuario.id,
+                Usuario.institucion_id == actual.usuario.institucion_id,
+            )
             .count()
         )
         if otros_admins == 0:
