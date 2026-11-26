@@ -55,7 +55,7 @@ const FILA: CasoAnonimizado = {
 const DETALLE_A: Dataset = { ...RESUMEN_A, items: [FILA] };
 
 interface FetchMock {
-  mock: { calls: Array<[Request, RequestInit | undefined]> };
+  mock: { calls: Array<[string | Request, RequestInit | undefined]> };
   mockResolvedValueOnce: (valor: Response) => unknown;
 }
 
@@ -82,7 +82,8 @@ afterEach(() => {
 function ultimaUrl(): string {
   const llamada = fetchMock.mock.calls.at(-1);
   if (!llamada) throw new Error('sin peticiones');
-  return llamada[0].url;
+  const peticion = llamada[0];
+  return typeof peticion === 'string' ? peticion : peticion.url;
 }
 
 function tarjetaDe(nombre: string): HTMLElement {

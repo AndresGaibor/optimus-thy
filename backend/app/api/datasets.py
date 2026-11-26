@@ -12,12 +12,16 @@
 
 from __future__ import annotations
 
+import csv
+import io
+import json
+import re
 import uuid
 from collections.abc import Iterable, Mapping
 from datetime import UTC, date, datetime, time, timedelta
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, Request, status
+from fastapi import APIRouter, Depends, Request, Response, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 from sqlalchemy import and_, func
@@ -400,3 +404,127 @@ def obtener_dataset(
         detalles={"resource_count": len(dataset.casos)},
     )
     return _vista(dataset)
+
+
+_COLUMNAS_EXPORTACION: tuple[str, ...] = tuple(CasoAnonimizadoOut.model_fields)
+"""Columnas del archivo, en el orden de la respuesta de la API."""
+
+_FORMATOS_EXPORTACION = frozenset({"csv", "json"})
+
+
+def _texto_una_linea(valor: Any) -> str:
+    """La ficha va en líneas de comentario: un salto de línea rompería el CSV."""
+    if valor is None:
+        return ""
+    return " ".join(str(valor).split())
+
+
+def _nombre_archivo(dataset: Dataset, extension: str) -> str:
+    base = re.sub(r"[^A-Za-z0-9._-]+", "-", dataset.nombre).strip("-.") or "dataset"
+    return f"dataset-{base}-{dataset.creado_en:%Y%m%d}.{extension}"
+
+
+def _ficha_exportacion(dataset: Dataset, k_efectivo: int, formato: str) -> dict[str, Any]:
+    resumen = _resumen(dataset, k_efectivo)
+    return {
+        "id": resumen.id,
+        "nombre": resumen.nombre,
+        "descripcion": resumen.descripcion,
+        "creado_en": resumen.creado_en.isoformat(),
+        "total_casos": resumen.total_casos,
+        "k": resumen.k,
+        "k_efectivo": resumen.k_efectivo,
+        "huella": resumen.huella,
+        "criterios": resumen.criterios,
+        "columnas": list(_COLUMNAS_EXPORTACION),
+        "formato": formato,
+        "anonimizacion": "app.investigacion.anonimizacion",
+        "nota": (
+            "Datos desidentificados: sin identificadores de pacientes ni vínculo con el caso."
+        ),
+    }
+
+
+def _csv_exportacion(ficha: Mapping[str, Any], filas: Iterable[CasoAnonimizadoOut]) -> str:
+    salida = io.StringIO()
+    salida.write("# Ficha técnica del dataset exportado\n")
+    for clave in (
+        "id",
+        "nombre",
+        "descripcion",
+        "creado_en",
+        "total_casos",
+        "k",
+        "k_efectivo",
+        "huella",
+        "formato",
+        "anonimizacion",
+        "nota",
+    ):
+        salida.write(f"# {clave}: {_texto_una_linea(ficha[clave])}\n")
+    criterios = json.dumps(ficha["criterios"], ensure_ascii=False, sort_keys=True)
+    salida.write(f"# criterios: {_texto_una_linea(criterios)}\n")
+    escritor = csv.writer(salida, lineterminator="\n")
+    escritor.writerow(_COLUMNAS_EXPORTACION)
+    for fila in filas:
+        escritor.writerow(
+            [
+                "" if getattr(fila, columna) is None else getattr(fila, columna)
+                for columna in _COLUMNAS_EXPORTACION
+            ]
+        )
+    return salida.getvalue()
+
+
+@router.get("/investigacion/datasets/{id}/exportar", response_model=None)
+def exportar_dataset(
+    request: Request,
+    id: str,
+    db: Annotated[Session, Depends(session_dep)],
+    actual: Annotated[SesionActual, Depends(requiere_permiso("investigacion.exportar"))],
+    formato: str = "csv",
+) -> Response | JSONResponse:
+    """Descarga el dataset con su ficha técnica; queda como `DATASET_EXPORT`.
+
+    El archivo no trae identificadores: solo las filas anonimizadas ya
+    persistidas. La bitácora guarda el número de filas y el formato, nunca el
+    contenido.
+    """
+    if formato not in _FORMATOS_EXPORTACION:
+        return _error(
+            request,
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
+            "formato_invalido",
+            "El formato debe ser csv o json.",
+        )
+    dataset = _dataset_de(db, actual, id)
+    if dataset is None:
+        return _error(request, status.HTTP_404_NOT_FOUND, "not_found", "No encontrado")
+    filas = [_fila(fila) for fila in dataset.casos]
+    k_efectivo = _k_efectivo(fila.datos for fila in dataset.casos)
+    ficha = _ficha_exportacion(dataset, k_efectivo, formato)
+    registrar(
+        db,
+        request,
+        AuditAction.DATASET_EXPORT,
+        AuditModule.RESEARCH,
+        usuario=actual.usuario,
+        rol=actual.rol_activo.nombre if actual.rol_activo else None,
+        tipo_objeto=AuditObjectType.DATASET,
+        objeto_id=dataset.id,
+        detalles={"resource_count": len(filas), "format": formato},
+    )
+    archivo = _nombre_archivo(dataset, formato)
+    cabeceras = {"Content-Disposition": f'attachment; filename="{archivo}"'}
+    if formato == "json":
+        cuerpo = json.dumps(
+            {"ficha": ficha, "filas": [fila.model_dump() for fila in filas]},
+            ensure_ascii=False,
+            indent=1,
+        )
+        return Response(cuerpo, media_type="application/json", headers=cabeceras)
+    return Response(
+        _csv_exportacion(ficha, filas),
+        media_type="text/csv; charset=utf-8",
+        headers=cabeceras,
+    )

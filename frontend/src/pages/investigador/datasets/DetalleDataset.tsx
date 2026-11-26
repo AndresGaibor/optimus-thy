@@ -19,6 +19,7 @@ import {
 } from '../../../design-system/components/atoms/Table';
 import { Callout } from '../../../design-system/components/molecules/Callout';
 import { EmptyState } from '../../../design-system/components/molecules/EmptyState';
+import { BotonExportar } from './BotonExportar';
 import { COLUMNAS_CASO, FORMATO_FECHA, huellaCorta, valorCaso } from './compartidos';
 
 export interface DetalleDatasetProps {
@@ -77,6 +78,7 @@ export function DetalleDataset({
           </div>
         </div>
         <CardDescription>{dataset.descripcion ?? 'Sin descripción.'}</CardDescription>
+        <BotonExportar datasetId={dataset.id} nombre={dataset.nombre} />
         <dl className="mt-2 grid gap-1 text-sm sm:grid-cols-2">
           <div>
             <dt className="text-xs text-muted-foreground">Huella</dt>
