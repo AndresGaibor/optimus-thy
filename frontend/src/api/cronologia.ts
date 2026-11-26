@@ -16,5 +16,7 @@ export async function obtenerCronologia(casoId: string): Promise<HitoCronologia[
     params: { path: { caso_id: casoId } },
   });
   if (error || !data) throw new Error('No se pudo cargar la cronología.');
-  return (data as unknown as { items: HitoCronologia[] }).items;
+  const items = (data as { items?: unknown }).items;
+  if (!Array.isArray(items)) throw new Error('No se pudo cargar la cronología.');
+  return items as HitoCronologia[];
 }
