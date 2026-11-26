@@ -155,7 +155,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: oven-sh/setup-bun@v2
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: ~/.bun/install/cache
           key: bun-${{ runner.os }}-${{ hashFiles('frontend/bun.lock') }}
@@ -190,13 +190,13 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: oven-sh/setup-bun@v2
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: ~/.bun/install/cache
           key: bun-${{ runner.os }}-${{ hashFiles('frontend/bun.lock') }}
       - name: Instalar dependencias
         run: bun install --frozen-lockfile
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         id: cache-chromium
         with:
           path: ~/.cache/ms-playwright
@@ -219,11 +219,11 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: oven-sh/setup-bun@v2
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: ~/.bun/install/cache
           key: bun-${{ runner.os }}-${{ hashFiles('frontend/bun.lock') }}
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         id: cache-chromium
         with:
           path: ~/.cache/ms-playwright
