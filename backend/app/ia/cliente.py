@@ -49,6 +49,7 @@ CODIGO_SERVICIO_NO_DISPONIBLE = "servicio_ia_no_disponible"
 CODIGO_CONTRATO_INVALIDO = "contrato_invalido"
 CODIGO_ARTEFACTO_INVALIDO = "artefacto_invalido"
 CODIGO_ARTEFACTOS_DEMASIADO_GRANDES = "artefactos_demasiado_grandes"
+CODIGO_IMAGEN_NO_PARECE_ECOGRAFIA = "imagen_no_parece_ecografia"
 
 #: Campos que el contrato de salida debe traer siempre.
 CAMPOS_CONTRATO = (
@@ -341,6 +342,16 @@ class ClienteIA:
                 codigo=CODIGO_SERVICIO_NO_DISPONIBLE,
             )
         if respuesta.status_code >= httpx.codes.BAD_REQUEST:
+            try:
+                cuerpo_error = respuesta.json()
+            except ValueError:
+                cuerpo_error = None
+            codigo_respuesta = cuerpo_error.get("code") if isinstance(cuerpo_error, dict) else None
+            if codigo_respuesta == CODIGO_IMAGEN_NO_PARECE_ECOGRAFIA:
+                raise ServicioRespondioError(
+                    "La imagen no parece una ecografía tiroidea.",
+                    codigo=CODIGO_IMAGEN_NO_PARECE_ECOGRAFIA,
+                )
             raise ServicioRespondioError(
                 f"El servicio de IA rechazó la solicitud con estado {respuesta.status_code}.",
                 codigo=CODIGO_SERVICIO_NO_DISPONIBLE,

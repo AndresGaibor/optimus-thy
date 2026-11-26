@@ -99,6 +99,8 @@ describe('inferencia del paciente', () => {
   let imagenes: unknown[];
   let resultados: unknown[];
   let consentimientos: unknown[];
+  let estadoTrabajo = 'completado';
+  let errorTrabajo: string | null = null;
 
   beforeEach(() => {
     vi.restoreAllMocks();
@@ -106,6 +108,8 @@ describe('inferencia del paciente', () => {
     imagenes = [IMAGEN];
     resultados = [INFERENCIA];
     consentimientos = [CONSENTIMIENTO];
+    estadoTrabajo = 'completado';
+    errorTrabajo = null;
 
     const fetchMock = vi.fn(async (input: unknown) => {
       const url = input instanceof Request ? input.url : String(input);
@@ -138,9 +142,10 @@ describe('inferencia del paciente', () => {
         return responderJson({
           id: 'trabajo-demo',
           tipo: 'inferencia',
-          estado: 'completado',
+          estado: estadoTrabajo,
           intentos: 1,
           max_intentos: 3,
+          error_detalle: errorTrabajo,
         });
       }
       if (/\/pacientes\/[^/?]+$/.test(url)) {
@@ -266,4 +271,19 @@ describe('inferencia del paciente', () => {
     await user.click(within(dialogo).getByRole('button', { name: 'Subir ecografía' }));
     expect(await screen.findByText('Ecografía cargada y saneada.')).toBeInTheDocument();
   });
+  it('explica cuando la imagen no parece una ecografía tiroidea', async () => {
+    estadoTrabajo = 'error';
+    errorTrabajo = 'imagen_no_parece_ecografia';
+    const user = userEvent.setup();
+    montarApp();
+
+    await user.click(await screen.findByRole('button', { name: 'Analizar' }));
+    expect(
+      await screen.findByText(
+        'La imagen no parece una ecografía tiroidea. Selecciona una ecografía.',
+        undefined,
+        { timeout: 5000 },
+      ),
+    ).toBeInTheDocument();
+  }, 10000);
 });

@@ -8,6 +8,7 @@ export interface Trabajo {
   estado: EstadoTrabajo;
   intentos: number;
   max_intentos: number;
+  error_detalle?: string | null;
 }
 
 export async function encolarInferencia(imagenId: string): Promise<Trabajo> {

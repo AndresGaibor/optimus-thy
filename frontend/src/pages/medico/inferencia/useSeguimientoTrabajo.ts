@@ -43,7 +43,9 @@ export function useSeguimientoTrabajo({ casoActual, alCompletar, alFallar }: Opc
             } else if (trabajo.estado === 'error') {
               detener();
               alFallar(
-                'La inferencia falló. Revisa el estado del servicio de IA e inténtalo de nuevo.',
+                trabajo.error_detalle === 'imagen_no_parece_ecografia'
+                  ? 'La imagen no parece una ecografía tiroidea. Selecciona una ecografía.'
+                  : 'La inferencia falló. Revisa el estado del servicio de IA e inténtalo de nuevo.',
               );
             }
           } catch {

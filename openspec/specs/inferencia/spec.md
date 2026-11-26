@@ -64,3 +64,23 @@ El sistema SHALL procesar cada trabajo `inferencia` solo si el caso tiene consen
 - **WHEN** se solicita una inferencia para un caso sin consentimiento vigente de atención de salud
 - **THEN** la API responde 409 `sin_consentimiento`
 - **AND** el worker no lee la imagen ni persiste evidencia
+
+### Requirement: Validación previa de ecografía tiroidea
+
+El servicio de inferencia SHALL comprobar antes de ejecutar los modelos que la imagen decodificada parezca una ecografía tiroidea mediante un criterio visual barato y determinista.
+
+#### Scenario: Imagen compatible
+
+- **WHEN** el servicio recibe una imagen decodificable que satisface el criterio de compatibilidad
+- **THEN** continúa el flujo existente de inferencia sin modificar su contrato de salida
+
+#### Scenario: Imagen no compatible
+
+- **WHEN** el servicio recibe una imagen decodificable que no satisface el criterio de compatibilidad
+- **THEN** responde HTTP 422 con el código `imagen_no_parece_ecografia`
+- **AND** no ejecuta ningún modelo
+
+#### Scenario: Valor en el umbral
+
+- **WHEN** la medida visual de la imagen alcanza exactamente el umbral configurado
+- **THEN** el servicio la acepta y continúa la inferencia
