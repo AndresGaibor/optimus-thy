@@ -61,3 +61,4 @@ El cambio de área SHALL limitarse a fijar el rol activo en el servidor; ninguna
 - **WHEN** el rol activo no tiene el permiso de la ruta solicitada
 - **THEN** la API responde 403 y registra el evento de acceso denegado
 - **AND** la interfaz muestra el error sin habilitar la acción
+

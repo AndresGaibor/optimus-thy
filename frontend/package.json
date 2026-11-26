@@ -22,6 +22,7 @@
     "tamanos": "bun scripts/tamanos.ts",
     "calidad": "bun run ui:check && bun run tamanos",
     "capturar": "bun e2e/capturar.ts",
+    "e2e:flujos": "bun e2e/flujos.ts",
     "capturar:criticas": "bun e2e/capturar.ts --criticas --anchos 1440x900",
     "capturar:comparar": "bun e2e/capturar.ts --criticas --anchos 1440x900 --comparar",
     "consulta": "bun scripts/storybook-consulta.ts"
