@@ -6,7 +6,7 @@ import argparse
 import sys
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
-from typing import NotRequired, TypedDict
+from typing import NotRequired, TypedDict, cast
 
 import sqlalchemy as sa
 from sqlalchemy.orm import Session
@@ -17,6 +17,7 @@ from app.db import get_session_factory
 from app.models.trabajos import Trabajo
 
 TAMANO_LOTE = 1000
+TABLA_TRABAJOS = cast("sa.Table", Trabajo.__table__)
 
 
 @dataclass(frozen=True, slots=True)
@@ -45,7 +46,7 @@ def politica_desde_settings() -> PoliticaRetencion:
 
 
 def _condicion_trabajos(corte: datetime) -> ColumnElement[bool]:
-    tabla = Trabajo.__table__
+    tabla = TABLA_TRABAJOS
     return sa.and_(
         tabla.c.estado.in_(("completado", "error")),
         tabla.c.actualizado_en < corte,
@@ -81,13 +82,13 @@ def _borrar_en_lotes(db: Session, tabla: sa.Table, condicion: ColumnElement[bool
         if not ids:
             return total
         resultado = db.execute(sa.delete(tabla).where(identificador.in_(ids), condicion))
-        borrados = resultado.rowcount
+        borrados = getattr(resultado, "rowcount", -1)
         total += len(ids) if borrados is None or borrados < 0 else borrados
 
 
 def _contar_candidatos(db: Session, ahora: datetime, politica: PoliticaRetencion) -> ResultadoPurga:
     corte_trabajos = ahora - timedelta(days=politica.trabajos_dias)
-    trabajos = _contar(db, Trabajo.__table__, _condicion_trabajos(corte_trabajos))
+    trabajos = _contar(db, TABLA_TRABAJOS, _condicion_trabajos(corte_trabajos))
     resultado: ResultadoPurga = {"trabajos": trabajos, "alertas": 0}
 
     tabla_alertas = _tabla_alertas(db)
@@ -108,7 +109,7 @@ def purgar(db: Session, ahora: datetime, politica: PoliticaRetencion) -> Resulta
 
     corte_trabajos = ahora - timedelta(days=politica.trabajos_dias)
     resultado: ResultadoPurga = {
-        "trabajos": _borrar_en_lotes(db, Trabajo.__table__, _condicion_trabajos(corte_trabajos)),
+        "trabajos": _borrar_en_lotes(db, TABLA_TRABAJOS, _condicion_trabajos(corte_trabajos)),
         "alertas": 0,
     }
 
