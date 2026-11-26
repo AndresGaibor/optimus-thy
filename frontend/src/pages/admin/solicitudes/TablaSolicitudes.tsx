@@ -194,8 +194,8 @@ export function TablaSolicitudes({
           </Field>
           <Field label="Respuesta" required hint="Entre 10 y 2000 caracteres.">
             <Input
+              autoComplete="off"
               value={respuesta}
-              minLength={10}
               maxLength={2000}
               onChange={(evento) => setRespuesta(evento.target.value)}
             />

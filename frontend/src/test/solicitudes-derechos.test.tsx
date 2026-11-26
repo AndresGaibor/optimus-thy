@@ -94,7 +94,30 @@ describe('solicitudes de derechos', () => {
     expect(await screen.findByText('La solicitud se registró correctamente.')).toBeInTheDocument();
   });
 
-  it('muestra un error genérico y permite reintentar', async () => {
+  it('explica el duplicado con el código del servidor', async () => {
+    fetchMock.mockResolvedValueOnce(responder(DATOS)).mockResolvedValueOnce(
+      responder(
+        {
+          error: {
+            code: 'solicitud_duplicada',
+            message: 'Ya existe una solicitud de ese tipo para el titular en esa fecha.',
+          },
+        },
+        409,
+      ),
+    );
+    const user = userEvent.setup();
+    render(<SolicitudesDerechosPage />);
+
+    await user.type(await screen.findByLabelText(/^Referencia del titular/), 'titular-123');
+    await user.click(screen.getByRole('button', { name: 'Registrar solicitud' }));
+
+    expect(
+      await screen.findByText('Ya existe una solicitud de ese tipo para el titular en esa fecha.'),
+    ).toBeInTheDocument();
+  });
+
+  it('explica el duplicado con el código del servidor', async () => {
     const user = userEvent.setup();
     fetchMock
       .mockResolvedValueOnce(responder({ detail: 'No revelar información interna' }, 500))
@@ -108,6 +131,22 @@ describe('solicitudes de derechos', () => {
     expect(await screen.findByText('titular-123')).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
+  it('no envía el cierre con una respuesta demasiado corta', async () => {
+    fetchMock.mockResolvedValueOnce(responder(DATOS));
+    const user = userEvent.setup();
+    render(<SolicitudesDerechosPage />);
+
+    await user.click(await screen.findByRole('button', { name: 'Cerrar' }));
+    const dialogo = await screen.findByRole('dialog');
+    await user.type(within(dialogo).getByLabelText(/^Respuesta/), 'corto');
+    await user.click(within(dialogo).getByRole('button', { name: 'Guardar cierre' }));
+
+    expect(
+      await within(dialogo).findByText('La respuesta debe tener entre 10 y 2000 caracteres.'),
+    ).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
   it('cierra una solicitud con PATCH y envía la respuesta', async () => {
     fetchMock
       .mockResolvedValueOnce(responder(DATOS))
