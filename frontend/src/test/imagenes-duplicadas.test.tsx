@@ -4,7 +4,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { DialogoSubida } from '../pages/medico/inferencia/DialogoSubida';
 import { useSubidaEcografia } from '../pages/medico/inferencia/useSubidaEcografia';
 
-
 function SubidaPrueba() {
   const subida = useSubidaEcografia({ casoId: 'caso-demo', alSubir: () => {} });
   return (
