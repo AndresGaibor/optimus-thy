@@ -109,6 +109,11 @@ export const unuqRespuestasBaja = [
   3, 3, 2, 3, 2, 3, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2,
 ];
 
+/** Contribución 0–4 de una respuesta 1–5; los ítems negativos se invierten. */
+export function contribucionUnuq(id: number, valor: number): number {
+  return unuqItemsInvertidos.has(id) ? 5 - valor : valor - 1;
+}
+
 export function calcularPuntajeUnuq(respuestas: number[]): number {
   if (!respuestas.length) return 0;
   const maximo = respuestas.length * 5;
@@ -116,16 +121,21 @@ export function calcularPuntajeUnuq(respuestas: number[]): number {
   return Math.round((suma / maximo) * 100);
 }
 
+export function sumaContribucionesUnuq(respuestas: number[]): number {
+  return respuestas.reduce((suma, valor, indice) => suma + contribucionUnuq(indice + 1, valor), 0);
+}
+
 export function resumirAtributosUnuq(respuestas: number[]): UnuqAtributoResumen[] {
   return unuqAtributos.map(({ nombre, peso }) => {
     const valores = unuqItems
       .filter((item) => item.atributo === nombre)
-      .map((item) => respuestas[item.id - 1] ?? 0);
+      .map((item) => contribucionUnuq(item.id, respuestas[item.id - 1] ?? 1));
     const promedio = valores.length
       ? Number((valores.reduce((t, v) => t + v, 0) / valores.length).toFixed(2))
       : 0;
-    return { atributo: nombre, promedio, puntaje: Math.round((promedio / 5) * 100), peso };
+    return { atributo: nombre, promedio, puntaje: Math.round((promedio / 4) * 100), peso };
   });
 }
 
-export const unuqFormula = 'Puntuación UnUQ = (Σ respuestas / (22 × 5)) × 100';
+export const unuqFormula =
+  'Puntuación UnUQ = (Σ contribuciones / 88) × 100, con contribución = respuesta − 1 y 5 − respuesta en S3, S6, S8, S13, S16, S18 y S22';
