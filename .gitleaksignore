@@ -1,4 +1,3 @@
-# Huellas aceptadas a mano. gitleaks 8.24.3 no aplica la lista de permitidos
-# por `regexTarget = "line"` a hallazgos de commits antiguos, así que el falso
-# positivo de este commit, ya corregido en el código actual, se ignora aquí.
-c7e54281cd0f3c3966dd4e2aee4d0eb7c33127ba:backend/tests/test_alertas.py:generic-api-key:175
+# Huellas aceptadas a mano. gitleaks 8.24.3 no aplica la lista de permitidos a
+# este hallazgo histórico; la contraseña es sintética y solo existe en tests.
+427dbba573c9e6a422b517b25e99643862b703ad:backend/tests/test_acceso_objetos.py:generic-api-key:253

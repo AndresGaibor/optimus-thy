@@ -14,6 +14,7 @@ from app.api.consentimientos import hay_consentimiento_vigente
 from app.auth.deps import SesionActual, requiere_permiso
 from app.db import session_dep
 from app.jobs.queue import encolar, reintentar
+from app.models.fichas import Caso
 from app.models.imagenes import Imagen
 from app.models.trabajos import Trabajo
 from app.security.limites import limitar_inferencia
@@ -72,6 +73,28 @@ def _consentimiento_del_payload(db: Session, payload: dict[str, Any]) -> bool | 
     return hay_consentimiento_vigente(db, imagen.caso_id)
 
 
+def _imagen_ajena(db: Session, payload: dict[str, Any], institucion_id: UUID) -> bool:
+    valor = payload.get("imagen_id")
+    if not isinstance(valor, str):
+        return False
+    try:
+        imagen_id = UUID(valor)
+    except ValueError:
+        return False
+    imagen = db.get(Imagen, imagen_id)
+    if imagen is None:
+        return False
+    return (
+        db.query(Caso.id)
+        .filter(
+            Caso.id == imagen.caso_id,
+            Caso.institucion_id == institucion_id,
+        )
+        .first()
+        is None
+    )
+
+
 def _propio(db: Session, request: Request, id: str, actual: SesionActual) -> Trabajo | None:
     """Trabajo del propio usuario (o de cualquiera si el rol activo es admin).
 
@@ -111,6 +134,14 @@ def crear_trabajo(
 ) -> dict[str, Any] | JSONResponse:
     if body.tipo == "inferencia":
         limitar_inferencia(request, actual)
+        if _imagen_ajena(db, body.payload, actual.usuario.institucion_id):
+            return JSONResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content={
+                    "error": {"code": "not_found", "message": "No encontrado"},
+                    "request_id": getattr(request.state, "request_id", "-"),
+                },
+            )
         if _consentimiento_del_payload(db, body.payload) is False:
             return _sin_consentimiento(request)
     trabajo = encolar(db, body.tipo, body.payload, creado_por=actual.usuario.id)
