@@ -10,9 +10,13 @@ export interface AuthSession {
   rol_activo: string;
   permisos?: string[];
   segundos_para_expirar?: number | null;
+  segundo_factor_activo?: boolean;
 }
 
-export type LoginResult = { ok: true; session: AuthSession } | { ok: false; status: number };
+export type LoginChallenge = { desafio: string; segundos_para_expirar: number };
+
+export type LoginResult =
+  { ok: true; session: AuthSession } | { ok: false; status: number; challenge?: LoginChallenge };
 
 export type MeResult = { ok: true; session: AuthSession } | { ok: false; status: number };
 
@@ -28,6 +32,21 @@ export async function loginWithCredentials(correo: string, password: string): Pr
     body: JSON.stringify({ correo, password }),
   });
 
+  if (res.status === 202) {
+    const challenge = (await res.json()) as {
+      requiere_otp: true;
+      desafio: string;
+      segundos_para_expirar: number;
+    };
+    return {
+      ok: false,
+      status: res.status,
+      challenge: {
+        desafio: challenge.desafio,
+        segundos_para_expirar: challenge.segundos_para_expirar,
+      },
+    };
+  }
   if (!res.ok) {
     if (res.status === 401 || res.status === 403 || res.status === 422) {
       return { ok: false, status: res.status };
@@ -121,4 +140,61 @@ export async function cambiarPassword(
     // Sin cuerpo JSON se conserva el mensaje genérico.
   }
   return { ok: false, codigo, mensaje };
+}
+
+export type AuthApiError = { ok: false; status: number; codigo: string };
+
+async function apiError(res: Response): Promise<AuthApiError> {
+  let codigo = 'error';
+  try {
+    const data = (await res.json()) as { error?: { code?: string } };
+    codigo = data.error?.code ?? codigo;
+  } catch {
+    // La respuesta puede no tener cuerpo JSON.
+  }
+  return { ok: false, status: res.status, codigo };
+}
+
+export async function loginOtp(desafio: string, codigo: string) {
+  const res = await fetch('/api/auth/login/otp', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ desafio, codigo }),
+  });
+  if (!res.ok) return apiError(res);
+  return { ok: true as const, session: (await res.json()) as AuthSession };
+}
+
+export async function iniciarSegundoFactor() {
+  const res = await fetch('/api/auth/2fa/iniciar', { method: 'POST', credentials: 'include' });
+  if (!res.ok) return apiError(res);
+  return {
+    ok: true as const,
+    ...((await res.json()) as { secreto: string; uri: string }),
+  };
+}
+
+export async function confirmarSegundoFactor(codigo: string) {
+  const res = await fetch('/api/auth/2fa/confirmar', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ codigo }),
+  });
+  if (!res.ok) return apiError(res);
+  return {
+    ok: true as const,
+    ...((await res.json()) as { segundo_factor_activo: true; codigos_recuperacion: string[] }),
+  };
+}
+
+export async function desactivarSegundoFactor(password: string) {
+  const res = await fetch('/api/auth/2fa/desactivar', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ password }),
+  });
+  return res.ok ? { ok: true as const } : apiError(res);
 }

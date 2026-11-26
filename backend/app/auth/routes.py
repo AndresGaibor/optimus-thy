@@ -7,6 +7,7 @@ import logging
 import secrets
 from datetime import UTC, datetime, timedelta
 from typing import Annotated
+from urllib.parse import quote, urlencode
 from uuid import UUID
 
 import sqlalchemy as sa
@@ -29,6 +30,7 @@ from app.config import get_settings
 from app.correo.servicio import CorreoNoConfigurado, EnvioError, enviar_recuperacion, mostrar_ttl
 from app.db import session_dep
 from app.models.correo import TokenRecuperacion
+from app.models.segundo_factor import CodigoRecuperacion, DesafioOtp
 from app.models.sesiones import Sesion
 from app.models.usuarios import Rol, Usuario, UsuarioRol
 from app.security.passwords import (
@@ -37,6 +39,7 @@ from app.security.passwords import (
     verify_dummy,
     verify_password,
 )
+from app.security.totp import generar_secreto, verificar_codigo
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -58,6 +61,7 @@ class LoginResponse(BaseModel):
     rol_activo: str | None
     permisos: list[str]
     segundos_para_expirar: int | None = None
+    segundo_factor_activo: bool = False
 
 
 class RolActivoRequest(BaseModel):
@@ -67,6 +71,19 @@ class RolActivoRequest(BaseModel):
 class CambioPasswordRequest(BaseModel):
     password_actual: str = Field(min_length=1, max_length=128)
     password_nueva: str = Field(min_length=1, max_length=128)
+
+
+class LoginOtpRequest(BaseModel):
+    desafio: str = Field(max_length=128)
+    codigo: str = Field(max_length=64)
+
+
+class ConfirmarSegundoFactorRequest(BaseModel):
+    codigo: str = Field(max_length=64)
+
+
+class DesactivarSegundoFactorRequest(BaseModel):
+    password: str = Field(min_length=1, max_length=128)
 
 
 def _error_password(
@@ -135,6 +152,7 @@ def _respuesta(
         rol_activo=activo,
         permisos=sorted(rp.permiso.codigo for rp in rol.roles_permisos) if rol else [],
         segundos_para_expirar=segundos,
+        segundo_factor_activo=usuario.totp_activado_en is not None,
     )
 
 
@@ -230,6 +248,27 @@ def login(
         db.add(usuario)
         db.commit()
 
+    if usuario.totp_activado_en is not None:
+        ahora = datetime.now(UTC)
+        token_desafio = secrets.token_urlsafe(32)
+        db.execute(sa.delete(DesafioOtp).where(DesafioOtp.expira_en <= ahora))
+        db.add(
+            DesafioOtp(
+                usuario_id=usuario.id,
+                token_hash=_hash_token(token_desafio),
+                expira_en=ahora + timedelta(minutes=5),
+            )
+        )
+        db.commit()
+        return JSONResponse(
+            status_code=status.HTTP_202_ACCEPTED,
+            content={
+                "requiere_otp": True,
+                "desafio": token_desafio,
+                "segundos_para_expirar": 300,
+            },
+        )
+
     roles = _roles_de(db, usuario.id)
     activo = roles[0] if roles else None
     sesion, token = create_session(db, usuario.id, rol_activo_id=activo.id if activo else None)
@@ -254,6 +293,219 @@ def login(
     return _respuesta(
         usuario, roles, activo.nombre if activo else None, segundos_para_expirar(sesion)
     )
+
+
+@router.post("/login/otp", response_model=LoginResponse)
+def login_otp(
+    request: Request,
+    response: Response,
+    body: LoginOtpRequest,
+    db: Annotated[Session, Depends(session_dep)],
+) -> LoginResponse | JSONResponse:
+    ahora = datetime.now(UTC)
+    desafio = db.scalar(
+        sa.select(DesafioOtp)
+        .where(DesafioOtp.token_hash == _hash_token(body.desafio))
+        .with_for_update()
+    )
+    if desafio is None or desafio.expira_en <= ahora:
+        if desafio is not None:
+            db.delete(desafio)
+            db.commit()
+        return _error_password(
+            request,
+            "desafio_expirado",
+            "El desafío de verificación expiró.",
+            status.HTTP_410_GONE,
+        )
+
+    usuario = db.get(Usuario, desafio.usuario_id)
+    if usuario is None:
+        db.delete(desafio)
+        db.commit()
+        return _error_password(
+            request,
+            "desafio_expirado",
+            "El desafío de verificación expiró.",
+            status.HTTP_410_GONE,
+        )
+
+    codigo_valido = (
+        usuario.totp_activado_en is not None
+        and usuario.totp_secreto_cifrado is not None
+        and verificar_codigo(usuario.totp_secreto_cifrado, body.codigo, ahora)
+    )
+    recuperacion = None
+    if not codigo_valido:
+        hash_recuperacion = _hash_token(body.codigo.strip().upper())
+        recuperacion = db.scalar(
+            sa.select(CodigoRecuperacion)
+            .where(
+                CodigoRecuperacion.usuario_id == usuario.id,
+                CodigoRecuperacion.hash == hash_recuperacion,
+                CodigoRecuperacion.usado_en.is_(None),
+            )
+            .with_for_update()
+        )
+        codigo_valido = recuperacion is not None
+
+    if not codigo_valido:
+        desafio.intentos += 1
+        if desafio.intentos >= 5:
+            db.delete(desafio)
+        registrar(
+            db,
+            request,
+            AuditAction.AUTH_2FA_FAILED,
+            AuditModule.AUTH,
+            usuario=usuario,
+        )
+        return _error_password(
+            request,
+            "codigo_invalido",
+            "El código de verificación no es válido.",
+            status.HTTP_401_UNAUTHORIZED,
+        )
+
+    if recuperacion is not None:
+        recuperacion.usado_en = ahora
+    db.delete(desafio)
+    roles = _roles_de(db, usuario.id)
+    activo = roles[0] if roles else None
+    sesion, token = create_session(db, usuario.id, rol_activo_id=activo.id if activo else None)
+    settings = get_settings()
+    response.set_cookie(
+        key=settings.session_cookie_name,
+        value=token,
+        httponly=True,
+        samesite="strict",
+        secure=settings.session_cookie_secure,
+        path="/",
+        max_age=min(settings.session_ttl_minutes, settings.session_inactividad_minutos) * 60,
+    )
+    registrar(
+        db,
+        request,
+        AuditAction.SESSION_START,
+        AuditModule.AUTH,
+        usuario=usuario,
+    )
+    return _respuesta(
+        usuario,
+        roles,
+        activo.nombre if activo else None,
+        segundos_para_expirar(sesion),
+    )
+
+
+@router.post("/2fa/iniciar", response_model=None)
+def iniciar_segundo_factor(
+    request: Request,
+    actual: Annotated[SesionActual, Depends(sesion_actual)],
+    db: Annotated[Session, Depends(session_dep)],
+) -> dict[str, str] | JSONResponse:
+    usuario = actual.usuario
+    if usuario.totp_activado_en is not None:
+        return _error_password(
+            request,
+            "segundo_factor_activo",
+            "El segundo factor ya está activado.",
+            status.HTTP_409_CONFLICT,
+        )
+    secreto = generar_secreto()
+    usuario.totp_secreto_cifrado = secreto
+    db.commit()
+    etiqueta = quote(f"OPTIMUS-THY:{usuario.email}", safe=":")
+    parametros = urlencode(
+        {
+            "secret": secreto,
+            "issuer": "OPTIMUS-THY",
+            "algorithm": "SHA1",
+            "digits": 6,
+            "period": 30,
+        }
+    )
+    return {"secreto": secreto, "uri": f"otpauth://totp/{etiqueta}?{parametros}"}
+
+
+@router.post("/2fa/confirmar", response_model=None)
+def confirmar_segundo_factor(
+    request: Request,
+    actual: Annotated[SesionActual, Depends(sesion_actual)],
+    body: ConfirmarSegundoFactorRequest,
+    db: Annotated[Session, Depends(session_dep)],
+) -> dict[str, object] | JSONResponse:
+    usuario = actual.usuario
+    ahora = datetime.now(UTC)
+    if (
+        usuario.totp_activado_en is not None
+        or usuario.totp_secreto_cifrado is None
+        or not verificar_codigo(usuario.totp_secreto_cifrado, body.codigo, ahora)
+    ):
+        registrar(
+            db,
+            request,
+            AuditAction.AUTH_2FA_FAILED,
+            AuditModule.AUTH,
+            usuario=usuario,
+        )
+        return _error_password(
+            request,
+            "codigo_invalido",
+            "El código de verificación no es válido.",
+            status.HTTP_401_UNAUTHORIZED,
+        )
+
+    codigos = [secrets.token_hex(5).upper() for _ in range(10)]
+    usuario.totp_activado_en = ahora
+    db.execute(sa.delete(CodigoRecuperacion).where(CodigoRecuperacion.usuario_id == usuario.id))
+    db.add_all(
+        CodigoRecuperacion(usuario_id=usuario.id, hash=_hash_token(codigo)) for codigo in codigos
+    )
+    registrar(
+        db,
+        request,
+        AuditAction.AUTH_2FA_ENABLED,
+        AuditModule.AUTH,
+        usuario=usuario,
+    )
+    return {"segundo_factor_activo": True, "codigos_recuperacion": codigos}
+
+
+@router.post("/2fa/desactivar", status_code=status.HTTP_204_NO_CONTENT)
+def desactivar_segundo_factor(
+    request: Request,
+    actual: Annotated[SesionActual, Depends(sesion_actual)],
+    body: DesactivarSegundoFactorRequest,
+    db: Annotated[Session, Depends(session_dep)],
+) -> Response:
+    usuario = actual.usuario
+    if usuario.totp_activado_en is None:
+        return _error_password(
+            request,
+            "segundo_factor_inactivo",
+            "El segundo factor no está activado.",
+            status.HTTP_409_CONFLICT,
+        )
+    if not verify_password(body.password, usuario.password_hash or "")[0]:
+        return _error_password(
+            request,
+            "password_incorrecta",
+            "La contraseña no es correcta.",
+        )
+
+    usuario.totp_secreto_cifrado = None
+    usuario.totp_activado_en = None
+    db.execute(sa.delete(CodigoRecuperacion).where(CodigoRecuperacion.usuario_id == usuario.id))
+    db.execute(sa.delete(DesafioOtp).where(DesafioOtp.usuario_id == usuario.id))
+    registrar(
+        db,
+        request,
+        AuditAction.AUTH_2FA_DISABLED,
+        AuditModule.AUTH,
+        usuario=usuario,
+    )
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)

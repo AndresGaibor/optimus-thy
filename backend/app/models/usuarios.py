@@ -11,6 +11,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
+from app.security.types import EncryptedBytes
 
 if TYPE_CHECKING:
     from app.models.auditoria import Auditoria
@@ -41,6 +42,10 @@ class Usuario(Base):
         sa.Integer, nullable=False, server_default=sa.text("0")
     )
     bloqueado_hasta: Mapped[datetime | None] = mapped_column(
+        sa.TIMESTAMP(timezone=True), nullable=True
+    )
+    totp_secreto_cifrado: Mapped[str | None] = mapped_column(EncryptedBytes(), nullable=True)
+    totp_activado_en: Mapped[datetime | None] = mapped_column(
         sa.TIMESTAMP(timezone=True), nullable=True
     )
     creado_en: Mapped[datetime] = mapped_column(
