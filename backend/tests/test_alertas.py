@@ -121,7 +121,7 @@ def _usuario(db: Session, institucion: Institucion, correo: str, rol: Rol) -> Us
         nombre="Cuenta de prueba",
         institucion_id=institucion.id,
         activo=True,
-        password_hash=hash_password(correo, CLAVE_PRUEBA),
+        password_hash=hash_password(correo, ACCESO_TESTS),
     )
     db.add(usuario)
     db.commit()
@@ -171,12 +171,12 @@ def _evento_db(
     )
 
 
-# Contraseña sintética de las cuentas del test; no es una credencial real.
-CLAVE_PRUEBA = "clave-sintetica-de-alertas"
+# Acceso sintético de las cuentas del test; no es una credencial real.
+ACCESO_TESTS = "acceso-de-prueba"
 
 
 def _entrar(client: TestClient, correo: str) -> None:
-    respuesta = client.post("/auth/login", json={"correo": correo, "password": CLAVE_PRUEBA})
+    respuesta = client.post("/auth/login", json={"correo": correo, "password": ACCESO_TESTS})
     assert respuesta.status_code == 200, respuesta.text
 
 
