@@ -1,7 +1,7 @@
 # exportacion-datasets Specification
 
 ## Purpose
-TBD - created by archiving change exportacion-dataset. Update Purpose after archive.
+Exportar un dataset anonimizado con su ficha técnica, sus permisos institucionales y registro de la exportación.
 
 ## Requirements
 

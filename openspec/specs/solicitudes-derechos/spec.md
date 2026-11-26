@@ -1,7 +1,7 @@
 # solicitudes-derechos Specification
 
 ## Purpose
-TBD - created by archiving change 2026-11-26-solicitudes-derechos. Update Purpose after archive.
+Registrar las solicitudes de derechos de los titulares, seguir su plazo y cerrarlas con constancia de la respuesta.
 
 ## Requirements
 

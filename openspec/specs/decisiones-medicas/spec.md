@@ -1,7 +1,7 @@
 # decisiones-medicas Specification
 
 ## Purpose
-TBD - created by archiving change decisiones-medicas. Update Purpose after archive.
+Registrar y leer la conclusión médica de una inferencia, dejando constancia auditada de la decisión.
 
 ## Requirements
 

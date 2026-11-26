@@ -1,7 +1,7 @@
 # auditoria-predicciones Specification
 
 ## Purpose
-TBD - created by archiving change auditoria-predicciones. Update Purpose after archive.
+Permitir auditar las predicciones del modelo contrastándolas con la referencia clínica, con filtros por institución y registro de la consulta.
 
 ## Requirements
 

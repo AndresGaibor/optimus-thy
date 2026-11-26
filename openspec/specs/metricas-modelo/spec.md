@@ -1,7 +1,7 @@
 # metricas-modelo Specification
 
 ## Purpose
-TBD - created by archiving change metricas-modelo. Update Purpose after archive.
+Calcular y presentar el acuerdo entre la salida del modelo y la decisión médica, con su desglose por resultado, en la navegación investigadora.
 
 ## Requirements
 
