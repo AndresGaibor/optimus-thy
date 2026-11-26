@@ -7,6 +7,8 @@
 
 from __future__ import annotations
 
+import hashlib
+import re
 import uuid
 from datetime import UTC, datetime
 from typing import Annotated
@@ -19,8 +21,11 @@ from app.audit.actions import AuditAction, AuditModule, AuditObjectType
 from app.audit.http import registrar
 from app.auth.deps import SesionActual, requiere_permiso
 from app.db import session_dep
+from app.models.auditoria import Auditoria
 from app.models.fichas import Caso
 from app.models.imagenes import Inferencia
+from app.models.usuarios import Usuario
+from app.reportes.consolidado import construir_consolidado
 from app.reportes.inferencia import construir_reporte
 from app.storage.s3 import ObjectStorage, StorageError, get_storage
 
@@ -103,4 +108,136 @@ def descargar_reporte(
         content=pdf,
         media_type="application/pdf",
         headers={"Content-Disposition": f'attachment; filename="{nombre}"'},
+    )
+
+
+@router.get("/casos/{caso_id}/reporte.pdf", response_model=None)
+def descargar_reporte_consolidado(
+    request: Request,
+    caso_id: str,
+    db: Annotated[Session, Depends(session_dep)],
+    actual: Annotated[SesionActual, Depends(requiere_permiso("reporte.generar"))],
+) -> Response | JSONResponse:
+    caso_uuid = _uuid(caso_id)
+    caso = (
+        db.query(Caso)
+        .filter(Caso.id == caso_uuid, Caso.institucion_id == actual.usuario.institucion_id)
+        .first()
+        if caso_uuid
+        else None
+    )
+    if caso is None:
+        return _error(request, status.HTTP_404_NOT_FOUND, "not_found", "No se encontró el recurso.")
+
+    inferencias = (
+        db.query(Inferencia)
+        .join(Inferencia.imagen)
+        .filter(Inferencia.imagen.has(caso_id=caso.id))
+        .order_by(Inferencia.creado_en, Inferencia.id)
+        .all()
+    )
+    if not inferencias:
+        return _error(
+            request,
+            status.HTTP_409_CONFLICT,
+            "sin_inferencias",
+            "El caso no tiene inferencias para consolidar.",
+        )
+
+    generado_en = datetime.now(UTC)
+    content_sha256 = hashlib.sha256(
+        (
+            f"{caso.codigo_caso}|"
+            + ",".join(
+                f"{inferencia.id}:{inferencia.creado_en.isoformat()}" for inferencia in inferencias
+            )
+        ).encode()
+    ).hexdigest()
+    identificador = f"REP-{content_sha256[:12]}"
+    pdf = construir_consolidado(
+        paciente_codigo=caso.paciente.seudonimo,
+        caso_codigo=caso.codigo_caso,
+        inferencias=inferencias,
+        usuario=actual.usuario.email,
+        generado_en=generado_en,
+        identificador=identificador,
+    )
+    report_sha256 = hashlib.sha256(pdf).hexdigest()
+    registrar(
+        db,
+        request,
+        AuditAction.REPORT_DOWNLOAD,
+        AuditModule.INFERENCE,
+        usuario=actual.usuario,
+        rol=actual.rol_activo.nombre if actual.rol_activo else None,
+        tipo_objeto=AuditObjectType.REPORT,
+        objeto_id=caso.id,
+        detalles={
+            "report_kind": "consolidado",
+            "report_sha256": report_sha256,
+            "content_sha256": content_sha256,
+            "resource_count": len(inferencias),
+        },
+    )
+    nombre = f"reporte-{caso.codigo_caso}-consolidado.pdf"
+    return Response(
+        content=pdf,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{nombre}"',
+            "X-Reporte-Huella": report_sha256,
+            "X-Reporte-Identificador": identificador,
+        },
+    )
+
+
+@router.get("/reportes/{valor}", response_model=None)
+def verificar_reporte(
+    request: Request,
+    valor: str,
+    db: Annotated[Session, Depends(session_dep)],
+    actual: Annotated[SesionActual, Depends(requiere_permiso("reporte.generar"))],
+) -> JSONResponse:
+    filtro = [
+        Auditoria.institucion_id == actual.usuario.institucion_id,
+        Auditoria.accion.endswith("REPORT_DOWNLOAD"),
+    ]
+    identificador: str | None = None
+    if re.fullmatch(r"[0-9a-fA-F]{64}", valor):
+        filtro.append(Auditoria.detalles.op("->>")("report_sha256") == valor.lower())
+    else:
+        coincidencia = re.fullmatch(r"REP-([0-9a-fA-F]{12})", valor)
+        if coincidencia is None:
+            return _error(
+                request, status.HTTP_404_NOT_FOUND, "not_found", "No se encontró el recurso."
+            )
+        prefijo = coincidencia.group(1).lower()
+        filtro.append(Auditoria.detalles.op("->>")("content_sha256").startswith(prefijo))
+        identificador = f"REP-{prefijo}"
+    evento = db.query(Auditoria).filter(*filtro).order_by(Auditoria.ocurrido_en.desc()).first()
+    if evento is None:
+        return _error(request, status.HTTP_404_NOT_FOUND, "not_found", "No se encontró el recurso.")
+    caso_uuid = _uuid(evento.entidad_id or "")
+    if caso_uuid is None:
+        return _error(request, status.HTTP_404_NOT_FOUND, "not_found", "No se encontró el recurso.")
+    caso = db.query(Caso).filter(Caso.id == caso_uuid).first()
+    if caso is None:
+        return _error(request, status.HTTP_404_NOT_FOUND, "not_found", "No se encontró el recurso.")
+    usuario = db.query(Usuario).filter(Usuario.id == evento.usuario_id).first()
+    detalles = evento.detalles or {}
+    cantidad = detalles.get("resource_count")
+    if not isinstance(cantidad, int) or isinstance(cantidad, bool):
+        return _error(request, status.HTTP_404_NOT_FOUND, "not_found", "No se encontró el recurso.")
+    content_sha256 = detalles.get("content_sha256", "")
+    identificador = identificador or f"REP-{content_sha256[:12]}"
+    return JSONResponse(
+        {
+            "valido": True,
+            "identificador": identificador,
+            "huella_archivo": detalles.get("report_sha256", ""),
+            "caso_codigo": caso.codigo_caso,
+            "generado_en": evento.ocurrido_en.isoformat(),
+            "usuario": usuario.email if usuario else "",
+            "inferencias": cantidad,
+        }
     )

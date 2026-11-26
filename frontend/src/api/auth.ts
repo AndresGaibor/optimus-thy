@@ -8,6 +8,7 @@ export interface AuthSession {
   usuario: AuthUsuario;
   roles: string[];
   rol_activo: string;
+  permisos?: string[];
   segundos_para_expirar?: number | null;
 }
 

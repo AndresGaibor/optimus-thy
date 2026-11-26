@@ -38,7 +38,10 @@ function EsqueletoMetricas() {
 
 /** Acuerdo del modelo con la decisión médica registrada, sin inferir validez clínica. */
 export function MetricasPage() {
-  const [filtros, setFiltros] = useState<Filtros>(FILTROS_METRICAS_VACIOS);
+  const [filtros, setFiltros] = useState<Filtros>(() => ({
+    ...FILTROS_METRICAS_VACIOS,
+    cohorte_id: new URLSearchParams(window.location.search).get('cohorte_id') ?? '',
+  }));
   const rangoInvalido = Boolean(filtros.desde && filtros.hasta && filtros.desde > filtros.hasta);
   const metricas = useMetricas(filtros, rangoInvalido);
 

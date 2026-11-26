@@ -43,6 +43,7 @@ const NAV_BY_ROLE: Record<Role, SidebarNavItem[]> = {
     { to: '/investigador/exportaciones', label: 'Exportaciones', icon: Download },
   ],
   administrador: [
+    { to: '/administrador/tablero', label: 'Tablero', icon: LayoutDashboard },
     { to: '/administrador/usuarios', label: 'Usuarios', icon: Users },
     { to: '/administrador/instituciones', label: 'Instituciones', icon: Building2 },
     { to: '/administrador/roles', label: 'Roles', icon: ShieldCheck },

@@ -4,12 +4,14 @@ export interface FiltrosMetricas {
   desde: string;
   hasta: string;
   modelo: string;
+  cohorte_id: string;
 }
 
 export const FILTROS_METRICAS_VACIOS: FiltrosMetricas = {
   desde: '',
   hasta: '',
   modelo: '',
+  cohorte_id: '',
 };
 
 export function consultaDe(filtros: FiltrosMetricas): ConsultaMetricas {
@@ -17,6 +19,7 @@ export function consultaDe(filtros: FiltrosMetricas): ConsultaMetricas {
     ...(filtros.desde ? { desde: filtros.desde } : {}),
     ...(filtros.hasta ? { hasta: filtros.hasta } : {}),
     ...(filtros.modelo ? { modelo: filtros.modelo } : {}),
+    ...(filtros.cohorte_id ? { cohorte_id: filtros.cohorte_id } : {}),
   };
 }
 

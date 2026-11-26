@@ -648,6 +648,65 @@
         }
       }
     },
+    "/pacientes/{id}/exportacion": {
+      "get": {
+        "tags": [
+          "pacientes"
+        ],
+        "summary": "Exportar Paciente",
+        "operationId": "exportar_paciente_pacientes__id__exportacion_get",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          },
+          {
+            "name": "formato",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "json",
+                "csv"
+              ],
+              "type": "string",
+              "default": "json",
+              "title": "Formato"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/pacientes/{id}/casos": {
       "post": {
         "tags": [
@@ -1180,6 +1239,31 @@
             }
           }
         }
+      }
+    },
+    "/administrador/tablero": {
+      "get": {
+        "tags": [
+          "usuarios"
+        ],
+        "summary": "Tablero Administrador",
+        "description": "Resumen operativo de datos, actividad y servicios de la institución.",
+        "operationId": "tablero_administrador_administrador_tablero_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
       }
     },
     "/instituciones/{id}": {
@@ -2094,7 +2178,7 @@
           "investigacion"
         ],
         "summary": "Consultar Metricas",
-        "description": "Cuenta las decisiones de la institución; no calcula métricas clínicas.",
+        "description": "Cuenta decisiones por modelo, opcionalmente limitadas a una cohorte propia.",
         "operationId": "consultar_metricas_investigacion_metricas_get",
         "security": [
           {
@@ -2151,6 +2235,23 @@
                 }
               ],
               "title": "Modelo"
+            }
+          },
+          {
+            "name": "cohorte_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cohorte Id"
             }
           }
         ],
@@ -2476,6 +2577,117 @@
         }
       }
     },
+    "/cohortes": {
+      "get": {
+        "tags": [
+          "investigacion"
+        ],
+        "summary": "Listar Cohortes",
+        "operationId": "listar_cohortes_cohortes_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CohortesListOut"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "investigacion"
+        ],
+        "summary": "Crear Cohorte",
+        "operationId": "crear_cohorte_cohortes_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CrearCohorteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CohorteOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
+      }
+    },
+    "/cohortes/{cohorte_id}": {
+      "delete": {
+        "tags": [
+          "investigacion"
+        ],
+        "summary": "Borrar Cohorte",
+        "operationId": "borrar_cohorte_cohortes__cohorte_id__delete",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "cohorte_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Cohorte Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/casos/{caso_id}/inferencias/{inferencia_id}/reporte.pdf": {
       "get": {
         "tags": [
@@ -2506,6 +2718,96 @@
             "schema": {
               "type": "string",
               "title": "Inferencia Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/casos/{caso_id}/reporte.pdf": {
+      "get": {
+        "tags": [
+          "reportes"
+        ],
+        "summary": "Descargar Reporte Consolidado",
+        "operationId": "descargar_reporte_consolidado_casos__caso_id__reporte_pdf_get",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "caso_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Caso Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reportes/{valor}": {
+      "get": {
+        "tags": [
+          "reportes"
+        ],
+        "summary": "Verificar Reporte",
+        "operationId": "verificar_reporte_reportes__valor__get",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "valor",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Valor"
             }
           }
         ],
@@ -3875,6 +4177,68 @@
         "title": "CasoAnonimizadoOut",
         "description": "Una fila publicable: sin identificadores ni vínculo con el caso."
       },
+      "CohorteOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "filtros": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Filtros"
+          },
+          "total_casos": {
+            "type": "integer",
+            "title": "Total Casos"
+          },
+          "creado_en": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Creado En"
+          },
+          "actualizado_en": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Actualizado En"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "nombre",
+          "filtros",
+          "total_casos",
+          "creado_en",
+          "actualizado_en"
+        ],
+        "title": "CohorteOut"
+      },
+      "CohortesListOut": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CohorteOut"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "items"
+        ],
+        "title": "CohortesListOut"
+      },
       "ConfiguracionIn": {
         "properties": {
           "host": {
@@ -4075,6 +4439,27 @@
           "pendiente"
         ],
         "title": "ConteoResultadoOut"
+      },
+      "CrearCohorteRequest": {
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Nombre"
+          },
+          "filtros": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Filtros"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "nombre"
+        ],
+        "title": "CrearCohorteRequest"
       },
       "CrearConsentimientoRequest": {
         "properties": {

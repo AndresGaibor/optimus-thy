@@ -3,22 +3,29 @@
 from __future__ import annotations
 
 import contextlib
+from datetime import UTC, datetime, timedelta
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, Request, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
-from sqlalchemy import func, or_
+from sqlalchemy import func, or_, text
 from sqlalchemy.orm import Session, joinedload
 
 from app.audit.actions import AuditAction, AuditModule, AuditObjectType
 from app.audit.http import registrar
 from app.auth.deps import SesionActual, requiere_permiso
 from app.db import session_dep
+from app.ia.cliente import get_cliente_ia
+from app.models.auditoria import Auditoria
+from app.models.fichas import Caso
+from app.models.imagenes import Imagen, Inferencia
 from app.models.instituciones import Institucion
+from app.models.pacientes import Paciente
 from app.models.usuarios import Rol, Usuario, UsuarioRol
 from app.security.passwords import hash_password
+from app.storage.s3 import get_storage
 
 router = APIRouter(tags=["usuarios"])
 
@@ -448,3 +455,97 @@ def put_roles_usuario(
             roles_list.append(ur.rol.nombre)
 
     return _usuario_to_item(usuario_loaded, roles_list)
+
+
+@router.get("/administrador/tablero", response_model=None)
+def tablero_administrador(
+    request: Request,
+    db: Annotated[Session, Depends(session_dep)],
+    actual: Annotated[SesionActual, Depends(requiere_permiso("auditoria.leer"))],
+) -> dict[str, Any]:
+    """Resumen operativo de datos, actividad y servicios de la institución."""
+    institucion_id = actual.usuario.institucion_id
+    volumen = {
+        "pacientes": db.query(func.count(Paciente.id))
+        .filter(Paciente.institucion_id == institucion_id)
+        .scalar(),
+        "casos": db.query(func.count(Caso.id))
+        .filter(Caso.institucion_id == institucion_id)
+        .scalar(),
+        "imagenes": db.query(func.count(Imagen.id))
+        .join(Caso, Imagen.caso_id == Caso.id)
+        .filter(Caso.institucion_id == institucion_id)
+        .scalar(),
+        "inferencias": db.query(func.count(Inferencia.id))
+        .join(Imagen, Inferencia.imagen_id == Imagen.id)
+        .join(Caso, Imagen.caso_id == Caso.id)
+        .filter(Caso.institucion_id == institucion_id)
+        .scalar(),
+        "usuarios": db.query(func.count(Usuario.id))
+        .filter(Usuario.institucion_id == institucion_id)
+        .scalar(),
+    }
+    desde = datetime.now(UTC) - timedelta(days=7)
+    filas = (
+        db.query(
+            Auditoria.accion,
+            func.count(Auditoria.id).label("total"),
+            func.max(Auditoria.ocurrido_en).label("ultima"),
+        )
+        .filter(
+            Auditoria.institucion_id == institucion_id,
+            Auditoria.ocurrido_en >= desde,
+        )
+        .group_by(Auditoria.accion)
+        .order_by(func.count(Auditoria.id).desc(), func.max(Auditoria.ocurrido_en).desc())
+        .limit(10)
+        .all()
+    )
+    actividad = [
+        {"accion": accion, "total": total, "ultima": ultima.isoformat()}
+        for accion, total, ultima in filas
+    ]
+
+    try:
+        db.execute(text("SELECT 1"))
+        estado_bd = "ok"
+    except Exception:
+        db.rollback()
+        estado_bd = "caido"
+
+    try:
+        salud_ia = get_cliente_ia().health()
+        if salud_ia.get("status") != "ok":
+            estado_ia = "caido"
+        elif not salud_ia.get("modelos_cargados", False):
+            estado_ia = "degradado"
+        else:
+            estado_ia = "ok"
+    except Exception:
+        estado_ia = "caido"
+
+    try:
+        get_storage().health()
+        estado_almacenamiento = "ok"
+    except Exception:
+        estado_almacenamiento = "caido"
+
+    registrar(
+        db,
+        request,
+        AuditAction.RECORD_READ,
+        AuditModule.ADMIN,
+        usuario=actual.usuario,
+        rol=actual.rol_activo.nombre if actual.rol_activo else None,
+        tipo_objeto=AuditObjectType.SYSTEM,
+        detalles={"resource_count": len(actividad)},
+    )
+    return {
+        "volumen": volumen,
+        "actividad": actividad,
+        "servicios": [
+            {"nombre": "base_datos", "estado": estado_bd},
+            {"nombre": "servicio_ia", "estado": estado_ia},
+            {"nombre": "almacenamiento", "estado": estado_almacenamiento},
+        ],
+    }

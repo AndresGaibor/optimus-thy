@@ -9,6 +9,7 @@ from typing import Annotated, Literal, cast
 
 import sqlalchemy as sa
 from fastapi import APIRouter, Depends, Query, Request
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -16,10 +17,23 @@ from app.audit.actions import AuditAction, AuditModule, AuditObjectType
 from app.audit.http import registrar
 from app.auth.deps import SesionActual, requiere_permiso
 from app.db import session_dep
+from app.investigacion.cohortes import casos_de_cohorte
+from app.models.cohortes import CohorteInvestigacion
 from app.models.fichas import Caso
 from app.models.imagenes import DecisionMedica, Imagen, Inferencia, ModeloIA
 
 router = APIRouter(tags=["investigacion"])
+
+
+def _error(request: Request, codigo: str, mensaje: str) -> JSONResponse:
+    return JSONResponse(
+        status_code=404,
+        content={
+            "error": {"code": codigo, "message": mensaje},
+            "request_id": getattr(request.state, "request_id", "-"),
+        },
+    )
+
 
 Resultado = Literal["benigno", "maligno", "sin_nodulo"]
 _RESULTADOS: tuple[Resultado, ...] = ("benigno", "maligno", "sin_nodulo")
@@ -82,8 +96,22 @@ def consultar_metricas(
     desde: Annotated[date | None, Query()] = None,
     hasta: Annotated[date | None, Query()] = None,
     modelo: Annotated[uuid.UUID | None, Query()] = None,
-) -> list[MetricasModeloOut]:
-    """Cuenta las decisiones de la institución; no calcula métricas clínicas."""
+    cohorte_id: Annotated[uuid.UUID | None, Query()] = None,
+) -> list[MetricasModeloOut] | JSONResponse:
+    """Cuenta decisiones por modelo, opcionalmente limitadas a una cohorte propia."""
+    casos_cohorte: set[uuid.UUID] | None = None
+    if cohorte_id is not None:
+        cohorte = (
+            db.query(CohorteInvestigacion)
+            .filter(
+                CohorteInvestigacion.id == cohorte_id,
+                CohorteInvestigacion.institucion_id == actual.usuario.institucion_id,
+            )
+            .one_or_none()
+        )
+        if cohorte is None:
+            return _error(request, "not_found", "La cohorte no está disponible.")
+        casos_cohorte = {caso.id for caso in casos_de_cohorte(db, actual, cohorte.filtros)}
     inferencias = (
         db.query(
             Inferencia.id.label("inferencia_id"),
@@ -96,6 +124,8 @@ def consultar_metricas(
         .outerjoin(DecisionMedica, DecisionMedica.inferencia_id == Inferencia.id)
         .filter(Caso.institucion_id == actual.usuario.institucion_id)
     )
+    if casos_cohorte is not None:
+        inferencias = inferencias.filter(Caso.id.in_(casos_cohorte))
     if desde is not None:
         inferencias = inferencias.filter(
             Inferencia.creado_en >= datetime.combine(desde, time.min, tzinfo=UTC)

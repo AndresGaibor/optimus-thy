@@ -18,9 +18,11 @@ import { ComparacionResultadosPage } from './pages/medico/ComparacionResultadosP
 import { AuditoriaPrediccionesPage } from './pages/investigador/AuditoriaPrediccionesPage';
 import { DatasetsPage } from './pages/investigador/DatasetsPage';
 import { MetricasPage } from './pages/investigador/MetricasPage';
+import { CohortesPage } from './pages/investigador/CohortesPage';
 import { ErroresPage } from './pages/investigador/ErroresPage';
 import { SolicitudesDerechosPage } from './pages/admin/SolicitudesDerechosPage';
 import { InferenciaPacientePage } from './pages/medico/InferenciaPacientePage';
+import { TableroPage } from './pages/admin/TableroPage';
 import { ExplicacionModeloPage } from './pages/medico/ExplicacionModeloPage';
 import { PerfilPage } from './pages/PerfilPage';
 import { RootRedirect, RoleRoute, SesionRoute } from './session/RoleRoute';
@@ -61,12 +63,12 @@ export function AppRoutes() {
           </RoleRoute>
         }
       >
-        <Route index element={<PlaceholderPage titulo="Cohortes" />} />
+        <Route index element={<CohortesPage />} />
         <Route path="predicciones" element={<AuditoriaPrediccionesPage />} />
         <Route path="datasets" element={<DatasetsPage />} />
         <Route path="metricas" element={<MetricasPage />} />
         <Route path="errores" element={<ErroresPage />} />
-        <Route path="cohortes" element={<PlaceholderPage titulo="Cohortes" />} />
+        <Route path="cohortes" element={<CohortesPage />} />
         <Route path="exportaciones" element={<PlaceholderPage titulo="Exportaciones" />} />
       </Route>
 
@@ -79,6 +81,7 @@ export function AppRoutes() {
         }
       >
         <Route index element={<UsuariosPage />} />
+        <Route path="tablero" element={<TableroPage />} />
         <Route path="usuarios" element={<UsuariosPage />} />
         <Route path="instituciones" element={<InstitucionesPage />} />
         <Route path="roles" element={<RolesPage />} />

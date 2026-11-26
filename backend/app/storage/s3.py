@@ -122,6 +122,13 @@ class ObjectStorage:
     def bucket(self) -> str:
         return self._bucket
 
+    def health(self) -> None:
+        """Comprueba el acceso al bucket sin crearlo ni modificarlo."""
+        try:
+            self._client.head_bucket(Bucket=self._bucket)
+        except Exception as exc:
+            raise StorageError("No se pudo comprobar el bucket") from exc
+
     def ensure_bucket(self) -> None:
         """Crea el bucket si no existe y le bloquea todo acceso público."""
         try:

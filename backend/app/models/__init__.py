@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from app.db import Base
 from app.models.auditoria import Auditoria, AuditoriaAncla
+from app.models.cohortes import CohorteInvestigacion
 from app.models.consentimientos import Consentimiento
 from app.models.correo import ConfiguracionCorreo, PlantillaCorreo, TokenRecuperacion
 from app.models.cumplimiento import SolicitudDerecho
@@ -22,6 +23,7 @@ __all__ = [
     "AuditoriaAncla",
     "Base",
     "Caso",
+    "CohorteInvestigacion",
     "ConfiguracionCorreo",
     "Consentimiento",
     "Dataset",
@@ -68,6 +70,7 @@ TABLAS: list[str] = [
     "nodulos",
     "decisiones_medicas",
     "consentimientos",
+    "cohortes_investigacion",
     "datasets",
     "datasets_casos",
     "auditoria",
