@@ -167,6 +167,33 @@
         }
       }
     },
+    "/auditoria/integridad": {
+      "get": {
+        "tags": [
+          "auditoria"
+        ],
+        "summary": "Verificar Integridad",
+        "description": "Comprueba los hashes de los eventos frente al ancla persistida.",
+        "operationId": "verificar_integridad_auditoria_integridad_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntegridadOut"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
+      }
+    },
     "/auditoria/exportar": {
       "get": {
         "tags": [
@@ -322,6 +349,16 @@
               }
             }
           },
+          "409": {
+            "description": "Ya existe un paciente con ese documento",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDuplicado"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -449,6 +486,16 @@
             "content": {
               "application/json": {
                 "schema": {}
+              }
+            }
+          },
+          "409": {
+            "description": "Ya existe un paciente con ese documento",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDuplicado"
+                }
               }
             }
           },
@@ -3728,13 +3775,17 @@
             "type": "string",
             "maxLength": 20,
             "minLength": 5,
-            "pattern": "^[A-Za-z0-9-]+$",
+            "pattern": "^[A-Za-z0-9 .-]+$",
             "title": "Documento"
           },
           "fecha_nacimiento": {
             "type": "string",
             "format": "date",
             "title": "Fecha Nacimiento"
+          },
+          "confirmar_duplicado": {
+            "type": "boolean",
+            "title": "Confirmar Duplicado"
           }
         },
         "type": "object",
@@ -3843,6 +3894,10 @@
             "type": "integer",
             "title": "K"
           },
+          "k_efectivo": {
+            "type": "integer",
+            "title": "K Efectivo"
+          },
           "huella": {
             "type": "string",
             "title": "Huella"
@@ -3872,6 +3927,7 @@
           "descripcion",
           "total_casos",
           "k",
+          "k_efectivo",
           "huella",
           "criterios",
           "creado_en",
@@ -3908,6 +3964,10 @@
             "type": "integer",
             "title": "K"
           },
+          "k_efectivo": {
+            "type": "integer",
+            "title": "K Efectivo"
+          },
           "huella": {
             "type": "string",
             "title": "Huella"
@@ -3930,6 +3990,7 @@
           "descripcion",
           "total_casos",
           "k",
+          "k_efectivo",
           "huella",
           "criterios",
           "creado_en"
@@ -3988,6 +4049,42 @@
         ],
         "title": "DecisionIn",
         "description": "Conclusión del médico; las observaciones son opcionales y acotadas."
+      },
+      "ErrorDuplicado": {
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/ErrorDuplicadoDetalle"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "error",
+          "request_id"
+        ],
+        "title": "ErrorDuplicado"
+      },
+      "ErrorDuplicadoDetalle": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "const": "posible_duplicado",
+            "title": "Code"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "ErrorDuplicadoDetalle"
       },
       "FiltroCasos": {
         "properties": {
@@ -4108,6 +4205,36 @@
         ],
         "title": "Health",
         "description": "Estado del servicio."
+      },
+      "IntegridadOut": {
+        "properties": {
+          "valida": {
+            "type": "boolean",
+            "title": "Valida"
+          },
+          "registros": {
+            "type": "integer",
+            "title": "Registros"
+          },
+          "primer_fallo": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Primer Fallo"
+          }
+        },
+        "type": "object",
+        "required": [
+          "valida",
+          "registros",
+          "primer_fallo"
+        ],
+        "title": "IntegridadOut"
       },
       "LoginRequest": {
         "properties": {
@@ -4421,7 +4548,7 @@
                 "type": "string",
                 "maxLength": 20,
                 "minLength": 5,
-                "pattern": "^[A-Za-z0-9-]+$"
+                "pattern": "^[A-Za-z0-9 .-]+$"
               },
               {
                 "type": "null"

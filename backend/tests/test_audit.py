@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 
 import app.models  # noqa: F401  (registra las tablas en Base.metadata)
 from app.audit import AuditAction, AuditError, AuditModule, AuditObjectType, AuditService
-from app.models import Auditoria, Usuario
+from app.models import Auditoria, AuditoriaAncla, Usuario
 
 COLUMNAS_REFERENCIA = {
     "id",
@@ -26,6 +26,8 @@ COLUMNAS_REFERENCIA = {
     "direccion_ip",
     "user_agent",
     "detalles",
+    "hash_anterior",
+    "hash_actual",
 }
 
 
@@ -100,16 +102,18 @@ def test_el_evento_guarda_referencias_y_no_datos_clinicos(
     assert evento.detalles == {"role_code": "medico"}
 
 
-def test_la_hora_la_pone_la_base(sesion: Session, usuario: Usuario) -> None:
-    """``ocurrido_en`` no se rellena en Python: lo pone ``now()`` de la base."""
+def test_el_servicio_fija_el_instante_del_evento(sesion: Session, usuario: Usuario) -> None:
+    """``ocurrido_en`` lo calcula el servicio para poder encadenar el hash."""
     evento = AuditService(sesion).record(
         AuditAction.SESSION_START, AuditModule.AUTH, usuario=usuario
     )
 
-    assert evento.ocurrido_en is None
+    assert evento.ocurrido_en is not None
+    assert evento.ocurrido_en.tzinfo is not None
+    assert evento.hash_actual is not None
+    assert evento.hash_anterior is None
     columna = Auditoria.__table__.c.ocurrido_en
     assert columna.server_default is not None
-    assert "now()" in str(columna.server_default.arg).lower()
 
 
 def test_los_detalles_admiten_codigos_y_numeros(sesion: Session) -> None:
@@ -223,3 +227,26 @@ def test_la_migracion_bloquea_actualizar_y_borrar() -> None:
     assert 'down_revision: str | None = "0004"' in fuente
     assert 'TABLA = "auditoria"' in fuente
     assert "BEFORE UPDATE OR DELETE ON {TABLA}" in fuente
+
+
+def test_el_ancla_sin_conexion_avanza_con_cada_evento(sesion: Session, usuario: Usuario) -> None:
+    servicio = AuditService(sesion)
+
+    servicio.record(AuditAction.SESSION_START, AuditModule.AUTH, usuario=usuario)
+    ultimo = servicio.record(AuditAction.SESSION_END, AuditModule.AUTH, usuario=usuario)
+
+    assert sesion.info["optimus_auditoria_registros"] == 2
+    assert sesion.info["optimus_auditoria_hash_actual"] == ultimo.hash_actual
+
+
+def test_el_ancla_persistida_avanza_con_cada_evento(db_session: Session) -> None:
+    servicio = AuditService(db_session)
+    servicio.record(AuditAction.SESSION_START, AuditModule.AUTH)
+    ultimo = servicio.record(AuditAction.SESSION_END, AuditModule.AUTH)
+    db_session.commit()
+
+    ancla = db_session.get(AuditoriaAncla, 1)
+
+    assert ancla is not None
+    assert ancla.registros == 2
+    assert ancla.hash_actual == ultimo.hash_actual

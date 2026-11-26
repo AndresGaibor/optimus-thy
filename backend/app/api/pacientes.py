@@ -13,12 +13,12 @@ import secrets
 import uuid
 from collections.abc import Callable
 from datetime import date, datetime
-from typing import Annotated, cast
+from typing import Annotated, Any, Literal, cast
 
 from fastapi import APIRouter, Depends, Query, Request, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-from sqlalchemy import func
+from sqlalchemy import func, text
 from sqlalchemy.orm import Session
 
 from app.audit.actions import AuditAction, AuditModule, AuditObjectType
@@ -41,6 +41,10 @@ def _fecha_nacimiento_valida(valor: date) -> date:
     return valor
 
 
+def _quitar_default_confirmacion(schema: dict[str, Any]) -> None:
+    schema.pop("default", None)
+
+
 class CrearPacienteRequest(BaseModel):
     """Solo los datos mínimos para identificar a la persona (RF-PAC-01)."""
 
@@ -48,8 +52,9 @@ class CrearPacienteRequest(BaseModel):
 
     nombres: str = Field(min_length=1, max_length=120)
     apellidos: str = Field(min_length=1, max_length=120)
-    documento: str = Field(min_length=5, max_length=20, pattern=r"^[A-Za-z0-9-]+$")
+    documento: str = Field(min_length=5, max_length=20, pattern=r"^[A-Za-z0-9 .-]+$")
     fecha_nacimiento: date
+    confirmar_duplicado: bool = Field(default=False, json_schema_extra=_quitar_default_confirmacion)
 
     @field_validator("fecha_nacimiento")
     @classmethod
@@ -65,7 +70,7 @@ class PatchPacienteRequest(BaseModel):
     nombres: str | None = Field(default=None, min_length=1, max_length=120)
     apellidos: str | None = Field(default=None, min_length=1, max_length=120)
     documento: str | None = Field(
-        default=None, min_length=5, max_length=20, pattern=r"^[A-Za-z0-9-]+$"
+        default=None, min_length=5, max_length=20, pattern=r"^[A-Za-z0-9 .-]+$"
     )
     fecha_nacimiento: date | None = None
 
@@ -94,6 +99,16 @@ class PacienteOut(BaseModel):
 class PacientesListOut(BaseModel):
     total: int
     items: list[PacienteOut]
+
+
+class ErrorDuplicadoDetalle(BaseModel):
+    code: Literal["posible_duplicado"]
+    message: str
+
+
+class ErrorDuplicado(BaseModel):
+    error: ErrorDuplicadoDetalle
+    request_id: str
 
 
 class CasoOut(BaseModel):
@@ -166,17 +181,33 @@ def _total_casos(db: Session, paciente_id: uuid.UUID) -> int:
     return db.query(func.count(Caso.id)).filter(Caso.paciente_id == paciente_id).scalar() or 0
 
 
+def _documento_canonico(documento: str) -> str:
+    return documento.upper().replace(" ", "").replace("-", "").replace(".", "")
+
+
+def _bloquear_documento(db: Session, institucion_id: uuid.UUID, documento: str) -> None:
+    if db.get_bind().dialect.name == "postgresql":
+        db.execute(
+            text("SELECT pg_advisory_xact_lock(hashtext(:clave))"),
+            {"clave": f"{institucion_id}:{_documento_canonico(documento)}"},
+        )
+
+
 def _documento_en_uso(
-    db: Session, institucion_id: uuid.UUID, documento: str, excluir: uuid.UUID
-) -> bool:
-    """El documento no tiene índice propio: se compara en claro dentro de la institución."""
-    filas = (
-        db.query(IdentidadPaciente.documento_cifrado)
+    db: Session, institucion_id: uuid.UUID, documento: str, excluir: uuid.UUID | None
+) -> uuid.UUID | None:
+    """Devuelve el ID de un paciente de la institución con ese documento, si existe."""
+    consulta = (
+        db.query(IdentidadPaciente.paciente_id, IdentidadPaciente.documento_cifrado)
         .join(Paciente, Paciente.id == IdentidadPaciente.paciente_id)
-        .filter(Paciente.institucion_id == institucion_id, Paciente.id != excluir)
-        .all()
+        .filter(Paciente.institucion_id == institucion_id)
     )
-    return any(fila[0] == documento for fila in filas)
+    if excluir is not None:
+        consulta = consulta.filter(Paciente.id != excluir)
+    for paciente_id, documento_guardado in consulta.all():
+        if _documento_canonico(documento_guardado) == _documento_canonico(documento):
+            return paciente_id
+    return None
 
 
 def _paciente_out(db: Session, paciente: Paciente) -> PacienteOut:
@@ -198,13 +229,33 @@ def _caso_out(caso: Caso, paciente: Paciente) -> CasoOut:
     )
 
 
-@router.post("/pacientes", status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/pacientes",
+    status_code=status.HTTP_201_CREATED,
+    response_model=PacienteOut,
+    responses={
+        409: {
+            "model": ErrorDuplicado,
+            "description": "Ya existe un paciente con ese documento",
+        }
+    },
+)
 def crear_paciente(
     request: Request,
     body: CrearPacienteRequest,
     db: Annotated[Session, Depends(session_dep)],
     actual: Annotated[SesionActual, Depends(requiere_permiso("paciente.escribir"))],
-) -> PacienteOut:
+) -> Any:
+    _bloquear_documento(db, actual.usuario.institucion_id, body.documento)
+    if not body.confirmar_duplicado and _documento_en_uso(
+        db, actual.usuario.institucion_id, body.documento, excluir=None
+    ):
+        return _error(
+            request,
+            status.HTTP_409_CONFLICT,
+            "posible_duplicado",
+            "Ya existe un paciente con ese documento",
+        )
     codigo = _codigo_nuevo(
         "PAC",
         lambda c: db.query(Paciente.id).filter(Paciente.seudonimo == c).first() is not None,
@@ -237,7 +288,16 @@ def crear_paciente(
     return _paciente_out(db, paciente)
 
 
-@router.patch("/pacientes/{id}", response_model=None)
+@router.patch(
+    "/pacientes/{id}",
+    response_model=None,
+    responses={
+        409: {
+            "model": ErrorDuplicado,
+            "description": "Ya existe un paciente con ese documento",
+        }
+    },
+)
 def actualizar_paciente(
     request: Request,
     id: str,
@@ -275,11 +335,12 @@ def actualizar_paciente(
         identidad.apellidos_cifrados = body.apellidos
         cambios.append("apellidos")
     if body.documento is not None and body.documento != identidad.documento_cifrado:
+        _bloquear_documento(db, paciente.institucion_id, body.documento)
         if _documento_en_uso(db, paciente.institucion_id, body.documento, paciente.id):
             return _error(
                 request,
                 status.HTTP_409_CONFLICT,
-                "conflict",
+                "posible_duplicado",
                 "Ya existe un paciente con ese documento",
             )
         identidad.documento_cifrado = body.documento

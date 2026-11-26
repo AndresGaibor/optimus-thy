@@ -19,22 +19,11 @@ import { Pagination } from '../../design-system/components/molecules/Pagination'
 import { SearchInput } from '../../design-system/components/molecules/SearchInput';
 import { Toast } from '../../design-system/components/molecules/Toast';
 import { Dialog, DialogClose } from '../../design-system/components/organisms/Dialog';
-import {
-  crearPaciente,
-  listarPacientes,
-  obtenerPaciente,
-  type Paciente,
-} from '../../api/pacientes';
+import { listarPacientes, obtenerPaciente, type Paciente } from '../../api/pacientes';
 import { CasosDelPaciente } from './CasosDelPaciente';
+import { useAltaPaciente } from './useAltaPaciente';
 
 const LIMITE_POR_PAGINA = 20;
-
-interface FormularioCrearPaciente {
-  nombres: string;
-  apellidos: string;
-  documento: string;
-  fecha_nacimiento: string;
-}
 
 function formatearFecha(fechaIso: string): string {
   try {
@@ -72,16 +61,6 @@ export function PacientesPage() {
   const [cargando, setCargando] = useState(true);
   const [errorListado, setErrorListado] = useState<string | null>(null);
 
-  const [dialogoCrearAbierto, setDialogoCrearAbierto] = useState(false);
-  const [formCrear, setFormCrear] = useState<FormularioCrearPaciente>({
-    nombres: '',
-    apellidos: '',
-    documento: '',
-    fecha_nacimiento: '',
-  });
-  const [erroresCrear, setErroresCrear] = useState<Record<string, string>>({});
-  const [errorCrear, setErrorCrear] = useState<string | null>(null);
-  const [guardandoCrear, setGuardandoCrear] = useState(false);
   const [avisoExito, setAvisoExito] = useState<string | null>(null);
 
   const [dialogoDetalleAbierto, setDialogoDetalleAbierto] = useState(false);
@@ -121,6 +100,14 @@ export function PacientesPage() {
     void cargarPacientes();
   }, [cargarPacientes]);
 
+  const alta = useAltaPaciente(
+    useCallback(() => {
+      setDesplazamiento(0);
+      setAvisoExito('Paciente creado correctamente.');
+      void cargarPacientes();
+    }, [cargarPacientes]),
+  );
+
   useEffect(() => {
     if (!avisoExito) {
       return;
@@ -128,94 +115,6 @@ export function PacientesPage() {
     const temporizador = setTimeout(() => setAvisoExito(null), 4000);
     return () => clearTimeout(temporizador);
   }, [avisoExito]);
-
-  const abrirCrear = useCallback(() => {
-    setFormCrear({
-      nombres: '',
-      apellidos: '',
-      documento: '',
-      fecha_nacimiento: '',
-    });
-    setErroresCrear({});
-    setErrorCrear(null);
-    setDialogoCrearAbierto(true);
-  }, []);
-
-  const validarCrear = useCallback((): boolean => {
-    const errores: Record<string, string> = {};
-    const nombres = formCrear.nombres.trim();
-    const apellidos = formCrear.apellidos.trim();
-    const documento = formCrear.documento.trim();
-    const fechaNacimiento = formCrear.fecha_nacimiento;
-
-    if (nombres === '') {
-      errores.nombres = 'El nombre es obligatorio.';
-    } else if (nombres.length > 120) {
-      errores.nombres = 'El nombre no puede superar los 120 caracteres.';
-    }
-
-    if (apellidos === '') {
-      errores.apellidos = 'Los apellidos son obligatorios.';
-    } else if (apellidos.length > 120) {
-      errores.apellidos = 'Los apellidos no pueden superar los 120 caracteres.';
-    }
-
-    if (documento === '') {
-      errores.documento = 'El documento es obligatorio.';
-    } else if (!/^[A-Za-z0-9-]{5,20}$/.test(documento)) {
-      errores.documento =
-        'El documento debe tener entre 5 y 20 caracteres alfanuméricos o guiones.';
-    }
-
-    if (fechaNacimiento === '') {
-      errores.fecha_nacimiento = 'La fecha de nacimiento es obligatoria.';
-    } else {
-      const fecha = new Date(fechaNacimiento);
-      const hoy = new Date();
-      if (Number.isNaN(fecha.getTime())) {
-        errores.fecha_nacimiento = 'La fecha de nacimiento no es válida.';
-      } else {
-        if (fecha > hoy) {
-          errores.fecha_nacimiento = 'La fecha de nacimiento no puede ser futura.';
-        }
-        const año = fecha.getFullYear();
-        if (año < 1900) {
-          errores.fecha_nacimiento = 'El año de nacimiento debe ser mayor o igual a 1900.';
-        }
-      }
-    }
-
-    setErroresCrear(errores);
-    return Object.keys(errores).length === 0;
-  }, [formCrear]);
-
-  const guardarCrear = useCallback(async () => {
-    if (!validarCrear()) {
-      return;
-    }
-    setGuardandoCrear(true);
-    setErrorCrear(null);
-    const resultado = await crearPaciente({
-      nombres: formCrear.nombres.trim(),
-      apellidos: formCrear.apellidos.trim(),
-      documento: formCrear.documento.trim(),
-      fecha_nacimiento: formCrear.fecha_nacimiento,
-    });
-    if (!resultado.ok) {
-      if (resultado.status === 422) {
-        setErrorCrear('Revisa los datos introducidos. Hay campos con errores.');
-      } else {
-        setErrorCrear('No se pudo crear el paciente. Reintenta la operación.');
-      }
-      setGuardandoCrear(false);
-      return;
-    }
-    setGuardandoCrear(false);
-    setDialogoCrearAbierto(false);
-    setDesplazamiento(0);
-    setAvisoExito('Paciente creado correctamente.');
-    void cargarPacientes();
-  }, [validarCrear, formCrear, cargarPacientes]);
 
   const verDetalle = useCallback(async (paciente: Paciente) => {
     setDialogoDetalleAbierto(true);
@@ -239,7 +138,7 @@ export function PacientesPage() {
       <PageHeader
         title="Pacientes"
         description="Se muestran códigos internos, no identidad. Use el buscador para localizar pacientes."
-        actions={<Button onClick={abrirCrear}>Nuevo paciente</Button>}
+        actions={<Button onClick={alta.abrir}>Nuevo paciente</Button>}
       />
 
       {avisoExito ? <Toast title={avisoExito} tone="success" /> : null}
@@ -296,7 +195,7 @@ export function PacientesPage() {
                       as="h2"
                       title="Todavía no hay pacientes"
                       description="Registra el primer paciente para empezar."
-                      action={<Button onClick={abrirCrear}>Registrar el primero</Button>}
+                      action={<Button onClick={alta.abrir}>Registrar el primero</Button>}
                     />
                   ) : (
                     <EmptyState
@@ -348,8 +247,8 @@ export function PacientesPage() {
       ) : null}
 
       <Dialog
-        open={dialogoCrearAbierto}
-        onOpenChange={setDialogoCrearAbierto}
+        open={alta.abierto}
+        onOpenChange={alta.setAbierto}
         title="Nuevo paciente"
         description="Introduce los datos mínimos para dar de alta al paciente."
         footer={
@@ -357,49 +256,47 @@ export function PacientesPage() {
             <DialogClose asChild>
               <Button variant="secondary">Cancelar</Button>
             </DialogClose>
-            <Button onClick={() => void guardarCrear()} disabled={guardandoCrear}>
-              {guardandoCrear ? 'Guardando...' : 'Guardar'}
-            </Button>
+            {alta.duplicado ? (
+              <Button onClick={() => void alta.guardar(true)} disabled={alta.guardando}>
+                {alta.guardando ? 'Guardando...' : 'Registrar igualmente'}
+              </Button>
+            ) : (
+              <Button onClick={() => void alta.guardar()} disabled={alta.guardando}>
+                {alta.guardando ? 'Guardando...' : 'Guardar'}
+              </Button>
+            )}
           </div>
         }
       >
         <div className="flex flex-col gap-4">
-          {errorCrear ? (
+          {alta.error ? (
             <Callout tone="danger" role="alert">
-              {errorCrear}
+              {alta.error}
             </Callout>
           ) : null}
-          <Field label="Nombres" required error={erroresCrear.nombres}>
+          <Field label="Nombres" required error={alta.errores.nombres}>
             <Input
-              value={formCrear.nombres}
-              onChange={(evento) =>
-                setFormCrear((anterior) => ({ ...anterior, nombres: evento.target.value }))
-              }
+              value={alta.formulario.nombres}
+              onChange={(evento) => alta.cambiar('nombres', evento.target.value)}
             />
           </Field>
-          <Field label="Apellidos" required error={erroresCrear.apellidos}>
+          <Field label="Apellidos" required error={alta.errores.apellidos}>
             <Input
-              value={formCrear.apellidos}
-              onChange={(evento) =>
-                setFormCrear((anterior) => ({ ...anterior, apellidos: evento.target.value }))
-              }
+              value={alta.formulario.apellidos}
+              onChange={(evento) => alta.cambiar('apellidos', evento.target.value)}
             />
           </Field>
-          <Field label="Documento" required error={erroresCrear.documento}>
+          <Field label="Documento" required error={alta.errores.documento}>
             <Input
-              value={formCrear.documento}
-              onChange={(evento) =>
-                setFormCrear((anterior) => ({ ...anterior, documento: evento.target.value }))
-              }
+              value={alta.formulario.documento}
+              onChange={(evento) => alta.cambiar('documento', evento.target.value)}
             />
           </Field>
-          <Field label="Fecha de nacimiento" required error={erroresCrear.fecha_nacimiento}>
+          <Field label="Fecha de nacimiento" required error={alta.errores.fecha_nacimiento}>
             <Input
               type="date"
-              value={formCrear.fecha_nacimiento}
-              onChange={(evento) =>
-                setFormCrear((anterior) => ({ ...anterior, fecha_nacimiento: evento.target.value }))
-              }
+              value={alta.formulario.fecha_nacimiento}
+              onChange={(evento) => alta.cambiar('fecha_nacimiento', evento.target.value)}
             />
           </Field>
         </div>

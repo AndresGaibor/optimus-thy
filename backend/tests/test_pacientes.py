@@ -61,8 +61,13 @@ def _entrar(client: TestClient, correo: str) -> TestClient:
     return client
 
 
+def _documento() -> str:
+    return f"DOC-{uuid.uuid4().hex[:8].upper()}"
+
+
 def _alta(client: TestClient, **cambios) -> dict:
-    respuesta = client.post("/pacientes", json={**PACIENTE, **cambios})
+    datos = {**PACIENTE, "documento": _documento(), **cambios}
+    respuesta = client.post("/pacientes", json=datos)
     assert respuesta.status_code == 201, respuesta.text
     return respuesta.json()
 
@@ -296,11 +301,12 @@ def test_patch_corrige_la_identidad_y_no_la_devuelve(client, mundo, test_engine)
 
 def test_patch_solo_cambia_los_campos_enviados(client, mundo):
     _entrar(client, mundo["medico"])
-    paciente = _alta(client)
+    documento = _documento()
+    paciente = _alta(client, documento=documento)
     respuesta = client.patch(f"/pacientes/{paciente['id']}", json={"nombres": "Ana Isabel"})
     assert respuesta.status_code == 200
     identidad = client.get(f"/pacientes/{paciente['id']}/identidad").json()
-    assert identidad == {**PACIENTE, "nombres": "Ana Isabel"}
+    assert identidad == {**PACIENTE, "documento": documento, "nombres": "Ana Isabel"}
 
 
 @pytest.mark.parametrize(
@@ -335,7 +341,7 @@ def test_patch_documento_duplicado_da_409_sin_revelarlo(client, mundo):
     respuesta = client.patch(f"/pacientes/{primero['id']}", json={"documento": "0607654321"})
     assert respuesta.status_code == 409
     assert "0607654321" not in respuesta.text
-    assert respuesta.json()["error"]["code"] == "conflict"
+    assert respuesta.json()["error"]["code"] == "posible_duplicado"
 
 
 def test_el_documento_duplicado_solo_se_compara_dentro_de_la_institucion(client, mundo):
@@ -396,14 +402,15 @@ def test_patch_sin_cambios_reales_no_audita(client, mundo, db_session):
 
 def test_la_identidad_solo_se_revela_en_su_ruta_y_queda_auditada(client, mundo, db_session):
     _entrar(client, mundo["medico"])
-    paciente = _alta(client)
+    documento = _documento()
+    paciente = _alta(client, documento=documento)
     respuesta = client.get(f"/pacientes/{paciente['id']}/identidad")
     assert respuesta.status_code == 200
-    assert respuesta.json() == PACIENTE
+    assert respuesta.json() == {**PACIENTE, "documento": documento}
     assert _veces(db_session, "PATIENTS.PII_REVEAL") == 1
     for url in ("/pacientes", f"/pacientes/{paciente['id']}"):
         texto = client.get(url).text
-        for valor in PACIENTE.values():
+        for valor in (*PACIENTE.values(), documento):
             assert valor not in texto
 
 
@@ -416,3 +423,14 @@ def test_la_identidad_exige_permiso_y_respeta_la_institucion(client, mundo):
     assert client.get(f"/pacientes/{paciente['id']}/identidad").status_code == 404
     _entrar(client, mundo["admin"])
     assert client.get(f"/pacientes/{paciente['id']}/identidad").status_code == 403
+
+
+def test_patch_documento_equivalente_sin_separadores_da_409(client, mundo) -> None:
+    _entrar(client, mundo["medico"])
+    _alta(client, documento="AB12345")
+    paciente = _alta(client, documento="CD12345")
+
+    respuesta = client.patch(f"/pacientes/{paciente['id']}", json={"documento": "ab-12345"})
+
+    assert respuesta.status_code == 409
+    assert respuesta.json()["error"]["code"] == "posible_duplicado"

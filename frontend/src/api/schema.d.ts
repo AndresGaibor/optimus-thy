@@ -41,6 +41,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auditoria/integridad": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Verificar Integridad
+         * @description Comprueba los hashes de los eventos frente al ancla persistida.
+         */
+        get: operations["verificar_integridad_auditoria_integridad_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auditoria/exportar": {
         parameters: {
             query?: never;
@@ -1091,6 +1111,8 @@ export interface components {
              * Format: date
              */
             fecha_nacimiento: string;
+            /** Confirmar Duplicado */
+            confirmar_duplicado?: boolean;
         };
         /** CrearTrabajoRequest */
         CrearTrabajoRequest: {
@@ -1129,6 +1151,8 @@ export interface components {
             total_casos: number;
             /** K */
             k: number;
+            /** K Efectivo */
+            k_efectivo: number;
             /** Huella */
             huella: string;
             /** Criterios */
@@ -1155,6 +1179,8 @@ export interface components {
             total_casos: number;
             /** K */
             k: number;
+            /** K Efectivo */
+            k_efectivo: number;
             /** Huella */
             huella: string;
             /** Criterios */
@@ -1186,6 +1212,22 @@ export interface components {
             decision: "acepta" | "corrige" | "descarta";
             /** Observaciones */
             observaciones?: string | null;
+        };
+        /** ErrorDuplicado */
+        ErrorDuplicado: {
+            error: components["schemas"]["ErrorDuplicadoDetalle"];
+            /** Request Id */
+            request_id: string;
+        };
+        /** ErrorDuplicadoDetalle */
+        ErrorDuplicadoDetalle: {
+            /**
+             * Code
+             * @constant
+             */
+            code: "posible_duplicado";
+            /** Message */
+            message: string;
         };
         /**
          * FiltroCasos
@@ -1222,6 +1264,15 @@ export interface components {
              * @constant
              */
             status: "ok";
+        };
+        /** IntegridadOut */
+        IntegridadOut: {
+            /** Valida */
+            valida: boolean;
+            /** Registros */
+            registros: number;
+            /** Primer Fallo */
+            primer_fallo: number | null;
         };
         /** LoginRequest */
         LoginRequest: {
@@ -1509,6 +1560,26 @@ export interface operations {
             };
         };
     };
+    verificar_integridad_auditoria_integridad_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IntegridadOut"];
+                };
+            };
+        };
+    };
     exportar_bitacora_auditoria_exportar_get: {
         parameters: {
             query?: {
@@ -1599,6 +1670,15 @@ export interface operations {
                     "application/json": components["schemas"]["PacienteOut"];
                 };
             };
+            /** @description Ya existe un paciente con ese documento */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDuplicado"];
+                };
+            };
             /** @description Validation Error */
             422: {
                 headers: {
@@ -1663,6 +1743,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Ya existe un paciente con ese documento */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDuplicado"];
                 };
             };
             /** @description Validation Error */

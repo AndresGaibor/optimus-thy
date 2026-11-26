@@ -38,6 +38,10 @@ export function ListaDatasets({ datasets, seleccionado, onSeleccionar }: ListaDa
                     <dt className="text-xs text-muted-foreground">k mínimo</dt>
                     <dd className="font-medium tabular-nums">{dataset.k}</dd>
                   </div>
+                  <div>
+                    <dt className="text-xs text-muted-foreground">k efectivo</dt>
+                    <dd className="font-medium tabular-nums">{dataset.k_efectivo}</dd>
+                  </div>
                   <div className="col-span-2">
                     <dt className="text-xs text-muted-foreground">Huella</dt>
                     <dd className="font-mono text-xs">

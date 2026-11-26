@@ -94,7 +94,9 @@ def _entrar(client: TestClient, correo: str) -> None:
 
 
 def _caso(client: TestClient) -> str:
-    paciente = client.post("/pacientes", json=PACIENTE)
+    paciente = client.post(
+        "/pacientes", json={**PACIENTE, "documento": f"DOC-{uuid.uuid4().hex[:8].upper()}"}
+    )
     assert paciente.status_code == 201, paciente.text
     caso = client.post(f"/pacientes/{paciente.json()['id']}/casos")
     assert caso.status_code == 201, caso.text
