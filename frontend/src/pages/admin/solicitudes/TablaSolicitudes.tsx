@@ -35,8 +35,6 @@ const ETIQUETA_ESTADO: Record<EstadoSolicitud, string> = {
 
 interface TablaSolicitudesProps {
   items: SolicitudDerecho[];
-  filtro: EstadoSolicitud | undefined;
-  onFiltroChange: (estado: EstadoSolicitud | undefined) => void;
   onCerrada: () => void;
 }
 
@@ -44,12 +42,7 @@ function formatearFecha(fecha: string): string {
   return FECHA.format(new Date(`${fecha}T00:00:00Z`));
 }
 
-export function TablaSolicitudes({
-  items,
-  filtro,
-  onFiltroChange,
-  onCerrada,
-}: TablaSolicitudesProps) {
+export function TablaSolicitudes({ items, onCerrada }: TablaSolicitudesProps) {
   const [seleccionada, setSeleccionada] = useState<SolicitudDerecho | null>(null);
   const [estadoFinal, setEstadoFinal] = useState<'atendida' | 'rechazada'>('atendida');
   const [respuesta, setRespuesta] = useState('');
@@ -89,22 +82,6 @@ export function TablaSolicitudes({
 
   return (
     <section className="space-y-4" aria-label="Listado de solicitudes de derechos">
-      <div className="flex flex-col gap-2 sm:max-w-xs">
-        <Field label="Filtrar por estado">
-          <Select
-            value={filtro ?? 'todas'}
-            onChange={(evento) => {
-              const valor = evento.target.value;
-              onFiltroChange(valor === 'todas' ? undefined : (valor as EstadoSolicitud));
-            }}
-          >
-            <option value="todas">Todos los estados</option>
-            <option value="pendiente">Pendientes</option>
-            <option value="atendida">Atendidas</option>
-            <option value="rechazada">Rechazadas</option>
-          </Select>
-        </Field>
-      </div>
       <div className="overflow-x-auto">
         <Table caption="Solicitudes de derechos de titulares">
           <TableHeader>
