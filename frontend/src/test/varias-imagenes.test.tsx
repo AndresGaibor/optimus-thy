@@ -111,6 +111,18 @@ describe('varias imágenes por caso', () => {
       if (url.includes('/casos/caso-demo/inferencias')) {
         return responderJson({ total: 0, items: [] });
       }
+      if (url.includes('/casos/caso-demo/ficha/historial')) {
+        return responderJson({ total: 0, items: [] });
+      }
+      if (url.includes('/casos/caso-demo/ficha')) {
+        return responderJson({
+          caso_id: 'caso-demo',
+          registrada: true,
+          cerrada_en: null,
+          cerrada_por_id: null,
+          cerrada_por_nombre: null,
+        });
+      }
       if (url.includes('/casos/caso-demo/consentimientos')) {
         return responderJson({ total: 1, items: [CONSENTIMIENTO] });
       }

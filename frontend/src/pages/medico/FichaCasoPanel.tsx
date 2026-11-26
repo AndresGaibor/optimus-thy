@@ -55,8 +55,8 @@ export function FichaCasoPanel({ casoId }: { casoId: string }) {
         obtenerEstadoFicha(casoId),
         obtenerHistorialFicha(casoId),
       ]);
-      setEstado(ficha);
-      setVersiones(historial);
+      setEstado(ficha ?? null);
+      setVersiones(Array.isArray(historial) ? historial : []);
       setError(null);
     } catch {
       setError('No se pudo cargar el historial de la ficha.');
