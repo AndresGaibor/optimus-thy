@@ -56,3 +56,13 @@ La pantalla SHALL cubrir carga, vacío y error con reintento, y SHALL no comunic
 
 - **WHEN** el trabajo termina en error o el servicio no responde
 - **THEN** la pantalla muestra un mensaje sin detalles internos y ofrece reintentar
+
+### Requirement: Aviso por imagen que no parece una ecografía tiroidea
+
+La pantalla SHALL explicar al médico que una inferencia se rechazó porque la imagen no parece una ecografía tiroidea, sin mostrar detalles internos del servicio.
+
+#### Scenario: El trabajo rechaza una imagen no compatible
+
+- **WHEN** el trabajo de inferencia termina con el código `imagen_no_parece_ecografia`
+- **THEN** la pantalla muestra un aviso específico para seleccionar una imagen que sí sea una ecografía tiroidea
+- **AND** no presenta el fallo como una indisponibilidad general del servicio
