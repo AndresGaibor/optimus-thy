@@ -37,7 +37,8 @@ async function puertoLibre(): Promise<number> {
   temporal.listen(0, '127.0.0.1');
   await once(temporal, 'listening');
   const direccion = temporal.address();
-  if (!direccion || typeof direccion === 'string') throw new Error('No se pudo obtener un puerto libre.');
+  if (!direccion || typeof direccion === 'string')
+    throw new Error('No se pudo obtener un puerto libre.');
   temporal.close();
   await once(temporal, 'close');
   return direccion.port;
@@ -60,7 +61,8 @@ async function iniciarPreview(): Promise<string> {
   });
   const url = `http://127.0.0.1:${port}`;
   for (let intento = 0; intento < 100; intento += 1) {
-    if (servidor.exitCode !== null) throw new Error('El servidor de preview terminó antes de iniciar.');
+    if (servidor.exitCode !== null)
+      throw new Error('El servidor de preview terminó antes de iniciar.');
     try {
       const respuesta = await fetch(url);
       if (respuesta.ok) return url;
@@ -76,7 +78,10 @@ function responder(status: number, cuerpo: unknown) {
   return { status, contentType: 'application/json', body: JSON.stringify(cuerpo) };
 }
 
-async function instalarApi(page: Page, rol: 'medico' | 'investigador'): Promise<{ inesperadas: string[] }> {
+async function instalarApi(
+  page: Page,
+  rol: 'medico' | 'investigador',
+): Promise<{ inesperadas: string[] }> {
   let sesion: AuthSession | null = null;
   let inferenciaEncolada = false;
   const inesperadas: string[] = [];
@@ -89,7 +94,8 @@ async function instalarApi(page: Page, rol: 'medico' | 'investigador'): Promise<
 
     if (path === '/api/auth/login' && method === 'POST') {
       const body = request.postDataJSON() as { correo?: string };
-      const correoEsperado = rol === 'medico' ? 'medico.e2e@example.test' : 'investigador.e2e@example.test';
+      const correoEsperado =
+        rol === 'medico' ? 'medico.e2e@example.test' : 'investigador.e2e@example.test';
       if (body.correo !== correoEsperado) {
         await route.fulfill(responder(401, { detail: 'Credenciales inválidas.' }));
         return;
@@ -99,7 +105,9 @@ async function instalarApi(page: Page, rol: 'medico' | 'investigador'): Promise<
       return;
     }
     if (path === '/api/auth/me' && method === 'GET') {
-      await route.fulfill(sesion ? responder(200, sesion) : responder(401, { detail: 'No autenticado.' }));
+      await route.fulfill(
+        sesion ? responder(200, sesion) : responder(401, { detail: 'No autenticado.' }),
+      );
       return;
     }
     if (path === '/api/pacientes' && method === 'GET') {
@@ -124,7 +132,10 @@ async function instalarApi(page: Page, rol: 'medico' | 'investigador'): Promise<
     }
     if (path === `/api/casos/${ids.caso}/inferencias` && method === 'GET') {
       await route.fulfill(
-        responder(200, { total: inferenciaEncolada ? 1 : 0, items: inferenciaEncolada ? [datos.inferencia] : [] }),
+        responder(200, {
+          total: inferenciaEncolada ? 1 : 0,
+          items: inferenciaEncolada ? [datos.inferencia] : [],
+        }),
       );
       return;
     }
@@ -181,7 +192,10 @@ async function flujoMedico(browser: Browser): Promise<void> {
     await page.getByLabel('Contraseña').fill('clave-sintetica');
     await page.getByRole('button', { name: 'Entrar' }).click();
     await page.getByRole('link', { name: 'Pacientes' }).click();
-    await page.getByRole('table', { name: 'Pacientes registrados' }).getByText(datos.paciente.codigo).waitFor();
+    await page
+      .getByRole('table', { name: 'Pacientes registrados' })
+      .getByText(datos.paciente.codigo)
+      .waitFor();
     await page.getByRole('button', { name: 'Ver detalle' }).click();
     const detalle = page.getByRole('dialog');
     await detalle.getByRole('heading', { name: 'Detalle del paciente' }).waitFor();
@@ -190,10 +204,16 @@ async function flujoMedico(browser: Browser): Promise<void> {
     await page.getByRole('button', { name: 'Analizar', exact: true }).click();
     await page.getByText('Confianza del detector', { exact: true }).waitFor({ timeout: 15_000 });
     await page.getByText('Resultado de IA: apoyo, no diagnóstico', { exact: true }).waitFor();
-    await page.getByText('La inferencia orienta la revisión profesional y no constituye un diagnóstico.', { exact: true }).waitFor();
+    await page
+      .getByText('La inferencia orienta la revisión profesional y no constituye un diagnóstico.', {
+        exact: true,
+      })
+      .waitFor();
     const confianza = page.getByText('Confianza del detector', { exact: true }).locator('..');
-    if (!(await confianza.getByText(/72/).isVisible())) throw new Error('No se mostró la confianza sintética del detector.');
-    if (api.inesperadas.length) throw new Error(`Solicitudes API sin fixture: ${api.inesperadas.join(', ')}`);
+    if (!(await confianza.getByText(/72/).isVisible()))
+      throw new Error('No se mostró la confianza sintética del detector.');
+    if (api.inesperadas.length)
+      throw new Error(`Solicitudes API sin fixture: ${api.inesperadas.join(', ')}`);
   } finally {
     await page.close();
   }
@@ -213,8 +233,12 @@ async function flujoInvestigador(browser: Browser): Promise<void> {
     await page.getByRole('link', { name: 'Datasets' }).click();
     await page.getByRole('heading', { name: 'Datasets anonimizados' }).waitFor();
     await page.getByRole('button', { name: `Abrir ${datos.datasetResumen.nombre}` }).click();
-    await page.getByRole('table', { name: 'Filas anonimizadas del dataset' }).getByText('sujeto-e2e-001').waitFor();
-    if (api.inesperadas.length) throw new Error(`Solicitudes API sin fixture: ${api.inesperadas.join(', ')}`);
+    await page
+      .getByRole('table', { name: 'Filas anonimizadas del dataset' })
+      .getByText('sujeto-e2e-001')
+      .waitFor();
+    if (api.inesperadas.length)
+      throw new Error(`Solicitudes API sin fixture: ${api.inesperadas.join(', ')}`);
   } finally {
     await page.close();
   }
