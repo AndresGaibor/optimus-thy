@@ -64,28 +64,56 @@ def obtener_cronologia(
 
     items: list[HitoCronologia] = []
     for imagen in db.query(Imagen).filter(Imagen.caso_id == caso_id).all():
-        items.append(HitoCronologia(tipo="imagen", ocurrido_en=imagen.creado_en, titulo="Imagen agregada"))
+        items.append(
+            HitoCronologia(tipo="imagen", ocurrido_en=imagen.creado_en, titulo="Imagen agregada")
+        )
     for inferencia in (
-        db.query(Inferencia).join(Imagen, Inferencia.imagen_id == Imagen.id)
-        .filter(Imagen.caso_id == caso_id).all()
+        db.query(Inferencia)
+        .join(Imagen, Inferencia.imagen_id == Imagen.id)
+        .filter(Imagen.caso_id == caso_id)
+        .all()
     ):
-        items.append(HitoCronologia(tipo="inferencia", ocurrido_en=inferencia.creado_en, titulo="Inferencia completada"))
+        items.append(
+            HitoCronologia(
+                tipo="inferencia", ocurrido_en=inferencia.creado_en, titulo="Inferencia completada"
+            )
+        )
     for consentimiento in db.query(Consentimiento).filter(Consentimiento.caso_id == caso_id).all():
-        items.append(HitoCronologia(
-            tipo="consentimiento", ocurrido_en=consentimiento.otorgado_en,
-            titulo="Consentimiento registrado",
-            detalle="Revocado" if consentimiento.revocado_en is not None else "Vigente",
-        ))
+        items.append(
+            HitoCronologia(
+                tipo="consentimiento",
+                ocurrido_en=consentimiento.otorgado_en,
+                titulo="Consentimiento registrado",
+                detalle="Revocado" if consentimiento.revocado_en is not None else "Vigente",
+            )
+        )
     for decision in (
-        db.query(DecisionMedica).join(Inferencia, DecisionMedica.inferencia_id == Inferencia.id)
-        .join(Imagen, Inferencia.imagen_id == Imagen.id).filter(Imagen.caso_id == caso_id).all()
+        db.query(DecisionMedica)
+        .join(Inferencia, DecisionMedica.inferencia_id == Inferencia.id)
+        .join(Imagen, Inferencia.imagen_id == Imagen.id)
+        .filter(Imagen.caso_id == caso_id)
+        .all()
     ):
-        items.append(HitoCronologia(tipo="decision", ocurrido_en=decision.creado_en, titulo="Decisión médica registrada"))
+        items.append(
+            HitoCronologia(
+                tipo="decision", ocurrido_en=decision.creado_en, titulo="Decisión médica registrada"
+            )
+        )
     ficha = db.query(FichaClinica).filter(FichaClinica.caso_id == caso_id).first()
     if ficha is not None:
-        items.append(HitoCronologia(tipo="ficha", ocurrido_en=ficha.creado_en, titulo="Ficha clínica registrada"))
+        items.append(
+            HitoCronologia(
+                tipo="ficha", ocurrido_en=ficha.creado_en, titulo="Ficha clínica registrada"
+            )
+        )
     for version in db.query(FichaVersion).filter(FichaVersion.caso_id == caso_id).all():
-        items.append(HitoCronologia(tipo="cambio_ficha", ocurrido_en=version.creado_en, titulo="Ficha clínica actualizada"))
+        items.append(
+            HitoCronologia(
+                tipo="cambio_ficha",
+                ocurrido_en=version.creado_en,
+                titulo="Ficha clínica actualizada",
+            )
+        )
 
     items.sort(key=lambda item: item.ocurrido_en, reverse=True)
     items = items[:100]

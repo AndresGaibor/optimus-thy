@@ -1,13 +1,16 @@
 """Lectura ordenada y aislada de la cronología de un caso."""
 
+# ruff: noqa: F811
+
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
+from itertools import pairwise
 
 from fastapi.testclient import TestClient
+from test_decisiones import _caso, _entrar, _inferencia, mundo  # noqa: F401
 
 from app.models.imagenes import Imagen
-from test_decisiones import _caso, _entrar, _inferencia, mundo
 
 
 def test_cronologia_orden_descendente_y_tipos(client: TestClient, mundo, db_session) -> None:
@@ -35,8 +38,7 @@ def test_cronologia_orden_descendente_y_tipos(client: TestClient, mundo, db_sess
     items = respuesta.json()["items"]
     assert {item["tipo"] for item in items} == {"imagen", "inferencia"}
     assert all(
-        primero["ocurrido_en"] >= siguiente["ocurrido_en"]
-        for primero, siguiente in zip(items, items[1:])
+        primero["ocurrido_en"] >= siguiente["ocurrido_en"] for primero, siguiente in pairwise(items)
     )
 
 
