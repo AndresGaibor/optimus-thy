@@ -213,8 +213,8 @@ export const SinConsentimiento: Story = {
     const canvas = within(canvasElement);
     await canvas.findByText('Falta el consentimiento para inferir');
     await expect(
-      canvas.getByText(/consentimiento vigente de atención de salud/),
-    ).toBeInTheDocument();
+      canvas.getAllByText(/La inferencia necesita un consentimiento vigente/).length,
+    ).toBeGreaterThan(0);
     await expect(
       canvas.getByRole('link', { name: 'Abrir el caso para registrar el consentimiento' }),
     ).toBeInTheDocument();
