@@ -1,28 +1,27 @@
-# Propuesta: curva ROC y distribución de probabilidades
+# Propuesta: curva ROC y distribución de probabilidades con tabla equivalente
 
 ## Por qué
 
-HU-097 (TES-374) pide que el investigador evalúe el modelo de forma visual: curva ROC y
-distribución de probabilidades, cada gráfico con una tabla equivalente accesible. Hoy
-`/investigador/metricas` muestra la tabla de acuerdo, la matriz de confusión y las barras de
-tendencia, pero no la curva ROC ni cómo se reparten las probabilidades entre clases.
+HU-097 (TES-374) pide que el investigador vea la curva ROC y la distribución de probabilidades,
+y que cada gráfico tenga una tabla equivalente accesible. La pantalla
+`/investigador/roc` (`frontend/src/screens/researcher/RocScreen.tsx`) ya dibuja ambas figuras con
+datos sintéticos, pero no ofrece tabla equivalente y su SVG vive fuera del sistema de diseño.
 
 ## Qué cambia
 
-- Dos organismos nuevos en `frontend/src/design-system/`:
-  - `RocCurve`: curva ROC con AUC, diagonal de referencia y tabla equivalente plegable.
-  - `ProbabilityDistribution`: barras agrupadas por intervalo de probabilidad para benigno y
-    maligno, con leyenda y tabla equivalente plegable.
-- Fixtures sintéticos de la pantalla investigadora con puntos de ROC y recuentos por intervalo.
-- `ModelMetrics` incorpora ambas figuras bajo su sección de métricas, con el aviso de que son
-  datos sintéticos de demostración y no validación clínica.
+- Dos organismos nuevos en `frontend/src/design-system/`: `RocCurve` y `ProbabilityDistribution`,
+  con la geometría que ya usa `RocScreen`, tokens en vez de colores literales y tabla equivalente
+  en un `<details>`.
+- `RocScreen` consume los organismos y pierde su SVG inline; conserva textos, AUC, leyenda y aviso
+  de datos sintéticos.
+- Historias CSF3 de ambos organismos, con `tags: ['ai-generated']`.
 
 ## Qué no cambia
 
-- No se calcula ROC en el backend: no hay conjunto etiquetado de validación y el sistema no
-  presenta métricas de validación clínica. Los datos son de la fixture de demostración.
-- No se toca la consulta de acuerdo ni sus permisos.
+- No se calcula ROC en el backend: los datos siguen siendo de la fixture de demostración y la
+  pantalla sigue declarando que no son métricas reales.
+- No se toca `ModelMetrics` ni la consulta de acuerdo.
 
 ## Alcance
 
-Interfaz de la navegación investigadora y sistema de diseño. Sin migraciones, sin API nueva.
+Sistema de diseño y pantalla de investigación. Sin migraciones, sin API nueva.
