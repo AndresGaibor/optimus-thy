@@ -270,3 +270,28 @@ def test_inferir_rechaza_una_imagen_vacia() -> None:
 
     assert respuesta.status_code == 422
     assert respuesta.json()["code"] == "imagen_invalida"
+
+
+def test_imagen_colorida_se_rechaza_antes_de_invocar_el_pipeline(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from app import main
+
+    monkeypatch.setattr(
+        main,
+        "analizar_imagen",
+        lambda *args, **kwargs: pytest.fail("El pipeline no debe ejecutarse."),
+    )
+    cliente, _ = abrir(modelos([]))
+    imagen = np.full((32, 32, 3), (0, 80, 255), dtype=np.uint8)
+    ok, codificada = cv2.imencode(".png", imagen)
+    assert ok
+
+    with cliente:
+        respuesta = cliente.post(
+            "/inferir",
+            files={"imagen": ("no-ecografia.png", codificada.tobytes(), "image/png")},
+        )
+
+    assert respuesta.status_code == 422, respuesta.text
+    assert respuesta.json()["code"] == "imagen_no_parece_ecografia"

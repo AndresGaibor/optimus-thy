@@ -32,9 +32,10 @@ from starlette.concurrency import run_in_threadpool
 
 from app.carga import CargaModelos, cargar_modelos
 from app.config import ConfiguracionIA, ErrorConfiguracion
-from app.contrato import VERSION_CONTRATO
+from app.contrato import CODIGO_IMAGEN_NO_PARECE_ECOGRAFIA, VERSION_CONTRATO
 from app.modelos import CODIGO_MODELO_NO_DISPONIBLE
 from app.pipeline import analizar_imagen
+from app.validacion_ecografia import parece_ecografia_tiroidea
 
 TAMANO_MAXIMO_IMAGEN = 20 * 1024 * 1024
 """20 MB: suficiente para una ecografía y acotado para no llenar la memoria."""
@@ -225,6 +226,13 @@ def crear_aplicacion(cargador: Cargador = cargar_modelos) -> FastAPI:
                 "imagen_invalida",
                 "No se pudo decodificar la imagen; el archivo no es una imagen válida.",
             )
+        if not parece_ecografia_tiroidea(imagen_bgr):
+            return _error(
+                422,
+                CODIGO_IMAGEN_NO_PARECE_ECOGRAFIA,
+                "La imagen no parece una ecografía tiroidea. Selecciona una ecografía.",
+            )
+
 
         try:
             resultado = await run_in_threadpool(

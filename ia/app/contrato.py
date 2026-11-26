@@ -18,6 +18,8 @@ from typing import Any
 
 VERSION_CONTRATO = "1.1"
 """Versión del contrato de salida; se sube cuando cambia algún campo."""
+CODIGO_IMAGEN_NO_PARECE_ECOGRAFIA = "imagen_no_parece_ecografia"
+"""La imagen recibida no tiene apariencia de ecografía tiroidea."""
 
 ORIGEN_BGAUNET = "bgaunet"
 ORIGEN_MGAC = "mgac"
