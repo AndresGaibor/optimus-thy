@@ -1,14 +1,43 @@
 """Configuración de la aplicación cargada desde variables de entorno."""
 
+import ipaddress
+import warnings
 from functools import lru_cache
 
 from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from sqlalchemy.engine import make_url
+from sqlalchemy.exc import ArgumentError
 
 DEV_PII_ENCRYPTION_KEY = "cambiar-en-local-no-usar-fuera-de-desarrollo"
 """Clave de ejemplo: solo se acepta en desarrollo y pruebas."""
 
 ENTORNOS_DE_DESARROLLO = frozenset({"local", "development", "test"})
+
+def _database_es_local(database_url: str) -> bool:
+    """Reconoce direcciones locales sin resolver DNS ni exponer la URL."""
+    try:
+        url = make_url(database_url)
+    except ArgumentError:
+        return True
+    if url.get_backend_name() == "sqlite" or not url.host:
+        return True
+    host = url.host.strip().lower().rstrip(".")
+    if host in {"localhost", "localhost.localdomain"}:
+        return True
+    try:
+        return ipaddress.ip_address(host).is_loopback
+    except ValueError:
+        return False
+
+
+def _database_parece_produccion(database_url: str) -> bool:
+    """Detecta marcadores comunes de producción en host y nombre de base."""
+    try:
+        url = make_url(database_url)
+    except ArgumentError:
+        return False
+    return any("prod" in parte.casefold() for parte in (url.host or "", url.database or ""))
 
 
 class Settings(BaseSettings):
@@ -90,6 +119,7 @@ class Settings(BaseSettings):
         default=DEV_PII_ENCRYPTION_KEY,
         alias="PII_ENCRYPTION_KEY",
         description="Clave de cifrado de datos personales; nunca se guarda en el repositorio.",
+        repr=False,
     )
     modelos_dir: str = Field(default="/modelos", alias="MODELOS_DIR")
     ia_url: str = Field(default="http://ia:8002", alias="IA_URL")
@@ -139,9 +169,10 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def _exigir_clave_propia(self) -> "Settings":
-        """Fuera de desarrollo la clave de ejemplo no es aceptable."""
+        """Exige seguridad en producción y advierte sobre bases ajenas en desarrollo."""
+        entorno = self.environment.lower()
         if (
-            self.environment.lower() not in ENTORNOS_DE_DESARROLLO
+            entorno not in ENTORNOS_DE_DESARROLLO
             and self.pii_encryption_key == DEV_PII_ENCRYPTION_KEY
         ):
             raise ValueError(

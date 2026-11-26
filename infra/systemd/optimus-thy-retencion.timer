@@ -1,0 +1,10 @@
+[Unit]
+Description=Ejecución diaria de la retención operativa OPTIMUS-THY
+
+[Timer]
+OnCalendar=*-*-* 04:30:00
+Persistent=true
+Unit=optimus-thy-retencion.service
+
+[Install]
+WantedBy=timers.target
