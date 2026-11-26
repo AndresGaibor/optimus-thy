@@ -1,14 +1,13 @@
-# Spec Delta
+# retencion-entornos Specification
 
 ## Purpose
-
 Definir una retención operativa activada explícitamente y evitar que producción arranque con secretos o conexiones locales inseguros.
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: Plazos operativos configurables
 
-La configuración DEBE establecer 90 días para trabajos terminados y 365 días para alertas revisadas; ambos plazos DEBEN ser al menos un día. La purga DEBE estar deshabilitada por defecto.
+La configuración SHALL establecer 90 días para trabajos terminados y 365 días para alertas revisadas; ambos plazos SHALL ser al menos un día. La purga SHALL estar deshabilitada por defecto.
 
 #### Scenario: Valores por defecto
 - **WHEN** no se configuran los plazos ni la activación de purga
@@ -20,7 +19,7 @@ La configuración DEBE establecer 90 días para trabajos terminados y 365 días 
 
 ### Requirement: Purga explícita y simulación
 
-El comando de retención DEBE simular sin `--si`; solo DEBE borrar datos si recibe `--si` y `PURGA_HABILITADA` está activa. La salida DEBE informar conteos y estados sin datos personales.
+El comando de retención SHALL simular sin `--si`; solo SHALL borrar datos si recibe `--si` y `PURGA_HABILITADA` está activa. La salida SHALL informar conteos y estados sin datos personales.
 
 #### Scenario: Simulación predeterminada
 - **WHEN** se ejecuta el comando sin `--si`
@@ -36,7 +35,7 @@ El comando de retención DEBE simular sin `--si`; solo DEBE borrar datos si reci
 
 ### Requirement: Alcance operativo y bitácora íntegra
 
-La retención DEBE eliminar solo trabajos en estado `completado` o `error` vencidos y alertas revisadas vencidas; DEBE conservar íntegra la bitácora y cualquier dato clínico o de identidad.
+La retención SHALL eliminar solo trabajos en estado `completado` o `error` vencidos y alertas revisadas vencidas; SHALL conservar íntegra la bitácora y cualquier dato clínico o de identidad.
 
 #### Scenario: Trabajos y alertas vencidos
 - **WHEN** una purga habilitada encuentra trabajos terminales vencidos y alertas revisadas cuyo `creado_en` excede su plazo
@@ -56,7 +55,7 @@ La retención DEBE eliminar solo trabajos en estado `completado` o `error` venci
 
 ### Requirement: Separación segura de entornos
 
-Producción DEBE requerir una clave PII distinta de la clave de ejemplo, `SESSION_COOKIE_SECURE=true` y una `DATABASE_URL` no local. En desarrollo, una base que parezca de producción DEBE generar una advertencia sin revelar secretos.
+Producción SHALL requerir una clave PII distinta de la clave de ejemplo, `SESSION_COOKIE_SECURE=true` y una `DATABASE_URL` no local. En desarrollo, una base que parezca de producción SHALL generar una advertencia sin revelar secretos.
 
 #### Scenario: Configuración de producción insegura
 - **WHEN** producción carece de clave PII propia, cookie segura o base no local
@@ -68,7 +67,7 @@ Producción DEBE requerir una clave PII distinta de la clave de ejemplo, `SESSIO
 
 ### Requirement: Ejecución periódica documentada
 
-La operación DEBE ofrecer una ejecución diaria a las 04:30 y un procedimiento para simular, autorizar y comprobar la retención.
+La operación SHALL ofrecer una ejecución diaria a las 04:30 y un procedimiento para simular, autorizar y comprobar la retención.
 
 #### Scenario: Ejecución programada
 - **WHEN** vence el temporizador diario de retención
