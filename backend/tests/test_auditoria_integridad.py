@@ -99,3 +99,24 @@ def test_integridad_exige_permiso_de_lectura_de_auditoria(client, mundo) -> None
     respuesta = client.get("/auditoria/integridad")
 
     assert respuesta.status_code == 403
+
+
+def test_integridad_detecta_la_eliminacion_de_la_cola(client, mundo, db_session: Session) -> None:
+    _entrar(client, mundo["admin"].email)
+    servicio = AuditService(db_session)
+    servicio.record(AuditAction.SESSION_START, AuditModule.AUTH, usuario=mundo["admin"])
+    ultimo = servicio.record(AuditAction.SESSION_END, AuditModule.AUTH, usuario=mundo["admin"])
+    db_session.commit()
+
+    db_session.execute(text("ALTER TABLE auditoria DISABLE TRIGGER auditoria_solo_escritura"))
+    try:
+        db_session.execute(text("DELETE FROM auditoria WHERE id = :id"), {"id": ultimo.id})
+    finally:
+        db_session.execute(text("ALTER TABLE auditoria ENABLE TRIGGER auditoria_solo_escritura"))
+    db_session.commit()
+
+    respuesta = client.get("/auditoria/integridad")
+
+    assert respuesta.status_code == 200
+    registros = db_session.query(Auditoria).count()
+    assert respuesta.json() == {"valida": False, "registros": registros, "primer_fallo": None}

@@ -173,14 +173,16 @@
           "auditoria"
         ],
         "summary": "Verificar Integridad",
-        "description": "Comprueba toda la cadena y solo devuelve estado e identificador del primer fallo.",
+        "description": "Comprueba los hashes de los eventos frente al ancla persistida.",
         "operationId": "verificar_integridad_auditoria_integridad_get",
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/IntegridadOut"
+                }
               }
             }
           }
@@ -352,7 +354,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/ErrorDuplicado"
                 }
               }
             }
@@ -484,6 +486,16 @@
             "content": {
               "application/json": {
                 "schema": {}
+              }
+            }
+          },
+          "409": {
+            "description": "Ya existe un paciente con ese documento",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDuplicado"
+                }
               }
             }
           },
@@ -3763,7 +3775,7 @@
             "type": "string",
             "maxLength": 20,
             "minLength": 5,
-            "pattern": "^[A-Za-z0-9-]+$",
+            "pattern": "^[A-Za-z0-9 .-]+$",
             "title": "Documento"
           },
           "fecha_nacimiento": {
@@ -3773,8 +3785,7 @@
           },
           "confirmar_duplicado": {
             "type": "boolean",
-            "title": "Confirmar Duplicado",
-            "default": false
+            "title": "Confirmar Duplicado"
           }
         },
         "type": "object",
@@ -4039,6 +4050,42 @@
         "title": "DecisionIn",
         "description": "Conclusión del médico; las observaciones son opcionales y acotadas."
       },
+      "ErrorDuplicado": {
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/ErrorDuplicadoDetalle"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "error",
+          "request_id"
+        ],
+        "title": "ErrorDuplicado"
+      },
+      "ErrorDuplicadoDetalle": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "const": "posible_duplicado",
+            "title": "Code"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "ErrorDuplicadoDetalle"
+      },
       "FiltroCasos": {
         "properties": {
           "desde": {
@@ -4158,6 +4205,36 @@
         ],
         "title": "Health",
         "description": "Estado del servicio."
+      },
+      "IntegridadOut": {
+        "properties": {
+          "valida": {
+            "type": "boolean",
+            "title": "Valida"
+          },
+          "registros": {
+            "type": "integer",
+            "title": "Registros"
+          },
+          "primer_fallo": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Primer Fallo"
+          }
+        },
+        "type": "object",
+        "required": [
+          "valida",
+          "registros",
+          "primer_fallo"
+        ],
+        "title": "IntegridadOut"
       },
       "LoginRequest": {
         "properties": {
@@ -4471,7 +4548,7 @@
                 "type": "string",
                 "maxLength": 20,
                 "minLength": 5,
-                "pattern": "^[A-Za-z0-9-]+$"
+                "pattern": "^[A-Za-z0-9 .-]+$"
               },
               {
                 "type": "null"

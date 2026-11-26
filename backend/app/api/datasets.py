@@ -20,7 +20,7 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends, Request, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field, model_validator
-from sqlalchemy import and_
+from sqlalchemy import and_, func
 from sqlalchemy.orm import Session, joinedload
 
 from app.audit.actions import AuditAction, AuditModule, AuditObjectType
@@ -28,6 +28,7 @@ from app.audit.http import registrar
 from app.auth.deps import SesionActual, requiere_permiso
 from app.db import session_dep
 from app.investigacion.anonimizacion import (
+    CAMPOS_CUASI_IDENTIFICADORES,
     anonimizar_caso,
     cuasi_identificadores,
     huella_de,
@@ -203,6 +204,29 @@ def _k_efectivo(filas: Iterable[Mapping[str, Any]]) -> int:
     return min(_frecuencias_cuasi_identificadores(filas).values())
 
 
+def _k_efectivo_por_dataset(db: Session, institucion_id: uuid.UUID) -> dict[uuid.UUID, int]:
+    claves = [
+        func.jsonb_extract_path_text(DatasetCaso.datos, campo)
+        for campo in CAMPOS_CUASI_IDENTIFICADORES
+    ]
+    clases = (
+        db.query(
+            DatasetCaso.dataset_id.label("dataset_id"),
+            func.count().label("frecuencia"),
+        )
+        .join(Dataset, Dataset.id == DatasetCaso.dataset_id)
+        .filter(Dataset.institucion_id == institucion_id)
+        .group_by(DatasetCaso.dataset_id, *claves)
+        .subquery()
+    )
+    minimos = (
+        db.query(clases.c.dataset_id, func.min(clases.c.frecuencia))
+        .group_by(clases.c.dataset_id)
+        .all()
+    )
+    return {dataset_id: int(k_efectivo) for dataset_id, k_efectivo in minimos}
+
+
 def _resumen(dataset: Dataset, k_efectivo: int) -> DatasetResumenOut:
     return DatasetResumenOut(
         id=str(dataset.id),
@@ -335,11 +359,8 @@ def listar_datasets(
     """Metadatos de los datasets de la institución, del más reciente al más antiguo."""
     consulta = db.query(Dataset).filter(Dataset.institucion_id == actual.usuario.institucion_id)
     total = consulta.count()
-    filas = (
-        consulta.options(joinedload(Dataset.casos))
-        .order_by(Dataset.creado_en.desc(), Dataset.id)
-        .all()
-    )
+    k_efectivos = _k_efectivo_por_dataset(db, actual.usuario.institucion_id)
+    filas = consulta.order_by(Dataset.creado_en.desc(), Dataset.id).all()
     registrar(
         db,
         request,
@@ -352,7 +373,7 @@ def listar_datasets(
     )
     return DatasetsListOut(
         total=total,
-        items=[_resumen(fila, _k_efectivo(caso.datos for caso in fila.casos)) for fila in filas],
+        items=[_resumen(fila, k_efectivos[fila.id]) for fila in filas],
     )
 
 

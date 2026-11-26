@@ -41,6 +41,10 @@ export function useAltaPaciente(onCreado: () => void) {
 
   const cambiar = useCallback((campo: keyof FormularioAltaPaciente, valor: string) => {
     setFormulario((anterior) => ({ ...anterior, [campo]: valor }));
+    if (campo === 'documento') {
+      setDuplicado(false);
+      setError(null);
+    }
   }, []);
 
   const validar = useCallback((): boolean => {

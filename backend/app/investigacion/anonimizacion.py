@@ -45,7 +45,7 @@ _FORMATO_MES: Final[str] = "%Y-%m"
 _DIAS_DESPLAZAMIENTO: Final[int] = 365
 _CATEGORIA_RE: Final[re.Pattern[str]] = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
 _UNIDAD_RE: Final[re.Pattern[str]] = re.compile(r"^[A-Za-z0-9µμ/%^.\- ]{1,16}$")
-_CUASI_IDENTIFICADORES: Final[tuple[str, ...]] = (
+CAMPOS_CUASI_IDENTIFICADORES: Final[tuple[str, ...]] = (
     "edad_rango",
     "mes_caso",
     "mes_tsh",
@@ -62,7 +62,7 @@ _CUASI_IDENTIFICADORES: Final[tuple[str, ...]] = (
 
 def cuasi_identificadores(fila: Mapping[str, Any]) -> tuple[Any, ...]:
     """Devuelve la clave de equivalencia publicada, sin atributos sensibles."""
-    return tuple(fila.get(campo) for campo in _CUASI_IDENTIFICADORES)
+    return tuple(fila.get(campo) for campo in CAMPOS_CUASI_IDENTIFICADORES)
 
 
 def _clave() -> bytes:

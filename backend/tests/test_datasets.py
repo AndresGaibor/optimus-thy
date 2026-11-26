@@ -9,6 +9,7 @@ from decimal import Decimal
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import event
 
 from app.investigacion.anonimizacion import _desplazamiento_dias
 from app.models.auditoria import Auditoria
@@ -185,17 +186,31 @@ def test_clases_con_k_suficiente_incluyen_k_efectivo(client, mundo, db_session) 
 def test_listar_datasets(client, mundo, db_session) -> None:
     _entrar(client, mundo["investigador"])
     _sembrar_casos(db_session, mundo["institucion"], 5)
-    _crear(client, "cohorte-a")
-    _crear(client, "cohorte-b")
+    creados = {nombre: _crear(client, nombre) for nombre in ("cohorte-a", "cohorte-b")}
+    consultas: list[str] = []
 
-    respuesta = client.get("/investigacion/datasets")
+    def capturar_consulta(conn, cursor, statement, parameters, context, executemany):
+        consultas.append(statement)
+
+    engine = db_session.get_bind()
+    event.listen(engine, "before_cursor_execute", capturar_consulta)
+    try:
+        respuesta = client.get("/investigacion/datasets")
+    finally:
+        event.remove(engine, "before_cursor_execute", capturar_consulta)
 
     assert respuesta.status_code == 200, respuesta.text
     cuerpo = respuesta.json()
     assert cuerpo["total"] == 2
     assert {item["nombre"] for item in cuerpo["items"]} == {"cohorte-a", "cohorte-b"}
     assert all("items" not in item for item in cuerpo["items"])
-    assert all(item["k_efectivo"] >= 5 for item in cuerpo["items"])
+    assert {item["nombre"]: item["k_efectivo"] for item in cuerpo["items"]} == {
+        nombre: dataset["k_efectivo"] for nombre, dataset in creados.items()
+    }
+    assert not any(
+        "datasets_casos" in consulta.lower() and "caso_id" in consulta.lower()
+        for consulta in consultas
+    )
 
 
 def test_detalle_dataset(client, mundo, db_session) -> None:

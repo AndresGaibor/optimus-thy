@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 
 import app.models  # noqa: F401  (registra las tablas en Base.metadata)
 from app.audit import AuditAction, AuditError, AuditModule, AuditObjectType, AuditService
-from app.models import Auditoria, Usuario
+from app.models import Auditoria, AuditoriaAncla, Usuario
 
 COLUMNAS_REFERENCIA = {
     "id",
@@ -227,3 +227,26 @@ def test_la_migracion_bloquea_actualizar_y_borrar() -> None:
     assert 'down_revision: str | None = "0004"' in fuente
     assert 'TABLA = "auditoria"' in fuente
     assert "BEFORE UPDATE OR DELETE ON {TABLA}" in fuente
+
+
+def test_el_ancla_sin_conexion_avanza_con_cada_evento(sesion: Session, usuario: Usuario) -> None:
+    servicio = AuditService(sesion)
+
+    servicio.record(AuditAction.SESSION_START, AuditModule.AUTH, usuario=usuario)
+    ultimo = servicio.record(AuditAction.SESSION_END, AuditModule.AUTH, usuario=usuario)
+
+    assert sesion.info["optimus_auditoria_registros"] == 2
+    assert sesion.info["optimus_auditoria_hash_actual"] == ultimo.hash_actual
+
+
+def test_el_ancla_persistida_avanza_con_cada_evento(db_session: Session) -> None:
+    servicio = AuditService(db_session)
+    servicio.record(AuditAction.SESSION_START, AuditModule.AUTH)
+    ultimo = servicio.record(AuditAction.SESSION_END, AuditModule.AUTH)
+    db_session.commit()
+
+    ancla = db_session.get(AuditoriaAncla, 1)
+
+    assert ancla is not None
+    assert ancla.registros == 2
+    assert ancla.hash_actual == ultimo.hash_actual

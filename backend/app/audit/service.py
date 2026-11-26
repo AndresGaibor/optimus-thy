@@ -23,7 +23,7 @@ from sqlalchemy.exc import UnboundExecutionError
 from sqlalchemy.orm import Session
 
 from app.audit.actions import AuditAction, AuditModule, AuditObjectType
-from app.models.auditoria import Auditoria
+from app.models.auditoria import Auditoria, AuditoriaAncla
 from app.models.usuarios import Usuario
 
 __all__ = ["AuditError", "AuditService", "hash_evento"]
@@ -161,6 +161,7 @@ class AuditService:
         hash_anterior: str | None
         if bind is None:
             hash_anterior = self._session.info.get("optimus_auditoria_hash_actual")
+            registros = int(self._session.info.get("optimus_auditoria_registros", 0))
             ocurrido_en = datetime.now(UTC)
         else:
             if bind.dialect.name == "postgresql":
@@ -208,9 +209,19 @@ class AuditService:
         )
         self._session.add(evento)
         if bind is None:
+            self._session.info["optimus_auditoria_registros"] = registros + 1
             self._session.info["optimus_auditoria_hash_actual"] = hash_actual
         else:
             self._session.flush([evento])
+            ancla = self._session.get(AuditoriaAncla, 1)
+            if ancla is None:
+                registros = self._session.scalar(select(func.count(Auditoria.id))) or 0
+                ancla = AuditoriaAncla(id=1, registros=registros, hash_actual=hash_actual)
+                self._session.add(ancla)
+            else:
+                ancla.registros += 1
+                ancla.hash_actual = hash_actual
+            self._session.flush([ancla])
         return evento
 
     def record_denied(

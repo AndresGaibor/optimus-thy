@@ -52,3 +52,14 @@ class Auditoria(Base):
 
     usuario: Mapped[Usuario | None] = relationship(back_populates="auditoria")
     institucion: Mapped[Institucion | None] = relationship(back_populates="auditoria")
+
+
+class AuditoriaAncla(Base):
+    """Estado final confirmado de la cadena de auditoría."""
+
+    __tablename__ = "auditoria_ancla"
+    __table_args__ = (sa.CheckConstraint("id = 1", name="singleton"),)
+
+    id: Mapped[int] = mapped_column(sa.SmallInteger, primary_key=True)
+    registros: Mapped[int] = mapped_column(sa.BigInteger, nullable=False)
+    hash_actual: Mapped[str | None] = mapped_column(sa.String(64))

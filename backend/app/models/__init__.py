@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from app.db import Base
-from app.models.auditoria import Auditoria
+from app.models.auditoria import Auditoria, AuditoriaAncla
 from app.models.consentimientos import Consentimiento
 from app.models.correo import ConfiguracionCorreo, PlantillaCorreo, TokenRecuperacion
 from app.models.datasets import Dataset, DatasetCaso
@@ -18,6 +18,7 @@ from app.models.usuarios import Permiso, Rol, RolPermiso, Usuario, UsuarioRol
 
 __all__ = [
     "Auditoria",
+    "AuditoriaAncla",
     "Base",
     "Caso",
     "ConfiguracionCorreo",
@@ -68,6 +69,7 @@ TABLAS: list[str] = [
     "datasets",
     "datasets_casos",
     "auditoria",
+    "auditoria_ancla",
     "sesiones",
     "trabajos",
     "configuracion_correo",

@@ -50,7 +50,7 @@ export interface paths {
         };
         /**
          * Verificar Integridad
-         * @description Comprueba toda la cadena y solo devuelve estado e identificador del primer fallo.
+         * @description Comprueba los hashes de los eventos frente al ancla persistida.
          */
         get: operations["verificar_integridad_auditoria_integridad_get"];
         put?: never;
@@ -1111,11 +1111,8 @@ export interface components {
              * Format: date
              */
             fecha_nacimiento: string;
-            /**
-             * Confirmar Duplicado
-             * @default false
-             */
-            confirmar_duplicado: boolean;
+            /** Confirmar Duplicado */
+            confirmar_duplicado?: boolean;
         };
         /** CrearTrabajoRequest */
         CrearTrabajoRequest: {
@@ -1216,6 +1213,22 @@ export interface components {
             /** Observaciones */
             observaciones?: string | null;
         };
+        /** ErrorDuplicado */
+        ErrorDuplicado: {
+            error: components["schemas"]["ErrorDuplicadoDetalle"];
+            /** Request Id */
+            request_id: string;
+        };
+        /** ErrorDuplicadoDetalle */
+        ErrorDuplicadoDetalle: {
+            /**
+             * Code
+             * @constant
+             */
+            code: "posible_duplicado";
+            /** Message */
+            message: string;
+        };
         /**
          * FiltroCasos
          * @description Criterios clínicos del conjunto; nunca identificadores de pacientes.
@@ -1251,6 +1264,15 @@ export interface components {
              * @constant
              */
             status: "ok";
+        };
+        /** IntegridadOut */
+        IntegridadOut: {
+            /** Valida */
+            valida: boolean;
+            /** Registros */
+            registros: number;
+            /** Primer Fallo */
+            primer_fallo: number | null;
         };
         /** LoginRequest */
         LoginRequest: {
@@ -1553,7 +1575,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["IntegridadOut"];
                 };
             };
         };
@@ -1654,7 +1676,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": Record<string, never>;
+                    "application/json": components["schemas"]["ErrorDuplicado"];
                 };
             };
             /** @description Validation Error */
@@ -1721,6 +1743,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Ya existe un paciente con ese documento */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDuplicado"];
                 };
             };
             /** @description Validation Error */

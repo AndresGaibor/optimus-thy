@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
+from threading import Barrier
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -66,7 +69,11 @@ def test_alta_duplicada_sin_confirmar_da_409_sin_insertar_filas(client, mundo, d
 
     assert respuesta.status_code == 409
     assert respuesta.json()["error"]["code"] == "posible_duplicado"
-    assert respuesta.json()["error"]["paciente_id"] == existente["id"]
+    assert set(respuesta.json()) == {"error", "request_id"}
+    assert set(respuesta.json()["error"]) == {"code", "message"}
+    assert respuesta.json()["request_id"]
+    assert "paciente_id" not in respuesta.json()["error"]
+    assert existente["id"] not in respuesta.text
     assert "0601234567" not in respuesta.text
     assert "Ana María" not in respuesta.text
     db_session.expire_all()
@@ -104,3 +111,28 @@ def test_documento_repetido_en_otra_institucion_no_bloquea_el_alta(client, mundo
     respuesta = client.post("/pacientes", json=PACIENTE)
 
     assert respuesta.status_code == 201, respuesta.text
+
+
+def test_documento_equivalente_sin_separadores_da_409(client, mundo) -> None:
+    _entrar(client, mundo["medico"])
+    _alta(client, documento="AB12345")
+
+    respuesta = client.post("/pacientes", json={**PACIENTE, "documento": "ab-12345"})
+
+    assert respuesta.status_code == 409
+    assert respuesta.json()["error"]["code"] == "posible_duplicado"
+    assert "paciente_id" not in respuesta.json()["error"]
+
+
+def test_altas_simultaneas_del_mismo_documento_crean_un_solo_paciente(client, mundo) -> None:
+    _entrar(client, mundo["medico"])
+    inicio = Barrier(2)
+
+    def crear() -> int:
+        inicio.wait(timeout=10)
+        return client.post("/pacientes", json=PACIENTE).status_code
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        estados = list(executor.map(lambda _: crear(), range(2)))
+
+    assert sorted(estados) == [201, 409]

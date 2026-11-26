@@ -341,7 +341,7 @@ def test_patch_documento_duplicado_da_409_sin_revelarlo(client, mundo):
     respuesta = client.patch(f"/pacientes/{primero['id']}", json={"documento": "0607654321"})
     assert respuesta.status_code == 409
     assert "0607654321" not in respuesta.text
-    assert respuesta.json()["error"]["code"] == "conflict"
+    assert respuesta.json()["error"]["code"] == "posible_duplicado"
 
 
 def test_el_documento_duplicado_solo_se_compara_dentro_de_la_institucion(client, mundo):
@@ -423,3 +423,14 @@ def test_la_identidad_exige_permiso_y_respeta_la_institucion(client, mundo):
     assert client.get(f"/pacientes/{paciente['id']}/identidad").status_code == 404
     _entrar(client, mundo["admin"])
     assert client.get(f"/pacientes/{paciente['id']}/identidad").status_code == 403
+
+
+def test_patch_documento_equivalente_sin_separadores_da_409(client, mundo) -> None:
+    _entrar(client, mundo["medico"])
+    _alta(client, documento="AB12345")
+    paciente = _alta(client, documento="CD12345")
+
+    respuesta = client.patch(f"/pacientes/{paciente['id']}", json={"documento": "ab-12345"})
+
+    assert respuesta.status_code == 409
+    assert respuesta.json()["error"]["code"] == "posible_duplicado"

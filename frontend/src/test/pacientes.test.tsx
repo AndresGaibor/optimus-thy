@@ -321,6 +321,64 @@ describe('pacientes médico', () => {
     expect(segundo).toMatchObject({ documento: 'ABC-12345', confirmar_duplicado: true });
   });
 
+  it('al cambiar el documento tras el aviso vuelve a enviarlo sin confirmar', async () => {
+    fetchMock.mockResolvedValueOnce(responderJson(mockSessionMedico));
+    fetchMock.mockResolvedValueOnce(responderJson({ total: 0, items: [] }));
+    fetchMock.mockResolvedValueOnce(
+      responderJson(
+        {
+          error: { code: 'posible_duplicado', message: 'Ya existe un paciente con ese documento.' },
+          request_id: 'req-1',
+        },
+        409,
+      ),
+    );
+    fetchMock.mockResolvedValueOnce(
+      responderJson(
+        { id: 'p-nuevo', codigo: 'PAC-NEW', creado_en: '2026-11-05T10:00:00Z', total_casos: 0 },
+        201,
+      ),
+    );
+    fetchMock.mockResolvedValueOnce(responderJson({ total: 1, items: [] }));
+
+    const usuario = userEvent.setup();
+    montarApp();
+
+    await waitFor(() => {
+      expect(screen.getByText('Todavía no hay pacientes')).toBeInTheDocument();
+    });
+
+    await usuario.click(screen.getByRole('button', { name: 'Nuevo paciente' }));
+    await usuario.type(screen.getByLabelText(/^Nombres/i), 'Ana María');
+    await usuario.type(screen.getByLabelText(/^Apellidos/i), 'García López');
+    const documento = screen.getByLabelText(/^Documento/i);
+    await usuario.type(documento, 'ABC-12345');
+    await usuario.type(screen.getByLabelText(/^Fecha de nacimiento/i), '1990-05-10');
+    await usuario.click(screen.getByRole('button', { name: 'Guardar' }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Registrar igualmente' })).toBeInTheDocument();
+    });
+
+    await usuario.clear(documento);
+    await usuario.type(documento, 'XYZ-67890');
+    expect(screen.queryByRole('button', { name: 'Registrar igualmente' })).not.toBeInTheDocument();
+    await usuario.click(screen.getByRole('button', { name: 'Guardar' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Paciente creado correctamente.')).toBeInTheDocument();
+    });
+
+    const posts = fetchMock.mock.calls.filter((call) => {
+      const arg = call[0];
+      return arg instanceof Request && arg.method.toUpperCase() === 'POST';
+    });
+    expect(posts).toHaveLength(2);
+    const segundo = await extraerCuerpo(posts[1] as unknown[]);
+    expect(segundo).toMatchObject({ documento: 'XYZ-67890' });
+    expect((segundo as Record<string, unknown>).confirmar_duplicado).not.toBe(true);
+  });
+
   it('muestra error con botón Reintentar y vuelve a cargar al pulsarlo', async () => {
     fetchMock.mockResolvedValueOnce(responderJson(mockSessionMedico));
     fetchMock.mockResolvedValueOnce(responderJson({ detail: 'error' }, 500));

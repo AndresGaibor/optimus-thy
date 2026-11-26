@@ -75,6 +75,8 @@ Ejecutar con parámetros enlazados `dataset_id` (UUID del dataset) y `k_publicad
 3. **Series temporales.** Los meses desplazados conservan orden/intervalos aproximados y el mismo desplazamiento se aplica a fechas de un caso; fechas y resultados sucesivos pueden permitir enlace con fuentes externas o revelar evolución clínica (`backend/app/investigacion/anonimizacion.py:12-16,53-67,130-139`). Revisar el riesgo de enlace en el contexto de publicación; considerar agregación temporal, reducción de precisión o exclusión de la secuencia cuando sea necesario.
 4. **Enlace y metadatos.** Aunque el seudónimo cambia por dataset, fechas, valores y `criterios` pueden facilitar enlace entre conjuntos o con fuentes externas (`backend/app/investigacion/anonimizacion.py:9-16,161-163`; `backend/app/api/datasets.py:97-105,185-195`). Evaluar también los metadatos y la combinación de datasets, no solo una exportación aislada.
 
+5. **Ancla de la bitácora.** `auditoria_ancla` conserva el recuento y el hash final de los eventos, por lo que detecta un truncamiento de la cola mientras el ancla permanece intacta. No es un registro externo: comparte la base PostgreSQL con `auditoria`; una persona con privilegios para reescribir ambas puede recalcular la cadena y el ancla en bloque. La resistencia ante ese escenario requiere checkpoints firmados o almacenamiento inmutable fuera de esa base.
+
 Estas son medidas de reducción de riesgo propuestas, no una afirmación de cumplimiento legal o de anonimización irreversible. La autorización y condiciones de publicación requieren revisión del contexto y, cuando corresponda, revisión legal.
 
 ## Evidencia de pruebas existentes
