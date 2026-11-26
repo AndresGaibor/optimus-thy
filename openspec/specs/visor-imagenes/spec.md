@@ -1,7 +1,7 @@
 # visor-imagenes Specification
 
 ## Purpose
-TBD - created by archiving change visor-imagenes. Update Purpose after archive.
+Mostrar las imágenes de un caso en el visor clínico y señalar de forma explícita cuándo una imagen no carga.
 
 ## Requirements
 

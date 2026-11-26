@@ -1,7 +1,7 @@
 # analisis-errores Specification
 
 ## Purpose
-TBD - created by archiving change 2026-11-26-analisis-errores. Update Purpose after archive.
+Permitir al personal investigador consultar los falsos positivos y negativos del modelo y registrar la corrección de una clasificación con su resultado clínico.
 
 ## Requirements
 

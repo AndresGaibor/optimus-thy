@@ -1,7 +1,7 @@
 # consulta-datasets Specification
 
 ## Purpose
-TBD - created by archiving change consulta-datasets. Update Purpose after archive.
+Permitir consultar los datasets anonimizados con su estado, su k efectivo por clase de equivalencia y sin cargar las filas completas en el listado.
 
 ## Requirements
 

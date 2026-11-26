@@ -1,7 +1,7 @@
 # bitacora-integridad Specification
 
 ## Purpose
-TBD - created by archiving change bitacora-integridad. Update Purpose after archive.
+Garantizar que la bitácora de auditoría sea íntegra y verificable: cadena criptográfica, escrituras serializadas, ancla del final y comprobación contra esa ancla.
 
 ## Requirements
 
