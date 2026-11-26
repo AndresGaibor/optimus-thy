@@ -11,6 +11,7 @@ La detección de texto incrustado requiere OCR y en operativo no se hace
 
 from __future__ import annotations
 
+import hashlib
 import io
 import uuid
 from datetime import datetime
@@ -208,9 +209,22 @@ async def cargar_imagen(
     try:
         contenido = await _leer_archivo(archivo)
         limpia, formato, content_type, ancho, alto = _validar_y_limpiar(contenido)
+        saneada = codificar(limpia, formato)
+        hash_sha256 = hashlib.sha256(saneada).hexdigest()
+        if (
+            db.query(Imagen)
+            .filter(Imagen.caso_id == caso.id, Imagen.hash_sha256 == hash_sha256)
+            .first()
+            is not None
+        ):
+            return _error(
+                request,
+                status.HTTP_409_CONFLICT,
+                "imagen_duplicada",
+                "Esta imagen ya está cargada en el caso.",
+            )
     except _ArchivoRechazado as rechazo:
         return _error(request, rechazo.codigo_http, "archivo_invalido", rechazo.mensaje)
-    saneada = codificar(limpia, formato)
     try:
         guardado = storage.put_object(
             saneada,
@@ -229,7 +243,7 @@ async def cargar_imagen(
     imagen = Imagen(
         caso_id=caso.id,
         ruta_s3=guardado.key,
-        hash_sha256=guardado.sha256,
+        hash_sha256=hash_sha256,
         sin_metadatos_exif_dicom=True,
     )
     db.add(imagen)
@@ -249,7 +263,7 @@ async def cargar_imagen(
     return ImagenOut(
         id=str(imagen.id),
         caso_id=str(imagen.caso_id),
-        sha256=guardado.sha256,
+        sha256=hash_sha256,
         formato=formato.lower(),
         ancho=ancho,
         alto=alto,

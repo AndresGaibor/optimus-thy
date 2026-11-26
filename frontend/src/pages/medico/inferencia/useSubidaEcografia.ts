@@ -76,11 +76,13 @@ export function useSubidaEcografia({ casoId, alSubir }: OpcionesSubida): SubidaE
         await subirImagen(casoId, item.archivo);
         marcar(item.archivo, 'lista', null);
         subidas += 1;
-      } catch {
+      } catch (error) {
         marcar(
           item.archivo,
           'error',
-          'No se pudo subir este archivo. Revisa que sea PNG o JPEG de hasta 15 MB y reintenta.',
+          error instanceof Error
+            ? error.message
+            : 'No se pudo subir este archivo. Revisa que sea PNG o JPEG de hasta 15 MB y reintenta.',
         );
         fallos += 1;
       }
