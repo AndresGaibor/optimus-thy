@@ -60,6 +60,9 @@ services:
       S3_SECRET_KEY: ${S3_SECRET_KEY:-cambiar-en-local}
       S3_BUCKET: ${S3_BUCKET:-optimus}
       PII_ENCRYPTION_KEY: ${PII_ENCRYPTION_KEY:-cambiar-en-local-no-usar-fuera-de-desarrollo}
+      RETENCION_TRABAJOS_DIAS: ${RETENCION_TRABAJOS_DIAS:-90}
+      RETENCION_ALERTAS_DIAS: ${RETENCION_ALERTAS_DIAS:-365}
+      PURGA_HABILITADA: ${PURGA_HABILITADA:-false}
       IA_URL: ${IA_URL:-http://ia:8002}
       MODELOS_DIR: /modelos
     volumes:

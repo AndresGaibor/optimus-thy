@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Button } from '../../design-system/components/atoms/Button';
+import { Checkbox } from '../../design-system/components/atoms/Checkbox';
 import { Input } from '../../design-system/components/atoms/Input';
 import { Label } from '../../design-system/components/atoms/Label';
 import { Spinner } from '../../design-system/components/atoms/Spinner';
@@ -19,38 +20,19 @@ import { Pagination } from '../../design-system/components/molecules/Pagination'
 import { SearchInput } from '../../design-system/components/molecules/SearchInput';
 import { Toast } from '../../design-system/components/molecules/Toast';
 import { Dialog, DialogClose } from '../../design-system/components/organisms/Dialog';
-import { listarPacientes, obtenerPaciente, type Paciente } from '../../api/pacientes';
-import { CasosDelPaciente } from './CasosDelPaciente';
+import {
+  listarPacientes,
+  obtenerPaciente,
+  type Paciente,
+  type PacienteDetalle,
+} from '../../api/pacientes';
+import { DialogoArchivadoPaciente } from './DialogoArchivadoPaciente';
+import { DialogoDetallePaciente } from './DialogoDetallePaciente';
+import { FilaPaciente } from './FilaPaciente';
 import { useAltaPaciente } from './useAltaPaciente';
+import { useArchivadoPaciente } from './useArchivadoPaciente';
 
 const LIMITE_POR_PAGINA = 20;
-
-function formatearFecha(fechaIso: string): string {
-  try {
-    const fecha = new Date(fechaIso);
-    return new Intl.DateTimeFormat('es-EC').format(fecha);
-  } catch {
-    return fechaIso;
-  }
-}
-
-interface PacienteDetalle extends Paciente {
-  casos?: Array<{
-    id: string;
-    codigo: string;
-    paciente_id: string;
-    paciente_codigo: string;
-    creado_en: string;
-  }>;
-}
-
-function esPacienteDetalle(valor: unknown): valor is PacienteDetalle {
-  if (!valor || typeof valor !== 'object') {
-    return false;
-  }
-  const obj = valor as Record<string, unknown>;
-  return typeof obj.id === 'string' && typeof obj.codigo === 'string';
-}
 
 export function PacientesPage() {
   const [busqueda, setBusqueda] = useState('');
@@ -60,6 +42,7 @@ export function PacientesPage() {
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
   const [cargando, setCargando] = useState(true);
   const [errorListado, setErrorListado] = useState<string | null>(null);
+  const [incluirArchivados, setIncluirArchivados] = useState(false);
 
   const [avisoExito, setAvisoExito] = useState<string | null>(null);
 
@@ -82,6 +65,7 @@ export function PacientesPage() {
     const resultado = await listarPacientes({
       limite: LIMITE_POR_PAGINA,
       desplazamiento,
+      incluir_archivados: incluirArchivados,
       ...(q === '' ? {} : { q }),
     });
     if (!resultado.ok) {
@@ -94,7 +78,7 @@ export function PacientesPage() {
     setPacientes(resultado.data.items);
     setTotal(resultado.data.total);
     setCargando(false);
-  }, [q, desplazamiento]);
+  }, [incluirArchivados, q, desplazamiento]);
 
   useEffect(() => {
     void cargarPacientes();
@@ -107,6 +91,14 @@ export function PacientesPage() {
       void cargarPacientes();
     }, [cargarPacientes]),
   );
+
+  const archivado = useArchivadoPaciente({
+    cargarPacientes,
+    desplazamiento,
+    incluirArchivados,
+    irAlInicio: useCallback(() => setDesplazamiento(0), []),
+    avisar: setAvisoExito,
+  });
 
   useEffect(() => {
     if (!avisoExito) {
@@ -127,9 +119,8 @@ export function PacientesPage() {
       setCargandoDetalle(false);
       return;
     }
-    const detalle = esPacienteDetalle(resultado.data)
-      ? (resultado.data as PacienteDetalle)
-      : paciente;
+    const datos = resultado.data as Partial<PacienteDetalle>;
+    const detalle: PacienteDetalle = { ...paciente, casos: datos.casos ?? [] };
     setPacienteDetalle(detalle);
     setCargandoDetalle(false);
   }, []);
@@ -150,6 +141,17 @@ export function PacientesPage() {
           placeholder="Buscar por código..."
           label="Buscar pacientes"
         />
+        <div className="flex items-center gap-2">
+          <Checkbox
+            id="incluir-archivados"
+            checked={incluirArchivados}
+            onChange={(evento) => {
+              setIncluirArchivados(evento.target.checked);
+              setDesplazamiento(0);
+            }}
+          />
+          <Label htmlFor="incluir-archivados">Incluir archivados</Label>
+        </div>
       </div>
 
       {errorListado ? (
@@ -175,13 +177,14 @@ export function PacientesPage() {
               <TableHead>Código</TableHead>
               <TableHead>Casos</TableHead>
               <TableHead>Alta</TableHead>
+              <TableHead>Estado</TableHead>
               <TableHead className="text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {cargando ? (
               <TableRow>
-                <TableCell colSpan={4}>
+                <TableCell colSpan={5}>
                   <div className="flex items-center justify-center py-6">
                     <Spinner aria-label="Cargando pacientes" />
                   </div>
@@ -189,7 +192,7 @@ export function PacientesPage() {
               </TableRow>
             ) : pacientes.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4}>
+                <TableCell colSpan={5}>
                   {q === '' ? (
                     <EmptyState
                       as="h2"
@@ -220,16 +223,12 @@ export function PacientesPage() {
               </TableRow>
             ) : (
               pacientes.map((paciente) => (
-                <TableRow key={paciente.id}>
-                  <TableCell className="font-medium">{paciente.codigo}</TableCell>
-                  <TableCell>{paciente.total_casos}</TableCell>
-                  <TableCell>{formatearFecha(paciente.creado_en)}</TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="secondary" onClick={() => void verDetalle(paciente)}>
-                      Ver detalle
-                    </Button>
-                  </TableCell>
-                </TableRow>
+                <FilaPaciente
+                  key={paciente.id}
+                  paciente={paciente}
+                  onVerDetalle={verDetalle}
+                  onArchivar={archivado.abrir}
+                />
               ))
             )}
           </TableBody>
@@ -302,62 +301,20 @@ export function PacientesPage() {
         </div>
       </Dialog>
 
-      <Dialog
-        open={dialogoDetalleAbierto}
-        onOpenChange={setDialogoDetalleAbierto}
-        title="Detalle del paciente"
-        description="Información del paciente y sus casos asociados."
-        footer={
-          <div className="flex w-full flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-            <DialogClose asChild>
-              <Button variant="secondary">Cerrar</Button>
-            </DialogClose>
-          </div>
-        }
-      >
-        <div className="flex flex-col gap-4">
-          {cargandoDetalle ? (
-            <div className="flex items-center justify-center py-6">
-              <Spinner aria-label="Cargando detalle" />
-            </div>
-          ) : errorDetalle ? (
-            <Callout tone="danger" role="alert">
-              {errorDetalle}
-            </Callout>
-          ) : pacienteDetalle ? (
-            <>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <div className="flex flex-col gap-1">
-                  <Label>Código</Label>
-                  <div className="text-sm text-foreground">{pacienteDetalle.codigo}</div>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <Label>Casos</Label>
-                  <div className="text-sm text-foreground">{pacienteDetalle.total_casos}</div>
-                </div>
-                <div className="flex flex-col gap-1 sm:col-span-2">
-                  <Label>Alta</Label>
-                  <div className="text-sm text-foreground">
-                    {formatearFecha(pacienteDetalle.creado_en)}
-                  </div>
-                </div>
-              </div>
-              <div className="flex flex-col gap-2">
-                <div className="text-sm font-medium text-foreground">Casos</div>
-                {pacienteDetalle.casos && pacienteDetalle.casos.length > 0 ? (
-                  <CasosDelPaciente casos={pacienteDetalle.casos} />
-                ) : (
-                  <EmptyState
-                    as="h2"
-                    title="Sin casos registrados"
-                    description="Este paciente aún no tiene casos asociados."
-                  />
-                )}
-              </div>
-            </>
-          ) : null}
-        </div>
-      </Dialog>
+      <DialogoDetallePaciente
+        abierto={dialogoDetalleAbierto}
+        onAbiertoChange={setDialogoDetalleAbierto}
+        cargando={cargandoDetalle}
+        error={errorDetalle}
+        paciente={pacienteDetalle}
+      />
+      <DialogoArchivadoPaciente
+        paciente={archivado.paciente}
+        cargando={archivado.cargando}
+        error={archivado.error}
+        onConfirmar={() => void archivado.confirmar()}
+        onCerrar={archivado.cerrar}
+      />
     </section>
   );
 }

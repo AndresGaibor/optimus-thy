@@ -717,6 +717,16 @@
               "default": 0,
               "title": "Desplazamiento"
             }
+          },
+          {
+            "name": "incluir_archivados",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Incluir Archivados"
+            }
           }
         ],
         "responses": {
@@ -837,6 +847,106 @@
                 "schema": {}
               }
             }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pacientes/{id}/archivar": {
+      "post": {
+        "tags": [
+          "pacientes"
+        ],
+        "summary": "Archivar Paciente",
+        "operationId": "archivar_paciente_pacientes__id__archivar_post",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PacienteOut"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "El paciente ya está archivado."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pacientes/{id}/desarchivar": {
+      "post": {
+        "tags": [
+          "pacientes"
+        ],
+        "summary": "Desarchivar Paciente",
+        "operationId": "desarchivar_paciente_pacientes__id__desarchivar_post",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PacienteOut"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "El paciente no está archivado."
           },
           "422": {
             "description": "Validation Error",
@@ -3428,6 +3538,154 @@
         }
       }
     },
+    "/auth/login/otp": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Login Otp",
+        "operationId": "login_otp_auth_login_otp_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginOtpRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/2fa/iniciar": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Iniciar Segundo Factor",
+        "operationId": "iniciar_segundo_factor_auth_2fa_iniciar_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
+      }
+    },
+    "/auth/2fa/confirmar": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Confirmar Segundo Factor",
+        "operationId": "confirmar_segundo_factor_auth_2fa_confirmar_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmarSegundoFactorRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
+      }
+    },
+    "/auth/2fa/desactivar": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Desactivar Segundo Factor",
+        "operationId": "desactivar_segundo_factor_auth_2fa_desactivar_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DesactivarSegundoFactorRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
+      }
+    },
     "/auth/logout": {
       "post": {
         "tags": [
@@ -4645,6 +4903,20 @@
         ],
         "title": "ConfiguracionOut"
       },
+      "ConfirmarSegundoFactorRequest": {
+        "properties": {
+          "codigo": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Codigo"
+          }
+        },
+        "type": "object",
+        "required": [
+          "codigo"
+        ],
+        "title": "ConfirmarSegundoFactorRequest"
+      },
       "ConteoResultadoOut": {
         "properties": {
           "resultado": {
@@ -5175,6 +5447,21 @@
         ],
         "title": "DecisionIn",
         "description": "Conclusión del médico; las observaciones son opcionales y acotadas."
+      },
+      "DesactivarSegundoFactorRequest": {
+        "properties": {
+          "password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "password"
+        ],
+        "title": "DesactivarSegundoFactorRequest"
       },
       "ErrorDuplicado": {
         "properties": {
@@ -5811,6 +6098,26 @@
         ],
         "title": "IntegridadOut"
       },
+      "LoginOtpRequest": {
+        "properties": {
+          "desafio": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Desafio"
+          },
+          "codigo": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Codigo"
+          }
+        },
+        "type": "object",
+        "required": [
+          "desafio",
+          "codigo"
+        ],
+        "title": "LoginOtpRequest"
+      },
       "LoginRequest": {
         "properties": {
           "correo": {
@@ -5828,6 +6135,62 @@
           "password"
         ],
         "title": "LoginRequest"
+      },
+      "LoginResponse": {
+        "properties": {
+          "usuario": {
+            "$ref": "#/components/schemas/UsuarioOut"
+          },
+          "roles": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Roles"
+          },
+          "rol_activo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rol Activo"
+          },
+          "permisos": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Permisos"
+          },
+          "segundos_para_expirar": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Segundos Para Expirar"
+          },
+          "segundo_factor_activo": {
+            "type": "boolean",
+            "title": "Segundo Factor Activo",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "usuario",
+          "roles",
+          "rol_activo",
+          "permisos"
+        ],
+        "title": "LoginResponse"
       },
       "MatrizPermisosRequest": {
         "properties": {
@@ -6043,6 +6406,18 @@
           "total_casos": {
             "type": "integer",
             "title": "Total Casos"
+          },
+          "archivado_en": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Archivado En"
           }
         },
         "type": "object",
@@ -6050,7 +6425,8 @@
           "id",
           "codigo",
           "creado_en",
-          "total_casos"
+          "total_casos",
+          "archivado_en"
         ],
         "title": "PacienteOut"
       },
@@ -6598,6 +6974,29 @@
           "id"
         ],
         "title": "SubidaOut"
+      },
+      "UsuarioOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "correo": {
+            "type": "string",
+            "title": "Correo"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "correo",
+          "nombre"
+        ],
+        "title": "UsuarioOut"
       },
       "ValidationError": {
         "properties": {

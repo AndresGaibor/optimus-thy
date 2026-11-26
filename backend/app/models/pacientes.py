@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import uuid
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 import sqlalchemy as sa
@@ -15,6 +16,7 @@ from app.security.types import EncryptedBytes
 if TYPE_CHECKING:
     from app.models.fichas import Caso
     from app.models.instituciones import Institucion
+    from app.models.usuarios import Usuario
 
 
 class Paciente(Base):
@@ -42,11 +44,22 @@ class Paciente(Base):
         onupdate=sa.func.now(),
     )
 
+    archivado_en: Mapped[datetime | None] = mapped_column(
+        sa.TIMESTAMP(timezone=True), nullable=True
+    )
+    archivado_por_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        sa.ForeignKey("usuarios.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+
     institucion: Mapped[Institucion] = relationship(back_populates="pacientes")
     identidad: Mapped[IdentidadPaciente | None] = relationship(
         back_populates="paciente", uselist=False, cascade="all, delete-orphan"
     )
     casos: Mapped[list[Caso]] = relationship(back_populates="paciente")
+
+    archivado_por: Mapped[Usuario | None] = relationship(foreign_keys=[archivado_por_id])
 
 
 class IdentidadPaciente(Base):

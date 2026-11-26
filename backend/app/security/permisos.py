@@ -16,6 +16,7 @@ from app.models.usuarios import Permiso, Rol, RolPermiso
 PERMISOS: Final[dict[str, str]] = {
     "paciente.leer": "Consultar el listado y el detalle de pacientes",
     "paciente.escribir": "Registrar y actualizar pacientes y casos",
+    "paciente.archivar": "Archivar y reactivar pacientes",
     "ficha.leer": "Consultar la ficha clínica del caso",
     "ficha.escribir": "Registrar y versionar la ficha clínica",
     "documento.leer": "Ver y descargar los documentos del caso",
@@ -58,6 +59,7 @@ PERMISOS_POR_ROL: Final[dict[str, tuple[str, ...]]] = {
         "inferencia.ejecutar",
         "inferencia.leer",
         "paciente.escribir",
+        "paciente.archivar",
         "paciente.leer",
         "reporte.generar",
     ),
@@ -86,6 +88,7 @@ PERMISOS_ASIGNABLES_POR_ROL: Final[dict[str, tuple[str, ...]]] = {
         "inferencia.ejecutar",
         "inferencia.leer",
         "paciente.escribir",
+        "paciente.archivar",
         "paciente.leer",
         "reporte.generar",
     ),

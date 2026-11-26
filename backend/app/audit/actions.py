@@ -12,6 +12,9 @@ class AuditAction(StrEnum):
     SESSION_START = "SESSION_START"
     SESSION_END = "SESSION_END"
     LOGIN_FAILED = "LOGIN_FAILED"
+    AUTH_2FA_ENABLED = "AUTH_2FA_ENABLED"
+    AUTH_2FA_DISABLED = "AUTH_2FA_DISABLED"
+    AUTH_2FA_FAILED = "AUTH_2FA_FAILED"
     ROLE_SWITCH = "ROLE_SWITCH"
 
     # Consultas (RF-AUD-02)
@@ -24,6 +27,8 @@ class AuditAction(StrEnum):
     # Altas y correcciones del registro clínico
     PATIENT_CREATE = "PATIENT_CREATE"
     PATIENT_UPDATE = "PATIENT_UPDATE"
+    PATIENT_ARCHIVE = "PATIENT_ARCHIVE"
+    PATIENT_UNARCHIVE = "PATIENT_UNARCHIVE"
     CASE_CREATE = "CASE_CREATE"
     # Cambios y ciclo de vida de la ficha clínica (CA-12)
     RECORD_UPDATE = "RECORD_UPDATE"

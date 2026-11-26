@@ -1,0 +1,9 @@
+[Unit]
+Description=OPTIMUS-THY purga de retención operativa
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/code/optimus-thy-operativo
+ExecStart=/usr/bin/docker compose -p optimus-thy --project-directory %h/code/optimus-thy-operativo --env-file %h/code/optimus-thy-operativo/.env -f %h/code/optimus-thy-operativo/docker-compose.yml -f %h/code/optimus-thy-operativo/compose.server.yaml run --rm --no-deps backend python -m app.jobs.retencion --si
