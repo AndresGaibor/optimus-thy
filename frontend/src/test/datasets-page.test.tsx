@@ -189,4 +189,83 @@ describe('consulta de datasets anonimizados', () => {
     ).toBeInTheDocument();
     expect(ultimaUrl()).toBe('http://localhost:8000/investigacion/datasets/ds-1');
   });
+
+  it('exporta el dataset en CSV y ofrece la descarga', async () => {
+    const usuario = userEvent.setup();
+    const crear = vi.fn(() => 'blob:dataset');
+    const revocar = vi.fn();
+    Object.defineProperty(URL, 'createObjectURL', { value: crear, configurable: true });
+    Object.defineProperty(URL, 'revokeObjectURL', { value: revocar, configurable: true });
+    render(<DatasetsPage />);
+    await screen.findByRole('heading', { name: 'Cohorte tiroides 2026' });
+
+    fetchMock.mockResolvedValueOnce(responder(DETALLE_A));
+    await usuario.click(screen.getByRole('button', { name: 'Abrir Cohorte tiroides 2026' }));
+    await screen.findByRole('table', { name: 'Filas anonimizadas del dataset' });
+
+    fetchMock.mockResolvedValueOnce(
+      new Response(new Blob(['# ficha\nsujeto\nS-001\n']), {
+        status: 200,
+        headers: {
+          'Content-Type': 'text/csv',
+          'Content-Disposition': 'attachment; filename="dataset-cohorte.csv"',
+        },
+      }),
+    );
+    await usuario.click(screen.getByRole('button', { name: 'Exportar' }));
+
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      'Exportación lista: Cohorte tiroides 2026 (CSV).',
+    );
+    expect(crear).toHaveBeenCalledTimes(1);
+    expect(revocar).toHaveBeenCalledWith('blob:dataset');
+    expect(ultimaUrl()).toBe(
+      'http://localhost:8000/investigacion/datasets/ds-1/exportar?formato=csv',
+    );
+  });
+
+  it('exporta en JSON cuando se elige ese formato', async () => {
+    const usuario = userEvent.setup();
+    Object.defineProperty(URL, 'createObjectURL', {
+      value: vi.fn(() => 'blob:x'),
+      configurable: true,
+    });
+    Object.defineProperty(URL, 'revokeObjectURL', { value: vi.fn(), configurable: true });
+    render(<DatasetsPage />);
+    await screen.findByRole('heading', { name: 'Cohorte tiroides 2026' });
+
+    fetchMock.mockResolvedValueOnce(responder(DETALLE_A));
+    await usuario.click(screen.getByRole('button', { name: 'Abrir Cohorte tiroides 2026' }));
+    await screen.findByRole('table', { name: 'Filas anonimizadas del dataset' });
+
+    await usuario.selectOptions(screen.getByLabelText('Formato de exportación'), 'json');
+    fetchMock.mockResolvedValueOnce(
+      new Response(new Blob(['{"ficha":{},"filas":[]}']), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+    await usuario.click(screen.getByRole('button', { name: 'Exportar' }));
+
+    expect(await screen.findByRole('status')).toHaveTextContent('(JSON)');
+    expect(ultimaUrl()).toContain('formato=json');
+  });
+
+  it('avisa cuando el rol no puede exportar', async () => {
+    const usuario = userEvent.setup();
+    render(<DatasetsPage />);
+    await screen.findByRole('heading', { name: 'Cohorte tiroides 2026' });
+
+    fetchMock.mockResolvedValueOnce(responder(DETALLE_A));
+    await usuario.click(screen.getByRole('button', { name: 'Abrir Cohorte tiroides 2026' }));
+    await screen.findByRole('table', { name: 'Filas anonimizadas del dataset' });
+
+    fetchMock.mockResolvedValueOnce(responder({ error: { code: 'forbidden' } }, 403));
+    await usuario.click(screen.getByRole('button', { name: 'Exportar' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Tu rol no permite exportar datasets.',
+    );
+    expect(screen.queryByRole('status')).toBeNull();
+  });
 });
