@@ -166,15 +166,34 @@ for operacion, valores in medidas.items():
 PY
 )" || fallar "no se pudieron calcular los percentiles."
 
-CPU="$(lscpu | awk -F: '/Model name/{sub(/^[[:space:]]+/, "", $2); print $2; exit}')"
-ARQUITECTURA="$(lscpu | awk -F: '/^Architecture:/{sub(/^[[:space:]]+/, "", $2); print $2; exit}')"
-RAM="$(free -h | awk '/^Mem:/{print $2 " total, " $3 " usada, " $4 " disponible"}')"
+if command -v lscpu >/dev/null 2>&1; then
+    CPU="$(lscpu | awk -F: '/Model name/{sub(/^[[:space:]]+/, "", $2); print $2; exit}')"
+    ARQUITECTURA="$(lscpu | awk -F: '/^Architecture:/{sub(/^[[:space:]]+/, "", $2); print $2; exit}')"
+    RAM="$(free -h 2>/dev/null | awk '/^Mem:/{print $2 " total, " $3 " usada, " $4 " disponible"}')"
+else
+    # macOS: lscpu y free no existen; sysctl da el modelo y la RAM en bytes.
+    CPU="$(sysctl -n machdep.cpu.brand_string 2>/dev/null || uname -m)"
+    ARQUITECTURA="$(uname -m)"
+    RAM="$(sysctl -n hw.memsize 2>/dev/null | awk '{printf "%.0fGi total", $1 / 1073741824}')"
+fi
 DOCKER="$(docker version --format '{{.Client.Version}}' 2>/dev/null || docker --version)"
 COMMIT="$(git rev-parse HEAD)"
-CONTENEDORES="$(dc ps -q | xargs -r docker stats --no-stream --format '{{.Name}} | {{.MemUsage}} | {{.MemPerc}}' 2>/dev/null || true)"
+IDS="$(dc ps -q)"
+# xargs de macOS no admite -r; sin ids no se consulta docker stats.
+if [[ -n "$IDS" ]]; then
+    CONTENEDORES="$(xargs docker stats --no-stream --format '{{.Name}} | {{.MemUsage}} | {{.MemPerc}}' <<<"$IDS" 2>/dev/null || true)"
+else
+    CONTENEDORES=""
+fi
 [[ -n "$CONTENEDORES" ]] || CONTENEDORES="No disponible (docker stats no devolvió datos)."
 
-ADVERTENCIA="Esta medición no se ejecutó en la laptop de demostración; el número no sustituye la medición en la laptop, la prefigura."
+if [[ "${LAPTOP_DEMO:-0}" == "1" ]]; then
+    ADVERTENCIA="Medición ejecutada en la laptop de demostración, con el stack completo por Docker Compose en ese equipo."
+    LAPTOP_TEXTO="Sí"
+else
+    ADVERTENCIA="Esta medición no se ejecutó en la laptop de demostración; el número no sustituye la medición en la laptop, la prefigura."
+    LAPTOP_TEXTO="No confirmada; asumir no"
+fi
 TABLA="| Operación | Muestras | p50 | p95 | p99 |\n|---|---:|---:|---:|---:|\n$METRICAS"
 
 {
@@ -182,7 +201,7 @@ TABLA="| Operación | Muestras | p50 | p95 | p99 |\n|---|---:|---:|---:|---:|\n$
     printf '# Medición de rendimiento — %s\n\n' "$FECHA"
     printf '| Dato | Valor |\n|---|---|\n'
     printf '| Máquina | %s (%s) |\n' "$(hostname)" "$(uname -s)"
-    printf '| Laptop de demostración | No confirmada; asumir no |\n'
+    printf '| Laptop de demostración | %s |\n' "$LAPTOP_TEXTO"
     printf '| CPU | %s |\n| Arquitectura | %s |\n| RAM del host | %s |\n' "${CPU:-No disponible}" "${ARQUITECTURA:-No disponible}" "${RAM:-No disponible}"
     printf '| Docker | %s |\n| Commit medido | `%s` |\n| Arranque frío hasta `/health` | %s ms |\n' "$DOCKER" "$COMMIT" "$ARRANQUE_MS"
     printf '| Proyecto aislado | `%s` |\n| URL medida | `%s` |\n| Límite global sintético | 500 por minuto |\n| Límite de inferencias sintético | 100 por minuto |\n\n' "$PROYECTO" "$URL"

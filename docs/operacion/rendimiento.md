@@ -2,7 +2,7 @@
 
 ## Repetir
 
-Desde la raíz del repositorio, con Docker, Docker Compose, `curl`, Python 3 y `lscpu`/`free` instalados:
+Desde la raíz del repositorio, con Docker, Docker Compose, `curl` y Python 3 instalados (`lscpu`/`free` en Linux; `sysctl` en macOS):
 
 ```bash
 bash tests/rendimiento/medir.sh
@@ -14,7 +14,7 @@ Mide 50 solicitudes de cada operación (`GET /health`, `POST /auth/login`, `GET 
 
 ## Interpretar el resultado
 
-Cada informe identifica el host, CPU, arquitectura, RAM, versión de Docker y commit medido. La ejecución de referencia de este procedimiento se hizo en el host remoto Linux del entorno de trabajo, **no en la laptop de demostración**. Por tanto, el número no sustituye la medición en la laptop: la prefigura. Para describir otro equipo como laptop de demostración, ejecútese allí y actualícese esa identificación solo con esa evidencia.
+Cada informe identifica el host, CPU, arquitectura, RAM, versión de Docker y commit medido. La ejecución de referencia de este procedimiento se hizo en el host remoto Linux del entorno de trabajo, **no en la laptop de demostración**. Por tanto, el número no sustituye la medición en la laptop: la prefigura. Para describir otro equipo como laptop de demostración, ejecútese allí con `LAPTOP_DEMO=1` y actualícese esa identificación solo con esa evidencia. La medición en la laptop de demostración está en `rendimiento-2026-11-26-laptop.md` y es la referencia para RNF-REN-01 y RNF-REN-02.
 
 Los percentiles describen la latencia observada en las 50 muestras de cada ruta; p95/p99 reflejan colas y variación que un promedio ocultaría. Compárese una ruta consigo misma entre ejecuciones con el mismo commit y datos, y consérvese el contexto del host. La memoria de `docker stats` corresponde a los contenedores en el instante de captura, no a la RAM total consumida durante todo el arranque.
 
