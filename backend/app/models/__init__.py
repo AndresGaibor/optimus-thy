@@ -14,6 +14,7 @@ from app.models.fichas import Caso, FichaClinica, FichaVersion
 from app.models.imagenes import DecisionMedica, Imagen, Inferencia, ModeloIA, Nodulo
 from app.models.instituciones import Institucion
 from app.models.pacientes import IdentidadPaciente, Paciente
+from app.models.segundo_factor import CodigoRecuperacion, DesafioOtp
 from app.models.sesiones import Sesion
 from app.models.trabajos import Trabajo
 from app.models.usuarios import Permiso, Rol, RolPermiso, Usuario, UsuarioRol
@@ -23,12 +24,14 @@ __all__ = [
     "AuditoriaAncla",
     "Base",
     "Caso",
+    "CodigoRecuperacion",
     "CohorteInvestigacion",
     "ConfiguracionCorreo",
     "Consentimiento",
     "Dataset",
     "DatasetCaso",
     "DecisionMedica",
+    "DesafioOtp",
     "Documento",
     "FichaClinica",
     "FichaVersion",
@@ -75,6 +78,8 @@ TABLAS: list[str] = [
     "datasets_casos",
     "auditoria",
     "auditoria_ancla",
+    "codigos_recuperacion",
+    "desafios_otp",
     "sesiones",
     "trabajos",
     "configuracion_correo",

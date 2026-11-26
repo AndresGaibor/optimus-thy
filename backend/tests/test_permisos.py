@@ -24,12 +24,20 @@ CLAVE = "claveSegura-123"
 PUBLICAS = {
     "/health",
     "/auth/login",
+    "/auth/login/otp",
     "/auth/logout",
     "/auth/recuperacion",
     "/auth/recuperacion/confirmar",
 }
 # Basta una sesión válida: actúan sobre la propia sesión, no sobre datos.
-SOLO_SESION = {"/auth/me", "/auth/rol-activo", "/auth/password"}
+SOLO_SESION = {
+    "/auth/me",
+    "/auth/rol-activo",
+    "/auth/password",
+    "/auth/2fa/iniciar",
+    "/auth/2fa/confirmar",
+    "/auth/2fa/desactivar",
+}
 
 
 def _dependencias(dependant):

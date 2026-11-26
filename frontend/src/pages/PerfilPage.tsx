@@ -10,6 +10,7 @@ import {
 } from '../design-system';
 import { useSession } from '../session/SessionContext';
 import { FormularioPassword } from './perfil/FormularioPassword';
+import { SeguridadSegundoFactor } from './perfil/SeguridadSegundoFactor';
 
 /**
  * Perfil de la cuenta autenticada (HU-006).
@@ -84,6 +85,7 @@ export function PerfilPage() {
             <FormularioPassword />
           </CardContent>
         </Card>
+        <SeguridadSegundoFactor />
       </div>
     </section>
   );

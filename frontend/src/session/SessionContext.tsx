@@ -9,10 +9,14 @@ import {
   type ReactNode,
 } from 'react';
 import { instanteDeExpiracion, RENOVAR_CADA_MS, sesionPorExpirar } from './expiry';
+import { mapearSesion } from './mapearSesion';
 import {
   login as loginApi,
+  loginOtp,
   logout as logoutApi,
   me as meApi,
+  type AuthSession,
+  type LoginChallenge,
   setRolActivo as setRolActivoApi,
   type MeResult,
 } from '../api/auth';
@@ -33,7 +37,14 @@ interface SessionValue {
   login: (
     correo: string,
     password: string,
-  ) => Promise<{ ok: true; rol: Role } | { ok: false; mensaje: string }>;
+  ) => Promise<
+    { ok: true; rol: Role } | { ok: false; mensaje: string; challenge?: LoginChallenge }
+  >;
+  /** Completa el segundo factor con un código TOTP o de recuperación. */
+  verificarOtp: (
+    desafio: string,
+    codigo: string,
+  ) => Promise<{ ok: true; rol: Role } | { ok: false; mensaje: string; codigo: string }>;
   logout: () => Promise<void>;
   cambiarRolActivo: (rol: Role) => Promise<void>;
   /** Aviso de HU-005: la sesión está por expirar por inactividad. */
@@ -54,6 +65,19 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [avisoExpirar, setAvisoExpirar] = useState(false);
   const ultimaRenovacion = useRef(0);
 
+  const aplicarSesion = useCallback((session: AuthSession): Role | null => {
+    const datos = mapearSesion(session);
+    if (!datos) return null;
+    setUsuario(datos.usuario);
+    setRoles(datos.roles);
+    setPermisos(datos.permisos);
+    setRolActivo(datos.rolActivo);
+    setEstado('autenticado');
+    setExpiraEn(instanteDeExpiracion(datos.segundosParaExpirar));
+    ultimaRenovacion.current = Date.now();
+    return datos.rolActivo;
+  }, []);
+
   useEffect(() => {
     let cancelado = false;
     (async () => {
@@ -73,12 +97,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         setEstado('anonimo');
         return;
       }
-      const session = res.session;
-      const rolesUi = (session.roles || [])
-        .map((r) => mapBackendRoleToUi(r))
-        .filter((r): r is Role => r !== null);
-      const rolActivoUi = mapBackendRoleToUi(session.rol_activo);
-      if (!rolActivoUi) {
+      const datos = mapearSesion(res.session);
+      if (!datos) {
         setUsuario(null);
         setRoles([]);
         setRolActivo(null);
@@ -86,54 +106,63 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         setEstado('anonimo');
         return;
       }
-      setUsuario({
-        id: session.usuario.id,
-        correo: session.usuario.correo,
-        nombre: session.usuario.nombre,
-      });
-      setRoles(rolesUi);
-      setPermisos(session.permisos ?? []);
-      setRolActivo(rolActivoUi);
-      setEstado('autenticado');
-      setExpiraEn(instanteDeExpiracion(session.segundos_para_expirar));
-      ultimaRenovacion.current = Date.now();
+      aplicarSesion(res.session);
     })();
     return () => {
       cancelado = true;
     };
-  }, []);
+  }, [aplicarSesion]);
 
   const login = useCallback(
     async (
       correo: string,
       password: string,
-    ): Promise<{ ok: true; rol: Role } | { ok: false; mensaje: string }> => {
+    ): Promise<
+      { ok: true; rol: Role } | { ok: false; mensaje: string; challenge?: LoginChallenge }
+    > => {
       const res = await loginApi(correo, password);
       if (!res.ok) {
+        if (res.challenge) {
+          return {
+            ok: false,
+            mensaje: 'Escribe el código de seis dígitos de tu aplicación de autenticación.',
+            challenge: res.challenge,
+          };
+        }
         return { ok: false, mensaje: 'No pudimos iniciar sesión. Revisa tu correo y contraseña.' };
       }
-      const session = res.session;
-      const rolesUi = (session.roles || [])
-        .map((r) => mapBackendRoleToUi(r))
-        .filter((r): r is Role => r !== null);
-      const rolActivoUi = mapBackendRoleToUi(session.rol_activo);
-      if (!rolActivoUi) {
+      const rol = aplicarSesion(res.session);
+      if (!rol) {
         return { ok: false, mensaje: 'No pudimos iniciar sesión. Revisa tu correo y contraseña.' };
       }
-      setUsuario({
-        id: session.usuario.id,
-        correo: session.usuario.correo,
-        nombre: session.usuario.nombre,
-      });
-      setRoles(rolesUi);
-      setPermisos(session.permisos ?? []);
-      setRolActivo(rolActivoUi);
-      setEstado('autenticado');
-      setExpiraEn(instanteDeExpiracion(session.segundos_para_expirar));
-      ultimaRenovacion.current = Date.now();
-      return { ok: true, rol: rolActivoUi };
+      return { ok: true, rol };
     },
-    [],
+    [aplicarSesion],
+  );
+
+  const verificarOtp = useCallback(
+    async (
+      desafio: string,
+      codigo: string,
+    ): Promise<{ ok: true; rol: Role } | { ok: false; mensaje: string; codigo: string }> => {
+      const res = await loginOtp(desafio, codigo);
+      if (!res.ok) {
+        return {
+          ok: false,
+          codigo: res.codigo,
+          mensaje:
+            res.codigo === 'desafio_expirado'
+              ? 'La verificación expiró. Vuelve a iniciar sesión.'
+              : 'El código no es válido.',
+        };
+      }
+      const rol = aplicarSesion(res.session);
+      if (!rol) {
+        return { ok: false, codigo: 'sin_rol', mensaje: 'Tu cuenta no tiene un rol activo.' };
+      }
+      return { ok: true, rol };
+    },
+    [aplicarSesion],
   );
 
   const logout = useCallback(async () => {
@@ -221,6 +250,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       rolActivo,
       permisos,
       login,
+      verificarOtp,
       logout,
       cambiarRolActivo,
       sesionPorExpirar: avisoExpirar,
@@ -233,6 +263,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       rolActivo,
       permisos,
       login,
+      verificarOtp,
       logout,
       cambiarRolActivo,
       avisoExpirar,
