@@ -113,6 +113,10 @@ class FichaClinica(Base):
         onupdate=sa.func.now(),
     )
 
+    cerrada_en: Mapped[datetime | None] = mapped_column(sa.TIMESTAMP(timezone=True))
+    cerrada_por_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), sa.ForeignKey("usuarios.id", ondelete="SET NULL")
+    )
     caso: Mapped[Caso] = relationship(back_populates="ficha_clinica")
 
 
@@ -136,7 +140,8 @@ class FichaVersion(Base):
         index=True,
     )
     version: Mapped[int] = mapped_column(sa.Integer, nullable=False)
-    snapshot: Mapped[dict[str, str]] = mapped_column(JSONB, nullable=False)
+    snapshot_anterior: Mapped[dict[str, str | None] | None] = mapped_column(JSONB)
+    snapshot: Mapped[dict[str, str | None]] = mapped_column(JSONB, nullable=False)
     autor_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         sa.ForeignKey("usuarios.id", ondelete="SET NULL"),

@@ -25,6 +25,10 @@ class AuditAction(StrEnum):
     PATIENT_CREATE = "PATIENT_CREATE"
     PATIENT_UPDATE = "PATIENT_UPDATE"
     CASE_CREATE = "CASE_CREATE"
+    # Cambios y ciclo de vida de la ficha clínica (CA-12)
+    RECORD_UPDATE = "RECORD_UPDATE"
+    RECORD_CLOSE = "RECORD_CLOSE"
+    RECORD_REOPEN = "RECORD_REOPEN"
 
     # Cargas (RF-AUD-03)
     DOCUMENT_UPLOAD = "DOCUMENT_UPLOAD"

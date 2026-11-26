@@ -58,7 +58,7 @@ erDiagram
 - Auditoría insert-only: sin `actualizado_en`; PK `BigInteger` con `Identity`; nunca datos clínicos.
 - Enums por CHECK: `String` + `CheckConstraint`, no `ENUM` nativo.
 - PK UUID con `gen_random_uuid()`.
-- Ficha: columnas tipadas para valores clínicos + `fichas_versiones` con `snapshot` JSONB para historial.
+- Ficha: columnas tipadas para valores clínicos + `fichas_versiones` con `snapshot` JSONB para historial. El cierre guarda `cerrada_en` y `cerrada_por_id` en la ficha; una versión solo se escribe cuando hay cambios reales.
 - Documentos nunca sobrescritos: unique (caso_id, nombre_original, version).
 - Nódulos: `indice` 1..3 con unique (inferencia_id, indice).
 - Inferencia sin `actualizado_en`: resultado en benigno/maligno/sin_nodulo, con ancho, alto, versión del contrato, umbrales y huella de los pesos; el nódulo guarda caja, confianza, origen de la máscara y las rutas de máscara, MGAC, XML y superposición.

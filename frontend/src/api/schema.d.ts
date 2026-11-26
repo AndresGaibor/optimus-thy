@@ -38,6 +38,75 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/casos/{caso_id}/ficha": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Obtener Estado Ficha */
+        get: operations["obtener_estado_ficha_casos__caso_id__ficha_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Actualizar Ficha */
+        patch: operations["actualizar_ficha_casos__caso_id__ficha_patch"];
+        trace?: never;
+    };
+    "/casos/{caso_id}/ficha/historial": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Obtener Historial Ficha */
+        get: operations["obtener_historial_ficha_casos__caso_id__ficha_historial_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/casos/{caso_id}/ficha/cerrar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cerrar Ficha */
+        post: operations["cerrar_ficha_casos__caso_id__ficha_cerrar_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/casos/{caso_id}/ficha/reabrir": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reabrir Ficha */
+        post: operations["reabrir_ficha_casos__caso_id__ficha_reabrir_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auditoria": {
         parameters: {
             query?: never;
@@ -1551,6 +1620,60 @@ export interface components {
             items: components["schemas"]["ErrorPrediccionOut"][];
         };
         /**
+         * FichaCambio
+         * @description Campos que puede registrar o corregir un usuario en la ficha.
+         */
+        FichaCambio: {
+            /** Tsh */
+            tsh?: number | string | null;
+            /** Tsh Unidad */
+            tsh_unidad?: string | null;
+            /** Tsh Fecha */
+            tsh_fecha?: string | null;
+            /** T3 */
+            t3?: number | string | null;
+            /** T3 Unidad */
+            t3_unidad?: string | null;
+            /** T3 Fecha */
+            t3_fecha?: string | null;
+            /** T4 */
+            t4?: number | string | null;
+            /** T4 Unidad */
+            t4_unidad?: string | null;
+            /** T4 Fecha */
+            t4_fecha?: string | null;
+            /** Tamano Nodulo Mm */
+            tamano_nodulo_mm?: number | string | null;
+            /** Lateralidad */
+            lateralidad?: string | null;
+            /** Tirads */
+            tirads?: string | null;
+            /** Bethesda */
+            bethesda?: string | null;
+            /** Cie10 */
+            cie10?: string | null;
+            /** Tipo Diagnostico */
+            tipo_diagnostico?: string | null;
+            /** Tipo Consulta */
+            tipo_consulta?: string | null;
+        };
+        /** FichaEstadoOut */
+        FichaEstadoOut: {
+            /**
+             * Caso Id
+             * Format: uuid
+             */
+            caso_id: string;
+            /** Registrada */
+            registrada: boolean;
+            /** Cerrada En */
+            cerrada_en: string | null;
+            /** Cerrada Por Id */
+            cerrada_por_id: string | null;
+            /** Cerrada Por Nombre */
+            cerrada_por_nombre: string | null;
+        };
+        /**
          * FiltroCasos
          * @description Criterios clínicos del conjunto; nunca identificadores de pacientes.
          */
@@ -1585,6 +1708,11 @@ export interface components {
              * @constant
              */
             status: "ok";
+        };
+        /** HistorialFichaOut */
+        HistorialFichaOut: {
+            /** Items */
+            items: components["schemas"]["VersionFichaOut"][];
         };
         /** HitoCronologia */
         HitoCronologia: {
@@ -1920,6 +2048,30 @@ export interface components {
             /** Context */
             ctx?: Record<string, never>;
         };
+        /** VersionFichaOut */
+        VersionFichaOut: {
+            /** Version */
+            version: number;
+            /**
+             * Creado En
+             * Format: date-time
+             */
+            creado_en: string;
+            /** Autor Id */
+            autor_id: string | null;
+            /** Autor Nombre */
+            autor_nombre: string | null;
+            /** Campos Cambiados */
+            campos_cambiados: string[];
+            /** Antes */
+            antes: {
+                [key: string]: string | null;
+            } | null;
+            /** Despues */
+            despues: {
+                [key: string]: string | null;
+            };
+        };
     };
     responses: never;
     parameters: never;
@@ -1967,6 +2119,165 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CronologiaOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    obtener_estado_ficha_casos__caso_id__ficha_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                caso_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FichaEstadoOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    actualizar_ficha_casos__caso_id__ficha_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                caso_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FichaCambio"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FichaEstadoOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    obtener_historial_ficha_casos__caso_id__ficha_historial_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                caso_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HistorialFichaOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cerrar_ficha_casos__caso_id__ficha_cerrar_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                caso_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FichaEstadoOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reabrir_ficha_casos__caso_id__ficha_reabrir_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                caso_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FichaEstadoOut"];
                 };
             };
             /** @description Validation Error */

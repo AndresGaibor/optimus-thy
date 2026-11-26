@@ -19,6 +19,7 @@ from app.api.correo import router as correo_router
 from app.api.cronologia import router as cronologia_router
 from app.api.datasets import router as datasets_router
 from app.api.decisiones import router as decisiones_router
+from app.api.fichas import router as fichas_router
 from app.api.imagenes import router as imagenes_router
 from app.api.instituciones import router as instituciones_router
 from app.api.metricas import router as metricas_router
@@ -183,6 +184,7 @@ def create_app() -> FastAPI:
         return Health(status="ok")
 
     app.include_router(cronologia_router)
+    app.include_router(fichas_router)
     app.include_router(auditoria_router)
     app.include_router(pacientes_router)
     app.include_router(roles_router)
