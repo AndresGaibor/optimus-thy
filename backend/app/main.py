@@ -12,10 +12,10 @@ from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, Response
 
-from app.api.cronologia import router as cronologia_router
 from app.api.auditoria import router as auditoria_router
 from app.api.consentimientos import router as consentimientos_router
 from app.api.correo import router as correo_router
+from app.api.cronologia import router as cronologia_router
 from app.api.datasets import router as datasets_router
 from app.api.decisiones import router as decisiones_router
 from app.api.imagenes import router as imagenes_router
