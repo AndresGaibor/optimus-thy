@@ -1,7 +1,7 @@
 # comparacion-resultados Specification
 
 ## Purpose
-TBD - created by archiving change comparacion-resultados. Update Purpose after archive.
+Ofrecer al personal investigador la comparación de los resultados de dos o más imágenes del mismo caso, sin que la comparación sugiera una recomendación clínica.
 
 ## Requirements
 

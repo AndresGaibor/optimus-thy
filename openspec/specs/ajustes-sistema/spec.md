@@ -1,7 +1,7 @@
 # ajustes-sistema Specification
 
 ## Purpose
-TBD - created by archiving change 2026-11-26-ajustes-no-sensibles. Update Purpose after archive.
+Exponer y modificar los ajustes operativos del sistema con permisos de gestión, sin revelar secretos y con cada cambio registrado en la bitácora.
 
 ## Requirements
 

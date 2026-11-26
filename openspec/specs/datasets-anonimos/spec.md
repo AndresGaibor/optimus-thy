@@ -1,7 +1,7 @@
 # datasets-anonimos Specification
 
 ## Purpose
-TBD - created by archiving change datasets-anonimos. Update Purpose after archive.
+Construir datasets anonimizados sin identificadores, con huella estable del conjunto y registro auditado de cada consulta.
 
 ## Requirements
 

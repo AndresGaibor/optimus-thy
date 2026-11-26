@@ -1,7 +1,7 @@
 # historial-inferencias Specification
 
 ## Purpose
-TBD - created by archiving change historial-inferencias. Update Purpose after archive.
+Mostrar el historial de inferencias de un caso con datos de la API real y sus estados explícitos de carga, vacío y error.
 
 ## Requirements
 

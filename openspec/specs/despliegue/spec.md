@@ -1,7 +1,7 @@
 # despliegue Specification
 
 ## Purpose
-TBD - created by archiving change despliegue-fiable. Update Purpose after archive.
+Informar qué commit está publicado y publicar el frontend desde el propio sistema.
 
 ## Requirements
 

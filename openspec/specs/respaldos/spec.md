@@ -1,7 +1,7 @@
 # respaldos Specification
 
 ## Purpose
-TBD - created by archiving change prueba-respaldo-archivos. Update Purpose after archive.
+Restaurar archivos respaldados solo tras verificar su integridad.
 
 ## Requirements
 

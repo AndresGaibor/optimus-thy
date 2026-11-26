@@ -1,7 +1,7 @@
 # pacientes Specification
 
 ## Purpose
-TBD - created by archiving change aviso-duplicado-paciente. Update Purpose after archive.
+Avisar de un documento duplicado en el alta de un paciente y pedir confirmación antes de continuar.
 
 ## Requirements
 

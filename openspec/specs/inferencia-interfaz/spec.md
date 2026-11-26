@@ -1,7 +1,7 @@
 # inferencia-interfaz Specification
 
 ## Purpose
-TBD - created by archiving change pantalla-inferencia. Update Purpose after archive.
+Ejecutar la inferencia desde la ficha del caso, presentar el resultado por nódulo y recordar que apoya el diagnóstico sin sustituirlo.
 
 ## Requirements
 

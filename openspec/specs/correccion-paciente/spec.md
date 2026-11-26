@@ -1,7 +1,7 @@
 # correccion-paciente Specification
 
 ## Purpose
-TBD - created by archiving change correccion-paciente. Update Purpose after archive.
+Permitir corregir la identidad de un paciente con lectura controlada y dejando constancia auditada del cambio.
 
 ## Requirements
 

@@ -1,7 +1,7 @@
 # perfil Specification
 
 ## Purpose
-TBD - created by archiving change cambio-password. Update Purpose after archive.
+Permitir que cada usuario cambie su contraseña autenticado y consulte los datos de su perfil.
 
 ## Requirements
 

@@ -1,7 +1,7 @@
 # explicacion-modelo Specification
 
 ## Purpose
-TBD - created by archiving change explicacion-modelo. Update Purpose after archive.
+Explicar qué aporta el modelo en cada resultado y qué límites tiene, para que la decisión clínica no se apoye solo en su salida.
 
 ## Requirements
 
