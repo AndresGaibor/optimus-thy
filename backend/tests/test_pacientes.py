@@ -61,8 +61,13 @@ def _entrar(client: TestClient, correo: str) -> TestClient:
     return client
 
 
+def _documento() -> str:
+    return f"DOC-{uuid.uuid4().hex[:8].upper()}"
+
+
 def _alta(client: TestClient, **cambios) -> dict:
-    respuesta = client.post("/pacientes", json={**PACIENTE, **cambios})
+    datos = {**PACIENTE, "documento": _documento(), **cambios}
+    respuesta = client.post("/pacientes", json=datos)
     assert respuesta.status_code == 201, respuesta.text
     return respuesta.json()
 
@@ -296,11 +301,12 @@ def test_patch_corrige_la_identidad_y_no_la_devuelve(client, mundo, test_engine)
 
 def test_patch_solo_cambia_los_campos_enviados(client, mundo):
     _entrar(client, mundo["medico"])
-    paciente = _alta(client)
+    documento = _documento()
+    paciente = _alta(client, documento=documento)
     respuesta = client.patch(f"/pacientes/{paciente['id']}", json={"nombres": "Ana Isabel"})
     assert respuesta.status_code == 200
     identidad = client.get(f"/pacientes/{paciente['id']}/identidad").json()
-    assert identidad == {**PACIENTE, "nombres": "Ana Isabel"}
+    assert identidad == {**PACIENTE, "documento": documento, "nombres": "Ana Isabel"}
 
 
 @pytest.mark.parametrize(
@@ -396,14 +402,15 @@ def test_patch_sin_cambios_reales_no_audita(client, mundo, db_session):
 
 def test_la_identidad_solo_se_revela_en_su_ruta_y_queda_auditada(client, mundo, db_session):
     _entrar(client, mundo["medico"])
-    paciente = _alta(client)
+    documento = _documento()
+    paciente = _alta(client, documento=documento)
     respuesta = client.get(f"/pacientes/{paciente['id']}/identidad")
     assert respuesta.status_code == 200
-    assert respuesta.json() == PACIENTE
+    assert respuesta.json() == {**PACIENTE, "documento": documento}
     assert _veces(db_session, "PATIENTS.PII_REVEAL") == 1
     for url in ("/pacientes", f"/pacientes/{paciente['id']}"):
         texto = client.get(url).text
-        for valor in PACIENTE.values():
+        for valor in (*PACIENTE.values(), documento):
             assert valor not in texto
 
 

@@ -294,9 +294,7 @@ describe('pacientes médico', () => {
     await usuario.click(screen.getByRole('button', { name: 'Guardar' }));
 
     await waitFor(() => {
-      expect(
-        screen.getByRole('button', { name: 'Registrar igualmente' }),
-      ).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Registrar igualmente' })).toBeInTheDocument();
     });
     expect(screen.queryByText('p-existente')).not.toBeInTheDocument();
 

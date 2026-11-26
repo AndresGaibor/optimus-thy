@@ -26,6 +26,8 @@ COLUMNAS_REFERENCIA = {
     "direccion_ip",
     "user_agent",
     "detalles",
+    "hash_anterior",
+    "hash_actual",
 }
 
 
@@ -100,16 +102,18 @@ def test_el_evento_guarda_referencias_y_no_datos_clinicos(
     assert evento.detalles == {"role_code": "medico"}
 
 
-def test_la_hora_la_pone_la_base(sesion: Session, usuario: Usuario) -> None:
-    """``ocurrido_en`` no se rellena en Python: lo pone ``now()`` de la base."""
+def test_el_servicio_fija_el_instante_del_evento(sesion: Session, usuario: Usuario) -> None:
+    """``ocurrido_en`` lo calcula el servicio para poder encadenar el hash."""
     evento = AuditService(sesion).record(
         AuditAction.SESSION_START, AuditModule.AUTH, usuario=usuario
     )
 
-    assert evento.ocurrido_en is None
+    assert evento.ocurrido_en is not None
+    assert evento.ocurrido_en.tzinfo is not None
+    assert evento.hash_actual is not None
+    assert evento.hash_anterior is None
     columna = Auditoria.__table__.c.ocurrido_en
     assert columna.server_default is not None
-    assert "now()" in str(columna.server_default.arg).lower()
 
 
 def test_los_detalles_admiten_codigos_y_numeros(sesion: Session) -> None:

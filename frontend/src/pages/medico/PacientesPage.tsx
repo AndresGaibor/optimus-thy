@@ -19,11 +19,7 @@ import { Pagination } from '../../design-system/components/molecules/Pagination'
 import { SearchInput } from '../../design-system/components/molecules/SearchInput';
 import { Toast } from '../../design-system/components/molecules/Toast';
 import { Dialog, DialogClose } from '../../design-system/components/organisms/Dialog';
-import {
-  listarPacientes,
-  obtenerPaciente,
-  type Paciente,
-} from '../../api/pacientes';
+import { listarPacientes, obtenerPaciente, type Paciente } from '../../api/pacientes';
 import { CasosDelPaciente } from './CasosDelPaciente';
 import { useAltaPaciente } from './useAltaPaciente';
 
