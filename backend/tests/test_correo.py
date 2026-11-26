@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import hashlib
 import os
+from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime, timedelta
+from threading import Barrier
 
 import pytest
 from fastapi.testclient import TestClient
@@ -363,3 +365,49 @@ def test_token_expirado_se_rechaza(db_session, client, mundo, monkeypatch):
         "/auth/recuperacion/confirmar", json={"token": token, "password": CLAVE_NUEVA}
     )
     assert respuesta.status_code == 400
+
+
+def test_dos_confirmaciones_del_mismo_token_solo_cambian_la_contrasena_una_vez(
+    db_session, client, mundo, monkeypatch
+) -> None:
+    """Dos canjes a la vez: uno gana el token y el otro recibe enlace inválido."""
+    _skip_if_no_db()
+    monkeypatch.setattr("app.auth.routes._enviar_enlace", lambda *a, **k: None)
+    client.post("/auth/recuperacion", json={"correo": "admin@t.com"})
+
+    token = "z" * 20
+    fila = db_session.query(TokenRecuperacion).one()
+    fila.token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
+    fila.expira_en = datetime.now(UTC) + timedelta(minutes=10)
+    db_session.add(fila)
+    db_session.commit()
+
+    inicio = Barrier(2)
+
+    def confirmar(clave: str) -> tuple[int, str | None]:
+        inicio.wait(timeout=10)
+        respuesta = client.post(
+            "/auth/recuperacion/confirmar", json={"token": token, "password": clave}
+        )
+        codigo = respuesta.json().get("error", {}).get("code") if respuesta.content else None
+        return respuesta.status_code, codigo
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        resultados = list(executor.map(confirmar, [CLAVE_NUEVA, CLAVE_OTRA]))
+
+    assert sorted(estado for estado, _ in resultados) == [204, 400]
+    assert [codigo for estado, codigo in resultados if estado == 400] == ["token_invalido"]
+
+    db_session.expire_all()
+    usuario = db_session.get(Usuario, mundo["admin"].id)
+    assert usuario is not None
+    validas = [
+        clave
+        for clave in (CLAVE_NUEVA, CLAVE_OTRA)
+        if verify_password(clave, usuario.password_hash)[0]
+    ]
+    assert len(validas) == 1
+    assert (
+        db_session.query(TokenRecuperacion).filter(TokenRecuperacion.usado_en.is_(None)).count()
+        == 0
+    )
