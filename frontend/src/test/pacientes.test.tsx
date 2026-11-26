@@ -89,8 +89,20 @@ describe('pacientes médico', () => {
       responderJson({
         total: 2,
         items: [
-          { id: 'p1', codigo: 'PAC-001', creado_en: '2026-01-15T10:00:00Z', total_casos: 3 },
-          { id: 'p2', codigo: 'PAC-002', creado_en: '2026-02-20T12:30:00Z', total_casos: 0 },
+          {
+            id: 'p1',
+            codigo: 'PAC-001',
+            creado_en: '2026-01-15T10:00:00Z',
+            total_casos: 3,
+            archivado_en: null,
+          },
+          {
+            id: 'p2',
+            codigo: 'PAC-002',
+            creado_en: '2026-02-20T12:30:00Z',
+            total_casos: 0,
+            archivado_en: null,
+          },
         ],
       }),
     );
@@ -196,6 +208,7 @@ describe('pacientes médico', () => {
           codigo: 'PAC-NEW',
           creado_en: '2026-11-05T10:00:00Z',
           total_casos: 0,
+          archivado_en: null,
         },
         201,
       ),
@@ -209,6 +222,7 @@ describe('pacientes médico', () => {
             codigo: 'PAC-NEW',
             creado_en: '2026-11-05T10:00:00Z',
             total_casos: 0,
+            archivado_en: null,
           },
         ],
       }),
@@ -273,7 +287,13 @@ describe('pacientes médico', () => {
     );
     fetchMock.mockResolvedValueOnce(
       responderJson(
-        { id: 'p-nuevo', codigo: 'PAC-NEW', creado_en: '2026-11-05T10:00:00Z', total_casos: 0 },
+        {
+          id: 'p-nuevo',
+          codigo: 'PAC-NEW',
+          creado_en: '2026-11-05T10:00:00Z',
+          total_casos: 0,
+          archivado_en: null,
+        },
         201,
       ),
     );
@@ -335,7 +355,13 @@ describe('pacientes médico', () => {
     );
     fetchMock.mockResolvedValueOnce(
       responderJson(
-        { id: 'p-nuevo', codigo: 'PAC-NEW', creado_en: '2026-11-05T10:00:00Z', total_casos: 0 },
+        {
+          id: 'p-nuevo',
+          codigo: 'PAC-NEW',
+          creado_en: '2026-11-05T10:00:00Z',
+          total_casos: 0,
+          archivado_en: null,
+        },
         201,
       ),
     );

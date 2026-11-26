@@ -206,6 +206,40 @@ export interface paths {
         patch: operations["actualizar_paciente_pacientes__id__patch"];
         trace?: never;
     };
+    "/pacientes/{id}/archivar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Archivar Paciente */
+        post: operations["archivar_paciente_pacientes__id__archivar_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/pacientes/{id}/desarchivar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Desarchivar Paciente */
+        post: operations["desarchivar_paciente_pacientes__id__desarchivar_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/pacientes/{id}/identidad": {
         parameters: {
             query?: never;
@@ -939,6 +973,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/login/otp": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Login Otp */
+        post: operations["login_otp_auth_login_otp_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/2fa/iniciar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Iniciar Segundo Factor */
+        post: operations["iniciar_segundo_factor_auth_2fa_iniciar_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/2fa/confirmar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirmar Segundo Factor */
+        post: operations["confirmar_segundo_factor_auth_2fa_confirmar_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/2fa/desactivar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Desactivar Segundo Factor */
+        post: operations["desactivar_segundo_factor_auth_2fa_desactivar_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/logout": {
         parameters: {
             query?: never;
@@ -1356,6 +1458,11 @@ export interface components {
             /** Ultima Prueba Ok */
             ultima_prueba_ok: boolean | null;
         };
+        /** ConfirmarSegundoFactorRequest */
+        ConfirmarSegundoFactorRequest: {
+            /** Codigo */
+            codigo: string;
+        };
         /** ConteoResultadoOut */
         ConteoResultadoOut: {
             /**
@@ -1560,6 +1667,11 @@ export interface components {
             /** Observaciones */
             observaciones?: string | null;
         };
+        /** DesactivarSegundoFactorRequest */
+        DesactivarSegundoFactorRequest: {
+            /** Password */
+            password: string;
+        };
         /** ErrorDuplicado */
         ErrorDuplicado: {
             error: components["schemas"]["ErrorDuplicadoDetalle"];
@@ -1749,12 +1861,36 @@ export interface components {
             /** Primer Fallo */
             primer_fallo: number | null;
         };
+        /** LoginOtpRequest */
+        LoginOtpRequest: {
+            /** Desafio */
+            desafio: string;
+            /** Codigo */
+            codigo: string;
+        };
         /** LoginRequest */
         LoginRequest: {
             /** Correo */
             correo: string;
             /** Password */
             password: string;
+        };
+        /** LoginResponse */
+        LoginResponse: {
+            usuario: components["schemas"]["UsuarioOut"];
+            /** Roles */
+            roles: string[];
+            /** Rol Activo */
+            rol_activo: string | null;
+            /** Permisos */
+            permisos: string[];
+            /** Segundos Para Expirar */
+            segundos_para_expirar?: number | null;
+            /**
+             * Segundo Factor Activo
+             * @default false
+             */
+            segundo_factor_activo: boolean;
         };
         /**
          * MatrizPermisosRequest
@@ -1846,6 +1982,8 @@ export interface components {
             creado_en: string;
             /** Total Casos */
             total_casos: number;
+            /** Archivado En */
+            archivado_en: string | null;
         };
         /** PacientesListOut */
         PacientesListOut: {
@@ -2034,6 +2172,15 @@ export interface components {
              * Format: uuid
              */
             id: string;
+        };
+        /** UsuarioOut */
+        UsuarioOut: {
+            /** Id */
+            id: string;
+            /** Correo */
+            correo: string;
+            /** Nombre */
+            nombre: string;
         };
         /** ValidationError */
         ValidationError: {
@@ -2389,6 +2536,7 @@ export interface operations {
                 q?: string | null;
                 limite?: number;
                 desplazamiento?: number;
+                incluir_archivados?: boolean;
             };
             header?: never;
             path?: never;
@@ -2521,6 +2669,82 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ErrorDuplicado"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    archivar_paciente_pacientes__id__archivar_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PacienteOut"];
+                };
+            };
+            /** @description El paciente ya está archivado. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    desarchivar_paciente_pacientes__id__desarchivar_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PacienteOut"];
+                };
+            };
+            /** @description El paciente no está archivado. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
@@ -3994,6 +4218,123 @@ export interface operations {
                 content: {
                     "application/json": unknown;
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    login_otp_auth_login_otp_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoginOtpRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoginResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    iniciar_segundo_factor_auth_2fa_iniciar_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    confirmar_segundo_factor_auth_2fa_confirmar_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfirmarSegundoFactorRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    desactivar_segundo_factor_auth_2fa_desactivar_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DesactivarSegundoFactorRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
