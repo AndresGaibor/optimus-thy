@@ -5,7 +5,7 @@ export interface Paciente {
   codigo: string;
   creado_en: string;
   total_casos: number;
-  archivado_en: string | null;
+  archivado_en?: string | null;
 }
 
 /** Caso asociado al paciente en el detalle (`GET /pacientes/{id}`). */
@@ -44,7 +44,7 @@ function esPaciente(valor: unknown): valor is Paciente {
     typeof v.codigo === 'string' &&
     typeof v.creado_en === 'string' &&
     typeof v.total_casos === 'number' &&
-    (typeof v.archivado_en === 'string' || v.archivado_en === null)
+    (v.archivado_en === undefined || v.archivado_en === null || typeof v.archivado_en === 'string')
   );
 }
 

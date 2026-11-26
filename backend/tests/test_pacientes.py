@@ -93,7 +93,7 @@ def test_alta_devuelve_codigo_interno_y_nunca_la_identidad(client, mundo):
     assert datos["total_casos"] == 0
     for dato in PACIENTE.values():
         assert dato not in respuesta.text
-    assert set(datos) == {"id", "codigo", "creado_en", "total_casos"}
+    assert set(datos) == {"id", "codigo", "creado_en", "total_casos", "archivado_en"}
 
 
 def test_la_identidad_se_guarda_aparte_y_cifrada(client, mundo, test_engine):
@@ -285,7 +285,7 @@ def test_patch_corrige_la_identidad_y_no_la_devuelve(client, mundo, test_engine)
     respuesta = client.patch(f"/pacientes/{paciente['id']}", json=nuevos)
     assert respuesta.status_code == 200, respuesta.text
     datos = respuesta.json()
-    assert set(datos) == {"id", "codigo", "creado_en", "total_casos"}
+    assert set(datos) == {"id", "codigo", "creado_en", "total_casos", "archivado_en"}
     assert datos["id"] == paciente["id"] and datos["codigo"] == paciente["codigo"]
     for valor in nuevos.values():
         assert valor not in respuesta.text
