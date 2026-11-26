@@ -76,7 +76,10 @@ const base: Array<[string, string]> = [
   ['Accesibilidad', 'El sistema permitió ajustar el tamaño del texto, los colores y las imágenes.'],
   ['Accesibilidad', 'Encontré difícil usar el sistema por problemas de navegación.'],
   ['Usabilidad', 'El sistema ofreció las herramientas necesarias para cumplir mi trabajo.'],
-  ['Usabilidad', 'El sistema careció de funciones esenciales para realizar mis tareas con eficacia.'],
+  [
+    'Usabilidad',
+    'El sistema careció de funciones esenciales para realizar mis tareas con eficacia.',
+  ],
   ['Usabilidad', 'El sistema facilitó mi trabajo.'],
   ['Aceptación', 'Estaría dispuesto a seguir usando este sistema con regularidad.'],
   ['Aceptación', 'El sistema aportó valor a mis tareas diarias.'],
