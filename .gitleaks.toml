@@ -22,6 +22,12 @@ paths = [
 ]
 condition = "AND"
 [[allowlists]]
+description = "Contraseña sintética del test de acceso entre instituciones (TES-349)"
+regexTarget = "match"
+regexes = ['''claveSuficientemente12''']
+paths = ['''backend/tests/test_acceso_objetos\.py''']
+condition = "AND"
+[[allowlists]]
 description = "IP privada Tailscale documentada, no es credencial"
 regexTarget = "line"
 regexes = ['''TAILSCALE_IP=100\.107\.225\.79''']

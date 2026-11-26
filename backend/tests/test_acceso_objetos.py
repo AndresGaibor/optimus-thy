@@ -250,7 +250,7 @@ def test_id_de_institucion_en_cuerpo_no_permite_crear_usuario_ajeno(client, mund
             "nombre": "Usuario Sintético",
             "institucion_id": str(mundo["institucion_b"].id),
             "roles": ["doctor"],
-            "password": "claveSuficientemente12",
+            "password": "clave-sintetica-de-prueba",
         },
     )
 
