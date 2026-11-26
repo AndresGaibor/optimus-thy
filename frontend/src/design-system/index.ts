@@ -136,3 +136,10 @@ export { SidebarLayout } from './components/organisms/SidebarLayout';
 export type { SidebarLayoutProps, SidebarNavItem } from './components/organisms/SidebarLayout';
 export { TrendBars } from './components/organisms/TrendBars';
 export type { TrendBarItem, TrendBarsProps } from './components/organisms/TrendBars';
+export { RocCurve } from './components/organisms/RocCurve';
+export type { RocCurveProps, RocPoint } from './components/organisms/RocCurve';
+export { ProbabilityDistribution } from './components/organisms/ProbabilityDistribution';
+export type {
+  ProbabilityBin,
+  ProbabilityDistributionProps,
+} from './components/organisms/ProbabilityDistribution';

@@ -22,6 +22,7 @@ const SEGMENTOS_APLICACIÓN: Record<string, true> = {
   Flujos: true,
   Pública: true,
   Médico: true,
+  Investigador: true,
   Administrador: true,
   'Shell y navegación': true,
 };
