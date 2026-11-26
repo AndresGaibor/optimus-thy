@@ -154,6 +154,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/pacientes/{id}/exportacion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Exportar Paciente */
+        get: operations["exportar_paciente_pacientes__id__exportacion_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/pacientes/{id}/casos": {
         parameters: {
             query?: never;
@@ -285,6 +302,26 @@ export interface paths {
         get?: never;
         /** Put Roles Usuario */
         put: operations["put_roles_usuario_usuarios__id__roles_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/administrador/tablero": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Tablero Administrador
+         * @description Resumen operativo de datos, actividad y servicios de la institución.
+         */
+        get: operations["tablero_administrador_administrador_tablero_get"];
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -518,7 +555,7 @@ export interface paths {
         };
         /**
          * Consultar Metricas
-         * @description Cuenta las decisiones de la institución; no calcula métricas clínicas.
+         * @description Cuenta decisiones por modelo, opcionalmente limitadas a una cohorte propia.
          */
         get: operations["consultar_metricas_investigacion_metricas_get"];
         put?: never;
@@ -621,6 +658,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/cohortes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listar Cohortes */
+        get: operations["listar_cohortes_cohortes_get"];
+        put?: never;
+        /** Crear Cohorte */
+        post: operations["crear_cohorte_cohortes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cohortes/{cohorte_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Borrar Cohorte */
+        delete: operations["borrar_cohorte_cohortes__cohorte_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/casos/{caso_id}/inferencias/{inferencia_id}/reporte.pdf": {
         parameters: {
             query?: never;
@@ -633,6 +705,40 @@ export interface paths {
          * @description PDF de una inferencia del caso, con aviso de apoyo y datos mínimos.
          */
         get: operations["descargar_reporte_casos__caso_id__inferencias__inferencia_id__reporte_pdf_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/casos/{caso_id}/reporte.pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Descargar Reporte Consolidado */
+        get: operations["descargar_reporte_consolidado_casos__caso_id__reporte_pdf_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reportes/{valor}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Verificar Reporte */
+        get: operations["verificar_reporte_reportes__valor__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1100,6 +1206,36 @@ export interface components {
             /** Tipo Consulta */
             tipo_consulta: string | null;
         };
+        /** CohorteOut */
+        CohorteOut: {
+            /** Id */
+            id: string;
+            /** Nombre */
+            nombre: string;
+            /** Filtros */
+            filtros: {
+                [key: string]: unknown;
+            };
+            /** Total Casos */
+            total_casos: number;
+            /**
+             * Creado En
+             * Format: date-time
+             */
+            creado_en: string;
+            /**
+             * Actualizado En
+             * Format: date-time
+             */
+            actualizado_en: string;
+        };
+        /** CohortesListOut */
+        CohortesListOut: {
+            /** Total */
+            total: number;
+            /** Items */
+            items: components["schemas"]["CohorteOut"][];
+        };
         /** ConfiguracionIn */
         ConfiguracionIn: {
             /** Host */
@@ -1168,6 +1304,15 @@ export interface components {
             descarta: number;
             /** Pendiente */
             pendiente: number;
+        };
+        /** CrearCohorteRequest */
+        CrearCohorteRequest: {
+            /** Nombre */
+            nombre: string;
+            /** Filtros */
+            filtros?: {
+                [key: string]: unknown;
+            };
         };
         /**
          * CrearConsentimientoRequest
@@ -2108,6 +2253,39 @@ export interface operations {
             };
         };
     };
+    exportar_paciente_pacientes__id__exportacion_get: {
+        parameters: {
+            query?: {
+                formato?: "json" | "csv";
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     crear_caso_pacientes__id__casos_post: {
         parameters: {
             query?: never;
@@ -2423,6 +2601,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    tablero_administrador_administrador_tablero_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
         };
@@ -2868,6 +3066,7 @@ export interface operations {
                 desde?: string | null;
                 hasta?: string | null;
                 modelo?: string | null;
+                cohorte_id?: string | null;
             };
             header?: never;
             path?: never;
@@ -3080,6 +3279,88 @@ export interface operations {
             };
         };
     };
+    listar_cohortes_cohortes_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CohortesListOut"];
+                };
+            };
+        };
+    };
+    crear_cohorte_cohortes_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CrearCohorteRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CohorteOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    borrar_cohorte_cohortes__cohorte_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cohorte_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     descargar_reporte_casos__caso_id__inferencias__inferencia_id__reporte_pdf_get: {
         parameters: {
             query?: never;
@@ -3087,6 +3368,68 @@ export interface operations {
             path: {
                 caso_id: string;
                 inferencia_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    descargar_reporte_consolidado_casos__caso_id__reporte_pdf_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                caso_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    verificar_reporte_reportes__valor__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                valor: string;
             };
             cookie?: never;
         };

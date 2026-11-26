@@ -29,6 +29,7 @@ interface SessionValue {
   usuario: SessionUsuario | null;
   roles: Role[];
   rolActivo: Role | null;
+  permisos: string[];
   login: (
     correo: string,
     password: string,
@@ -48,6 +49,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [usuario, setUsuario] = useState<SessionUsuario | null>(null);
   const [roles, setRoles] = useState<Role[]>([]);
   const [rolActivo, setRolActivo] = useState<Role | null>(null);
+  const [permisos, setPermisos] = useState<string[]>([]);
   const [expiraEn, setExpiraEn] = useState<number | null>(null);
   const [avisoExpirar, setAvisoExpirar] = useState(false);
   const ultimaRenovacion = useRef(0);
@@ -67,6 +69,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         setUsuario(null);
         setRoles([]);
         setRolActivo(null);
+        setPermisos([]);
         setEstado('anonimo');
         return;
       }
@@ -79,6 +82,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         setUsuario(null);
         setRoles([]);
         setRolActivo(null);
+        setPermisos([]);
         setEstado('anonimo');
         return;
       }
@@ -88,6 +92,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         nombre: session.usuario.nombre,
       });
       setRoles(rolesUi);
+      setPermisos(session.permisos ?? []);
       setRolActivo(rolActivoUi);
       setEstado('autenticado');
       setExpiraEn(instanteDeExpiracion(session.segundos_para_expirar));
@@ -121,6 +126,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         nombre: session.usuario.nombre,
       });
       setRoles(rolesUi);
+      setPermisos(session.permisos ?? []);
       setRolActivo(rolActivoUi);
       setEstado('autenticado');
       setExpiraEn(instanteDeExpiracion(session.segundos_para_expirar));
@@ -138,6 +144,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
     setUsuario(null);
     setRoles([]);
+    setPermisos([]);
     setRolActivo(null);
     setExpiraEn(null);
     setAvisoExpirar(false);
@@ -153,12 +160,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     if (!res.ok) {
       setUsuario(null);
       setRoles([]);
+      setPermisos([]);
       setRolActivo(null);
       setExpiraEn(null);
       setAvisoExpirar(false);
       setEstado('anonimo');
       return;
     }
+    setPermisos(res.session.permisos ?? []);
     setExpiraEn(instanteDeExpiracion(res.session.segundos_para_expirar));
     ultimaRenovacion.current = Date.now();
     setAvisoExpirar(false);
@@ -201,6 +210,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
     setRoles(rolesUi);
     setRolActivo(rolActivoUi);
+    setPermisos(session.permisos ?? []);
   }, []);
 
   const value = useMemo(
@@ -209,6 +219,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       usuario,
       roles,
       rolActivo,
+      permisos,
       login,
       logout,
       cambiarRolActivo,
@@ -220,6 +231,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       usuario,
       roles,
       rolActivo,
+      permisos,
       login,
       logout,
       cambiarRolActivo,
@@ -237,6 +249,10 @@ export function useSession(): SessionValue {
     throw new Error('useSession debe usarse dentro de SessionProvider');
   }
   return value;
+}
+
+export function usePermisosSesion(): string[] {
+  return useContext(SessionContext)?.permisos ?? [];
 }
 
 export { homePathFor };

@@ -9,6 +9,8 @@ que no existe.
 
 from __future__ import annotations
 
+import csv
+import io
 import secrets
 import uuid
 from collections.abc import Callable
@@ -16,7 +18,7 @@ from datetime import date, datetime
 from typing import Annotated, Any, Literal, cast
 
 from fastapi import APIRouter, Depends, Query, Request, status
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import func, text
 from sqlalchemy.orm import Session
@@ -26,6 +28,7 @@ from app.audit.http import registrar
 from app.auth.deps import SesionActual, requiere_permiso
 from app.db import session_dep
 from app.models.fichas import Caso
+from app.models.imagenes import DecisionMedica, Imagen, Inferencia, ModeloIA
 from app.models.pacientes import IdentidadPaciente, Paciente
 from app.security.encryption import get_cipher
 
@@ -461,6 +464,135 @@ def obtener_identidad(
         objeto_id=paciente.id,
     )
     return datos
+
+
+@router.get("/pacientes/{id}/exportacion", response_model=None)
+def exportar_paciente(
+    request: Request,
+    id: str,
+    db: Annotated[Session, Depends(session_dep)],
+    actual: Annotated[SesionActual, Depends(requiere_permiso("paciente.leer"))],
+    formato: Annotated[Literal["json", "csv"], Query()] = "json",
+) -> Response:
+    paciente = _paciente_de(db, actual, id)
+    if paciente is None:
+        return _no_encontrado(request)
+
+    identidad = paciente.identidad
+    identidad_exportada = {
+        "seudonimo": paciente.seudonimo,
+        "nombres": identidad.nombres_cifrados if identidad else None,
+        "apellidos": identidad.apellidos_cifrados if identidad else None,
+        "documento": identidad.documento_cifrado if identidad else None,
+        "fecha_nacimiento": (
+            date.fromisoformat(identidad.fecha_nacimiento_cifrada).isoformat()
+            if identidad
+            else None
+        ),
+    }
+    casos_exportados: list[dict[str, Any]] = []
+    filas: list[list[str]] = []
+    casos = db.query(Caso).filter(Caso.paciente_id == paciente.id).order_by(Caso.creado_en).all()
+    for caso in casos:
+        inferencias = (
+            db.query(Inferencia)
+            .join(Imagen, Inferencia.imagen_id == Imagen.id)
+            .filter(Imagen.caso_id == caso.id)
+            .order_by(Inferencia.creado_en, Inferencia.id)
+            .all()
+        )
+        filas_inferencia: list[dict[str, Any]] = []
+        for inferencia in inferencias:
+            modelo = db.get(ModeloIA, inferencia.modelo_ia_id)
+            decision = (
+                db.query(DecisionMedica.decision)
+                .filter(DecisionMedica.inferencia_id == inferencia.id)
+                .scalar()
+            )
+            dato = {
+                "fecha": inferencia.creado_en.isoformat(),
+                "resultado": inferencia.resultado,
+                "confianza": inferencia.confianza,
+                "modelo": modelo.nombre if modelo else None,
+                "version_contrato": inferencia.version_contrato,
+                "decision": decision,
+            }
+            filas_inferencia.append(dato)
+            filas.append(
+                [
+                    paciente.seudonimo,
+                    identidad_exportada["documento"] or "",
+                    caso.codigo_caso,
+                    dato["fecha"],
+                    dato["resultado"],
+                    "" if dato["confianza"] is None else str(dato["confianza"]),
+                    dato["modelo"] or "",
+                    dato["decision"] or "",
+                ]
+            )
+        if not inferencias:
+            filas.append(
+                [
+                    paciente.seudonimo,
+                    identidad_exportada["documento"] or "",
+                    caso.codigo_caso,
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                ]
+            )
+        casos_exportados.append(
+            {
+                "codigo_caso": caso.codigo_caso,
+                "creado_en": caso.creado_en.isoformat(),
+                "inferencias": filas_inferencia,
+            }
+        )
+    resource_count = sum(len(caso["inferencias"]) for caso in casos_exportados)
+
+    registrar(
+        db,
+        request,
+        AuditAction.EXPORT,
+        AuditModule.EXPORT,
+        usuario=actual.usuario,
+        rol=actual.rol_activo.nombre if actual.rol_activo else None,
+        tipo_objeto=AuditObjectType.PATIENT,
+        objeto_id=paciente.id,
+        detalles={"format": formato, "resource_count": resource_count},
+    )
+    headers = {
+        "Content-Disposition": f'attachment; filename="datos-{paciente.seudonimo}.{formato}"'
+    }
+    if formato == "json":
+        return JSONResponse(
+            content={"paciente": identidad_exportada, "casos": casos_exportados},
+            headers=headers,
+        )
+
+    salida = io.StringIO(newline="")
+    salida.write("\ufeff")
+    escritor = csv.writer(salida)
+    escritor.writerow(
+        [
+            "seudonimo",
+            "documento",
+            "codigo_caso",
+            "fecha_inferencia",
+            "resultado",
+            "confianza",
+            "modelo",
+            "decision",
+        ]
+    )
+    escritor.writerows(filas)
+    return Response(
+        content=salida.getvalue(),
+        media_type="text/csv; charset=utf-8",
+        headers=headers,
+    )
 
 
 @router.post("/pacientes/{id}/casos", status_code=status.HTTP_201_CREATED, response_model=None)

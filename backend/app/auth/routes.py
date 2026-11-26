@@ -56,6 +56,7 @@ class LoginResponse(BaseModel):
     usuario: UsuarioOut
     roles: list[str]
     rol_activo: str | None
+    permisos: list[str]
     segundos_para_expirar: int | None = None
 
 
@@ -127,10 +128,12 @@ def _roles_de(db: Session, usuario_id: object) -> list[Rol]:
 def _respuesta(
     usuario: Usuario, roles: list[Rol], activo: str | None, segundos: int | None = None
 ) -> LoginResponse:
+    rol = next((rol for rol in roles if rol.nombre == activo), None)
     return LoginResponse(
         usuario=UsuarioOut(id=str(usuario.id), correo=usuario.email, nombre=usuario.nombre or ""),
         roles=[r.nombre for r in roles],
         rol_activo=activo,
+        permisos=sorted(rp.permiso.codigo for rp in rol.roles_permisos) if rol else [],
         segundos_para_expirar=segundos,
     )
 

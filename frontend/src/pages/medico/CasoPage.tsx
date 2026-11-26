@@ -20,6 +20,7 @@ import { DialogoSubida } from './inferencia/DialogoSubida';
 import { useSubidaEcografia } from './inferencia/useSubidaEcografia';
 import { AbrirVisor } from './visor/AbrirVisor';
 import { CronologiaCaso } from './CronologiaCaso';
+import { ExportarPaciente } from './ExportarPaciente';
 
 const INTERVALO_MS = 3000;
 
@@ -34,6 +35,7 @@ export function CasoPage() {
   const [aviso, setAviso] = useState<string | null>(null);
   const [analizando, setAnalizando] = useState<string | null>(null);
   const intervalo = useRef<number | null>(null);
+  const [errorExportacion, setErrorExportacion] = useState<string | null>(null);
 
   const detener = useCallback(() => {
     if (intervalo.current !== null) {
@@ -125,8 +127,20 @@ export function CasoPage() {
       <PageHeader
         title={caso ? `Caso ${caso.codigo}` : 'Caso'}
         description={caso ? `Paciente ${caso.paciente_codigo}` : undefined}
-        actions={<Button onClick={subida.abrir}>Subir ecografía</Button>}
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            {caso ? (
+              <ExportarPaciente pacienteId={caso.paciente_id} onError={setErrorExportacion} />
+            ) : null}
+            <Button onClick={subida.abrir}>Subir ecografía</Button>
+          </div>
+        }
       />
+      {errorExportacion ? (
+        <Callout tone="danger" title="Error" role="alert">
+          {errorExportacion}
+        </Callout>
+      ) : null}
       <SupportNotice context="inferencia" />
       <ConsentimientosCaso
         casoId={casoId}

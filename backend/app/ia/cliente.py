@@ -297,6 +297,20 @@ class ClienteIA:
         self._timeout = httpx.Timeout(timeout_segundos)
         self._transporte = transporte
 
+    def health(self) -> dict[str, object]:
+        """Consulta el health del servicio IA y conserva su contrato."""
+        try:
+            with httpx.Client(timeout=self._timeout, transport=self._transporte) as cliente:
+                respuesta = cliente.get(f"{self._url}/health")
+        except httpx.HTTPError as exc:
+            raise ServicioNoDisponible("El servicio de IA no está disponible.") from exc
+        if respuesta.status_code >= httpx.codes.BAD_REQUEST:
+            raise ServicioNoDisponible("El servicio de IA no está disponible.")
+        datos = respuesta.json()
+        if not isinstance(datos, dict):
+            raise ContratoInvalido("El health del servicio de IA no es válido.")
+        return datos
+
     def inferir(self, imagen: bytes, nombre: str) -> dict[str, object]:
         """Envía la imagen y devuelve el contrato validado."""
         if not imagen:
