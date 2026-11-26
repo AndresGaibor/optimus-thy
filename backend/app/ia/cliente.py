@@ -346,9 +346,7 @@ class ClienteIA:
                 cuerpo_error = respuesta.json()
             except ValueError:
                 cuerpo_error = None
-            codigo_respuesta = (
-                cuerpo_error.get("code") if isinstance(cuerpo_error, dict) else None
-            )
+            codigo_respuesta = cuerpo_error.get("code") if isinstance(cuerpo_error, dict) else None
             if codigo_respuesta == CODIGO_IMAGEN_NO_PARECE_ECOGRAFIA:
                 raise ServicioRespondioError(
                     "La imagen no parece una ecografía tiroidea.",
